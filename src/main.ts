@@ -1,0 +1,52 @@
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module";
+import { VersioningType } from "@nestjs/common";
+import { ResponseInterceptor } from "./common/interceptors/response.interceptor";
+import { CustomExceptionFilter } from "./common/exception-filter/exception-filter";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { requestLogger } from "./common/logger/request.logger";
+
+async function bootstrap() {
+	const app = await NestFactory.create(AppModule);
+
+	app.setGlobalPrefix("api");
+
+	//For versioning api
+	app.enableVersioning({
+		type: VersioningType.URI,
+	});
+
+	//Apply Request Logger Middleware
+	app.use(requestLogger({ skipHealth: true }));
+
+	//Apply Response Interceptor
+	app.useGlobalInterceptors(new ResponseInterceptor());
+
+	//Apply exception filter
+	app.useGlobalFilters(new CustomExceptionFilter());
+
+	//swagger configurations
+	const config = new DocumentBuilder()
+		.setTitle("DeepEnd")
+		.setDescription("DeepEnd Api")
+		.setVersion("v1")
+		.addServer("http://localhost:3000", "Local Environment")
+		.addTag("Deep End Apis")
+		.addBearerAuth(
+			{ type: "http", scheme: "bearer", bearerFormat: "JWT" },
+			"access-token",
+		)
+		.addBearerAuth(
+			{ type: "http", scheme: "bearer", bearerFormat: "JWT" },
+			"refresh-token",
+		)
+		.build();
+
+	//Swagger Document
+	const document = SwaggerModule.createDocument(app, config);
+
+	SwaggerModule.setup("api", app, document);
+
+	await app.listen(process.env.PORT ?? 3000);
+}
+bootstrap();
