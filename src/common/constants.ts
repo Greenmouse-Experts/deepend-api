@@ -1,0 +1,2 @@
+export const MYSQL_CONNECTION = "MYSQL_CONNECTION";
+export const ID_GENERATOR_LENGTH = 15;
