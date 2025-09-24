@@ -1,0 +1,22 @@
+import * as joi from "joi";
+
+export const envSchema = joi.object({
+	NODE_ENV: joi
+		.string()
+		.valid("development", "production", "test")
+		.default("development"),
+	DB_HOST: joi.string().required(),
+	DB_PORT: joi.number().required(),
+	DB_USER: joi.string().required(),
+	DB_PASSWORD: joi.string().required(),
+	DB_NAME: joi.string().required(),
+	PORT: joi.number().default(3000),
+	JWT_ACCESS_SECRET: joi.string().required(),
+	JWT_ACCESS_EXPIRATION_TIME: joi.string().required(),
+	JWT_REFRESH_SECRET: joi.string().required(),
+	JWT_REFRESH_EXPIRATION_TIME: joi.string().required(),
+	VERIFICATION_TOKEN_EXPIRY_TIME: joi.string().required(),
+	SMTP_HOST: joi.string().required(),
+	SMTP_PORT: joi.number().required(),
+	DEEPEND_MAIL_FROM: joi.string().email().required(),
+});
