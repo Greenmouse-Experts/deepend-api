@@ -42,10 +42,17 @@ async function bootstrap() {
 		)
 		.build();
 
-	//Swagger Document
-	const document = SwaggerModule.createDocument(app, config);
+	if (process.env.NODE_ENV !== "production") {
+		//Swagger Document
+		const document = SwaggerModule.createDocument(app, config);
 
-	SwaggerModule.setup("api", app, document);
+		SwaggerModule.setup("api", app, document, {
+			swaggerOptions: {
+				persistAuthorization: true,
+			},
+			jsonDocumentUrl: "api-json",
+		});
+	}
 
 	await app.listen(process.env.PORT ?? 3000);
 }
