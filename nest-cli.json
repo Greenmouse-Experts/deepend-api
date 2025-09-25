@@ -4,7 +4,10 @@
 	"sourceRoot": "src",
 	"compilerOptions": {
 		"deleteOutDir": true,
-		"assets": [{ "include": "mail/templates/**/*" }],
+		"assets": [
+			{ "include": "mail/templates/**/*" },
+			{ "include": "database/migrations/**/*" }
+		],
 		"exclude": ["seed/**"]
 	}
 }

@@ -8,13 +8,13 @@ export class UserRepository {
 	constructor(private readonly databaseService: DatabaseService) {}
 
 	async findUserById(id: string) {
-		return this.databaseService.db.query.users.findFirst({
+		return await this.databaseService.db.query.users.findFirst({
 			where: eq(users.id, id),
 		});
 	}
 
 	async findUserByEmail(email: string) {
-		return this.databaseService.db.query.users.findFirst({
+		return await this.databaseService.db.query.users.findFirst({
 			where: eq(users.email, email),
 		});
 	}

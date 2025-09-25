@@ -4,11 +4,14 @@ import {
 	ExceptionFilter,
 	HttpException,
 	HttpStatus,
+	Logger,
 } from "@nestjs/common";
 import { DrizzleQueryError } from "drizzle-orm";
 
 @Catch()
 export class CustomExceptionFilter implements ExceptionFilter {
+	private readonly logger = new Logger();
+
 	catch(exception: HttpException | DrizzleQueryError, host: ArgumentsHost) {
 		const ctx = host.switchToHttp();
 		const response = ctx.getResponse();
@@ -34,6 +37,12 @@ export class CustomExceptionFilter implements ExceptionFilter {
 			exception instanceof HttpException
 				? exception.getStatus()
 				: HttpStatus.INTERNAL_SERVER_ERROR;
+
+		if (status === 500) {
+			this.logger.error(
+				`${request.method} ${request.url} ${status} - ${exception} ${request.ip}`,
+			);
+		}
 
 		return response.status(status).send({
 			status: "fail",

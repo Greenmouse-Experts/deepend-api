@@ -2,7 +2,10 @@ import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
-	out: "./src/database/migrations",
+	out:
+		process.env.NODE_ENV === "production"
+			? "./database/migrations"
+			: "./src/database/migrations",
 	schema: "./src/database/schema/*.ts",
 	dialect: "mysql",
 	dbCredentials: {
