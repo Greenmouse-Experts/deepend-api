@@ -65,7 +65,9 @@ export class AuthService {
 				firstName: newUser.firstName,
 			});
 
-			return newUser;
+			const { password, ...userWithoutPassword } = newUser;
+
+			return { id: createdUser.id, ...userWithoutPassword };
 		} catch (error) {
 			throw error;
 		}
