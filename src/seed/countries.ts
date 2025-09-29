@@ -1,7 +1,7 @@
 import "dotenv/config";
 import mysql from "mysql2/promise";
 import { drizzle } from "drizzle-orm/mysql2";
-import { countries } from "../../src/database/schema/countries";
+import { countries } from "../database/schema/countries";
 import { sql } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
