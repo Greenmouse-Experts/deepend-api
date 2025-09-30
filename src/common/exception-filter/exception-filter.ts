@@ -12,6 +12,8 @@ import { DrizzleQueryError } from "drizzle-orm";
 export class CustomExceptionFilter implements ExceptionFilter {
 	private readonly logger = new Logger();
 
+	private readonly excludedPayloadKeys = ["message", "error", "statusCode"];
+
 	catch(exception: HttpException | DrizzleQueryError, host: ArgumentsHost) {
 		const ctx = host.switchToHttp();
 		const response = ctx.getResponse();
@@ -44,6 +46,26 @@ export class CustomExceptionFilter implements ExceptionFilter {
 			);
 		}
 
+		let payload: Record<string, any> = {};
+		const exceptionResponse =
+			exception instanceof HttpException ? exception.getResponse() : null;
+
+		if (
+			exceptionResponse &&
+			typeof exceptionResponse === "object" &&
+			!Array.isArray(exceptionResponse)
+		) {
+			payload = Object.entries(exceptionResponse)
+				.filter(([key]) => !this.excludedPayloadKeys.includes(key))
+				.reduce(
+					(acc, [key, value]) => {
+						acc[key] = value;
+						return acc;
+					},
+					{} as Record<string, any>,
+				);
+		}
+
 		return response.status(status).send({
 			status: "fail",
 			path: request.url,
@@ -51,6 +73,7 @@ export class CustomExceptionFilter implements ExceptionFilter {
 				status < 500
 					? exception.message.replace(/"/g, "")
 					: "An Error Occurred",
+			...(Object.keys(payload).length > 0 ? { payload } : {}),
 			error_trace:
 				process.env.NODE_ENV === "development" ? exception.stack : undefined,
 		});
