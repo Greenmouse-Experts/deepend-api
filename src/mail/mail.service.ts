@@ -59,4 +59,16 @@ export class MailService {
 
 		return await this.sendMail({ email, context, subject, templatePath });
 	}
+
+	async sendPasswordReset({
+		email,
+		code,
+		firstName,
+	}: { email: string; code: string; firstName: string }) {
+		const subject = "Reset your password";
+		const templatePath = "passwordReset"; // Assuming you have a template named 'passwordReset'
+		const context = { firstName, code };
+
+		return await this.sendMail({ email, context, subject, templatePath });
+	}
 }
