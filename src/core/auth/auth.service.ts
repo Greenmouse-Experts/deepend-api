@@ -1,7 +1,10 @@
 import {
 	BadRequestException,
 	ForbiddenException,
+	HttpException,
+	HttpStatus,
 	Injectable,
+	NotFoundException,
 } from "@nestjs/common";
 import { UserService } from "../user/user.service";
 import { CreateUser } from "src/database/schema";
@@ -95,8 +98,12 @@ export class AuthService {
 				firstName: user.firstName,
 			});
 
-			throw new BadRequestException(
-				`Please verify your email. A new verification code has been sent to ${maskEmail(user.email)}`,
+			throw new HttpException(
+				{
+					userId: user.id,
+					message: `Email not verified. A new verification code has been sent to ${maskEmail(user.email)}`,
+				},
+				HttpStatus.BAD_REQUEST,
 			);
 		}
 
@@ -107,7 +114,46 @@ export class AuthService {
 
 		await this.userService.updateUser(user.id, { refreshToken: refresh_token });
 
-		return { ...user, access_token, refresh_token };
+		const {
+			password: pwd,
+			refreshToken: rft,
+			updatedAt: udt,
+			...userWithoutPassword
+		} = user;
+
+		return { ...userWithoutPassword, access_token, refresh_token };
+	}
+
+	async loginAdmin({ email, password }: LoginUserDto) {
+		const user = await this.userService.getUserByEmail(email);
+
+		if (!user || user.role !== "admin") {
+			throw new NotFoundException("Admin with this email does not exist");
+		}
+
+		if (
+			!(await this.passwordService.comparePassword(password, user.password))
+		) {
+			throw new BadRequestException("Invalid email or password");
+		}
+
+		const { access_token, refresh_token } = await this.getTokens(
+			user.id,
+			user.role,
+		);
+
+		await this.userService.updateUser(user.id, {
+			refreshToken: refresh_token,
+		});
+
+		const {
+			password: pwd,
+			refreshToken: rft,
+			updatedAt: udt,
+			...userWithoutPassword
+		} = user;
+
+		return { ...userWithoutPassword, access_token, refresh_token };
 	}
 
 	async getVerificationOtpCode(userId: string) {
@@ -144,6 +190,82 @@ export class AuthService {
 		});
 
 		return { message: "Email verified successfully" };
+	}
+
+	async forgotPassword(email: string) {
+		const user = await this.userService.getUserByEmail(email);
+
+		if (!user) {
+			throw new NotFoundException("User with this email does not exist");
+		}
+
+		const otpCode = await this.getNewVerificationOtpCode(user.id);
+
+		await this.mailService.sendPasswordReset({
+			email: user.email,
+			code: otpCode,
+			firstName: user.firstName,
+		});
+
+		return {
+			userId: user.id,
+			message: `A password reset code has been sent to ${maskEmail(user.email)}`,
+		};
+	}
+
+	async resetPassword({
+		userId,
+		code,
+		newPassword,
+	}: { userId: string; code: string; newPassword: string }) {
+		const isCodeValid = await this.verificationService.verifyOtp(userId, code);
+
+		if (!isCodeValid.isValid) {
+			throw new BadRequestException("Invalid or expired verification code");
+		}
+
+		if (isCodeValid.userId !== userId) {
+			throw new BadRequestException("Invalid verification attempt");
+		}
+
+		const hashedPassword = await this.passwordService.hashPassword(newPassword);
+
+		await this.userService.updateUser(isCodeValid.userId, {
+			password: hashedPassword,
+		});
+
+		return { message: "Password reset successfully" };
+	}
+
+	async changePassword(
+		userId: string,
+		{
+			currentPassword,
+			newPassword,
+		}: { currentPassword: string; newPassword: string },
+	) {
+		const user = await this.userService.getUserById(userId);
+
+		if (!user) {
+			throw new NotFoundException("User not found");
+		}
+
+		if (
+			!(await this.passwordService.comparePassword(
+				currentPassword,
+				user.password,
+			))
+		) {
+			throw new BadRequestException("Current password is incorrect");
+		}
+
+		const hashedPassword = await this.passwordService.hashPassword(newPassword);
+
+		await this.userService.updateUser(userId, {
+			password: hashedPassword,
+		});
+
+		return { message: "Password changed successfully" };
 	}
 
 	async getTokens(userId: string, role: string) {
@@ -199,5 +321,19 @@ export class AuthService {
 			access_token,
 			refresh_token,
 		};
+	}
+
+	async logoutUser(userId: string) {
+		const user = await this.userService.getUserById(userId);
+
+		if (!user) {
+			throw new NotFoundException("User not found");
+		}
+
+		await this.userService.updateUser(userId, {
+			refreshToken: null,
+		});
+
+		return { message: "Signed out successfully" };
 	}
 }
