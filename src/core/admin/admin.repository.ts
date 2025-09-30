@@ -41,6 +41,15 @@ export class AdminRepository {
 		return category;
 	}
 
+	async getFoodCategoryById(id: number) {
+		const category = await this.databaseService.db
+			.select()
+			.from(foodCategories)
+			.where(eq(foodCategories.id, id));
+
+		return category;
+	}
+
 	async getAllFoodCategories(offset: number, limit: number) {
 		const categories = await this.databaseService.db
 			.select()
