@@ -34,7 +34,13 @@ export class AdminService {
 	}
 
 	async deleteFoodCategory(id: number) {
+		const existingCategory = await this.adminRepository.getFoodCategoryById(id);
+
+		if (existingCategory.length === 0) {
+			throw new BadRequestException("Food category not found");
+		}
 		await this.adminRepository.deleteFoodCategory(id);
+
 		return { message: "Food category deleted successfully" };
 	}
 
