@@ -105,6 +105,55 @@ export const ResendVerificationSchema = joi.object({
 	email: joi.string().email().trim().required(),
 });
 
+export class ForgotPasswordDto {
+	@ApiProperty({
+		description: "User's email address",
+		example: "user@gmail.com",
+	})
+	email: string;
+}
+
+export const ForgotPasswordSchema = joi.object({
+	email: joi.string().email().trim().required(),
+});
+
+export class ResetPasswordDto {
+	@ApiProperty({
+		description: "OTP code sent to user's email",
+		example: "123456",
+	})
+	code: string;
+	@ApiProperty({
+		description: "New password for the user",
+		example: "newStrongPassword123!",
+	})
+	newPassword: string;
+}
+
+export const ResetPasswordSchema = joi.object({
+	code: joi.string().length(6).trim().required(),
+	newPassword: joi.string().min(8).max(100).trim().required(),
+});
+
+export class ChangePasswordDto {
+	@ApiProperty({
+		description: "Current password of the user",
+		example: "currentPassword123!",
+	})
+	currentPassword: string;
+
+	@ApiProperty({
+		description: "New password for the user",
+		example: "newStrongPassword123!",
+	})
+	newPassword: string;
+}
+
+export const ChangePasswordSchema = joi.object({
+	currentPassword: joi.string().min(8).max(100).trim().required(),
+	newPassword: joi.string().min(8).max(100).trim().required(),
+});
+
 export class RefreshTokenDto {
 	@ApiProperty({
 		description: "User's ID",
