@@ -8,8 +8,8 @@ import {
 } from "drizzle-orm/mysql-core";
 import { countries } from "./countries";
 import { varchar } from "drizzle-orm/mysql-core";
-import { generateId } from "src/common/helpers";
-import { ID_GENERATOR_LENGTH } from "src/common/constants";
+import { generateId } from "../../common/helpers";
+import { ID_GENERATOR_LENGTH } from "../../common/constants";
 
 export type CreateUser = typeof users.$inferInsert;
 
