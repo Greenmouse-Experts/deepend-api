@@ -7,6 +7,7 @@ import {
 	Logger,
 } from "@nestjs/common";
 import { DrizzleQueryError } from "drizzle-orm";
+import { MySQLDriverError, MySQLError } from "../mysql.error";
 
 @Catch()
 export class CustomExceptionFilter implements ExceptionFilter {
@@ -20,20 +21,18 @@ export class CustomExceptionFilter implements ExceptionFilter {
 		const request = ctx.getRequest();
 
 		// Handle unhandled database errors
-		// if (exception instanceof DrizzleQueryError) {
-		// console.error(exception);
-		// const { status, message } = PgError.parsePgError(
-		// 	exception.cause as DatabaseError,
-		// );
+		if (exception instanceof DrizzleQueryError) {
+			console.error(exception);
+			const { status, message } = MySQLError.parseMySQLError(exception.cause);
 
-		// 	return response.status(status).send({
-		// 		status: "fail",
-		// 		path: request.url,
-		// 		message: message,
-		// 		error_trace:
-		// 			process.env.NODE_ENV === "development" ? exception.stack : undefined,
-		// 	});
-		// }
+			return response.status(status).send({
+				status: "fail",
+				path: request.url,
+				message: message,
+				error_trace:
+					process.env.NODE_ENV === "development" ? exception.stack : undefined,
+			});
+		}
 
 		const status =
 			exception instanceof HttpException
