@@ -1,6 +1,20 @@
 import { ApiProperty } from "@nestjs/swagger";
 import * as Joi from "joi";
 
+class Images {
+	@ApiProperty({
+		example: "http://example.com/image.jpg",
+		description: "URL of the image",
+	})
+	url: string;
+
+	@ApiProperty({
+		example: "/images/image.jpg",
+		description: "Path of the image",
+	})
+	path: string;
+}
+
 export class CreateFoodDto {
 	@ApiProperty({ example: "Pizza", description: "Name of the food item" })
 	name: string;
@@ -22,11 +36,15 @@ export class CreateFoodDto {
 	categoryId: number;
 
 	@ApiProperty({
-		example: ["http://example.com/image1.jpg", "http://example.com/image2.jpg"],
+		example: [
+			{ url: "http://example.com/image1.jpg", path: "/image1.jpeg" },
+			{ url: "http://example.com/image2.jpg", path: "/image2.jpeg" },
+		],
 		description: "List of image URLs for the food item",
 		required: false,
+		type: [Images],
 	})
-	imageUrls?: string[];
+	imageUrls?: Images[];
 }
 
 export const CreateFoodSchema = Joi.object({
@@ -35,7 +53,14 @@ export const CreateFoodSchema = Joi.object({
 	price: Joi.number().precision(2).positive().required(),
 	quantity: Joi.number().integer().min(1).required(),
 	categoryId: Joi.number().integer().positive().required(),
-	imageUrls: Joi.array().items(Joi.string().uri()).optional(),
+	imageUrls: Joi.array()
+		.items(
+			Joi.object({
+				url: Joi.string().uri().required(),
+				path: Joi.string().required(),
+			}),
+		)
+		.optional(),
 });
 
 export class UpdateFoodDto {
@@ -68,13 +93,6 @@ export class UpdateFoodDto {
 	quantity: number;
 
 	@ApiProperty({
-		example: true,
-		description: "Availability status of the food item",
-		required: true,
-	})
-	isAvailable: boolean;
-
-	@ApiProperty({
 		example: 1,
 		description: "Category ID of the food item",
 		required: false,
@@ -82,11 +100,17 @@ export class UpdateFoodDto {
 	categoryId?: number;
 
 	@ApiProperty({
-		example: ["http://example.com/image1.jpg", "http://example.com/image2.jpg"],
+		example: [
+			{
+				url: "http://example.com/image1.jpg",
+				path: "/image1.jpeg",
+			},
+		],
 		description: "List of image URLs for the food item",
 		required: false,
+		type: [Images],
 	})
-	imageUrls?: string[];
+	imageUrls?: Images[];
 }
 
 export const UpdateFoodSchema = Joi.object({
@@ -94,9 +118,15 @@ export const UpdateFoodSchema = Joi.object({
 	description: Joi.string().max(1024).optional(),
 	price: Joi.number().precision(2).positive().optional(),
 	quantity: Joi.number().integer().min(1).required(),
-	isAvailable: Joi.boolean().required(),
 	categoryId: Joi.number().integer().positive().optional(),
-	imageUrls: Joi.array().items(Joi.string().uri()).optional(),
+	imageUrls: Joi.array()
+		.items(
+			Joi.object({
+				url: Joi.string().uri().required(),
+				path: Joi.string().required(),
+			}),
+		)
+		.optional(),
 });
 
 export class AddFoodAddonItems {
