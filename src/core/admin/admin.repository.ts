@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
 import {
+	advertBanners,
 	foodAddonCategories,
 	foodAddonsItems,
 	foodCategories,
@@ -316,5 +317,71 @@ export class AdminRepository {
 			.where(eq(foods.id, id));
 
 		return result;
+	}
+
+	async createAdvertBanner({
+		name,
+		imageUrls,
+		linkUrl,
+	}: {
+		name: string;
+		imageUrls: Array<{ url: string; path: string }>;
+		linkUrl: string;
+	}) {
+		const result = await this.databaseService.db
+			.insert(advertBanners)
+			.values({ name, imageUrls, linkUrl })
+			.$returningId();
+
+		return result[0];
+	}
+
+	async updateAdvertBanner(
+		bannerId: number,
+		{
+			name,
+			imageUrls,
+			linkUrl,
+		}: {
+			name?: string;
+			imageUrls?: Array<{ url: string; path: string }>;
+			linkUrl?: string;
+		},
+	) {
+		const updatedAdvertBanner = await this.databaseService.db
+			.update(advertBanners)
+			.set({ name, imageUrls, linkUrl })
+			.where(eq(advertBanners.id, bannerId));
+
+		return updatedAdvertBanner;
+	}
+
+	async getAdvertBanners(offset: number, limit: number) {
+		return await this.databaseService.db
+			.select()
+			.from(advertBanners)
+			.limit(limit)
+			.offset(offset)
+			.orderBy(advertBanners.id);
+	}
+
+	async deleteAdvertBanner(bannerId: number) {
+		return await this.databaseService.db
+			.delete(advertBanners)
+			.where(eq(advertBanners.id, bannerId));
+	}
+
+	async publishAdvertBanner(bannerId: number) {
+		return await this.databaseService.db
+			.update(advertBanners)
+			.set({ isPublished: true })
+			.where(eq(advertBanners.id, bannerId));
+	}
+
+	async unpublishAdvertBanner(bannerId: number) {
+		return await this.databaseService.db
+			.update(advertBanners)
+			.set({ isPublished: false })
+			.where(eq(advertBanners.id, bannerId));
 	}
 }
