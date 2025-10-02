@@ -7,7 +7,8 @@ import {
 	Logger,
 } from "@nestjs/common";
 import { DrizzleQueryError } from "drizzle-orm";
-import { MySQLDriverError, MySQLError } from "../mysql.error";
+import { MySQLError } from "../mysql.error";
+import { expression } from "joi";
 
 @Catch()
 export class CustomExceptionFilter implements ExceptionFilter {
@@ -31,6 +32,13 @@ export class CustomExceptionFilter implements ExceptionFilter {
 				message: message,
 				error_trace:
 					process.env.NODE_ENV === "development" ? exception.stack : undefined,
+				error_cause:
+					exception.cause instanceof Error &&
+					process.env.NODE_ENV === "development"
+						? exception.cause.message
+						: undefined,
+				exception:
+					process.env.NODE_ENV === "development" ? exception : undefined,
 			});
 		}
 

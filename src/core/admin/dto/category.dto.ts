@@ -151,7 +151,7 @@ export const CreateFoodAddonItemsSchema = Joi.object({
 			Joi.object({
 				name: Joi.string().trim().max(255).required(),
 				description: Joi.string().optional(),
-				price: Joi.number().precision(2).positive().required(),
+				price: Joi.number().precision(2).min(0).required(),
 				categoryId: Joi.number().integer().positive().required(),
 			}),
 		)
@@ -189,8 +189,6 @@ export class UpdateFoodAddonItemDto {
 export const UpdateFoodAddonItemSchema = Joi.object({
 	name: Joi.string().trim().max(255).optional(),
 	description: Joi.string().optional(),
-	price: Joi.number().precision(2).positive().optional(),
+	price: Joi.number().precision(2).min(0).optional(),
 	categoryId: Joi.number().integer().positive().optional(),
 });
-
-

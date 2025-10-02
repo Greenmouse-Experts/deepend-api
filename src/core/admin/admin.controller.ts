@@ -1,13 +1,13 @@
-import { ApiBody, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { AdminService } from "./admin.service";
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, UseGuards, UsePipes } from "@nestjs/common";
-import { CreateFoodAddonCategories, CreateFoodAddonCategoriesSchema, CreateFoodAddonItemsDto, CreateFoodAddonItemsSchema, CreateFoodCategoryDto, CreateFoodCategorySchema, UpdateFoodAddonCategoryDto, UpdateFoodAddonCategorySchema, UpdateFoodAddonItemDto, UpdateFoodAddonItemSchema, UpdateFoodCategoryDto, UpdateFoodCategorySchema } from "./dto/category.dto";
-import { JoiValidationPipe } from "src/common/pipes/validation.pipe";
+import { ApiBody, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Role } from "src/common/decorators/role/role.decorator";
 import { UserRoles } from "src/common/decorators/role/role.enum";
+import { PaginationQueryDto, PaginationQuerySchema } from "src/common/dto/requestQuery.dto";
 import { AuthGuard } from "src/common/guards/auth.guard";
 import { QueryJoiValidationPipe } from "src/common/pipes/query-validation.pipe";
-import { PaginationQueryDto, PaginationQuerySchema } from "src/common/dto/requestQuery.dto";
+import { JoiValidationPipe } from "src/common/pipes/validation.pipe";
+import { AdminService } from "./admin.service";
+import { CreateFoodAddonCategories, CreateFoodAddonCategoriesSchema, CreateFoodAddonItemsDto, CreateFoodAddonItemsSchema, CreateFoodCategoryDto, CreateFoodCategorySchema, UpdateFoodAddonCategoryDto, UpdateFoodAddonCategorySchema, UpdateFoodAddonItemDto, UpdateFoodAddonItemSchema, UpdateFoodCategoryDto } from "./dto/category.dto";
 import { AddFoodAddonItemsSchema, AddFoodAddonsDto, CreateFoodDto, CreateFoodSchema, RemoveFoodAddonCategoryDto, RemoveFoodAddonCategorySchema, RemoveFoodAddonItemsDto, RemoveFoodAddonItemsSchema, UpdateFoodDto, UpdateFoodSchema } from "./dto/service.dto";
 
 @ApiTags("Admin")
@@ -39,6 +39,16 @@ export class AdminController {
     return await this.adminService.deleteFood(id);
   }
 
+
+  @Get('foods/categories')
+  @ApiOperation({ summary: 'Get all food categories' })
+  async getAllFoodCategories(
+    @Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+    { page, limit }: PaginationQueryDto
+  ) {
+    return await this.adminService.getAllFoodCategories(+page, +limit);
+  }
+
   @Get("foods/:id")
   @ApiOperation({ summary: "Get a food item by ID" })
   async getFoodById(@Param('id') id: string) {
@@ -51,7 +61,7 @@ export class AdminController {
     @Query(new QueryJoiValidationPipe(PaginationQuerySchema))
     { page, limit }: PaginationQueryDto
   ) {
-    return await this.adminService.getAllFoods(page, limit);
+    return await this.adminService.getAllFoods(+page, limit);
   }
 
   @Post('foods/categories')
@@ -74,14 +84,6 @@ export class AdminController {
     return await this.adminService.deleteFoodCategory(id);
   }
 
-  @Get('foods/categories')
-  @ApiOperation({ summary: 'Get all food categories' })
-  async getAllFoodCategories(
-    @Query(new QueryJoiValidationPipe(PaginationQuerySchema))
-    { page, limit }: PaginationQueryDto
-  ) {
-    return await this.adminService.getAllFoodCategories(page, limit);
-  }
 
   @Post('foods/addons/categories')
   @ApiOperation({ summary: 'Create new food addon categories' })
