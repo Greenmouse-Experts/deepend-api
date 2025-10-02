@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { DatabaseService } from "src/database/database.service";
 import { and, desc, eq, like, sql } from "drizzle-orm";
 import {
+	advertBanners,
 	foodAddonCategories,
 	foodAddonsItems,
 	foodCategories,
@@ -183,5 +184,17 @@ END`.as("addons"),
 			.orderBy(desc(foods.createdAt));
 
 		return result;
+	}
+
+	async getAllAdvertBanners(offset: number, limit: number) {
+		const banners = await this.databaseService.db
+			.select()
+			.from(advertBanners)
+			.where(eq(advertBanners.isPublished, true))
+			.limit(limit)
+			.offset(offset)
+			.orderBy(desc(advertBanners.createdAt));
+
+		return banners;
 	}
 }
