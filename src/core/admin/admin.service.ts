@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+} from "@nestjs/common";
 import { AdminRepository } from "./admin.repository";
 import { CreateFood } from "src/database/schema/services";
 import { isDatabaseError, mysqlErrorCodes } from "src/common/mysql.error";
@@ -453,5 +457,84 @@ export class AdminService {
 			throw new BadRequestException("Food not found or already unavailable");
 		}
 		return { message: "Food is now unavailable" };
+	}
+
+	async createAdvertBanner({
+		name,
+		imageUrls,
+		linkUrl,
+	}: {
+		name: string;
+		imageUrls: Array<{ url: string; path: string }>;
+		linkUrl: string;
+	}) {
+		return await this.adminRepository.createAdvertBanner({
+			name,
+			imageUrls,
+			linkUrl,
+		});
+	}
+
+	async updateAdvertBanner(
+		bannerId: number,
+		{
+			name,
+			imageUrls,
+			linkUrl,
+		}: {
+			name?: string;
+			imageUrls?: Array<{ url: string; path: string }>;
+			linkUrl?: string;
+		},
+	) {
+		const updatedAdvertBanner = await this.adminRepository.updateAdvertBanner(
+			bannerId,
+			{
+				name,
+				imageUrls,
+				linkUrl,
+			},
+		);
+
+		if (updatedAdvertBanner[0].affectedRows === 0)
+			throw new NotFoundException("Advert banner not found");
+
+		return { message: "Advert bannner updated successfully" };
+	}
+
+	async getAdvertBanner(page: number, limit: number) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		return await this.adminRepository.getAdvertBanners(offset, limit);
+	}
+
+	async deleteAdvertBanner(bannerId: number) {
+		const deletedAdvertBanner =
+			await this.adminRepository.deleteAdvertBanner(bannerId);
+
+		if (deletedAdvertBanner[0].affectedRows === 0)
+			throw new NotFoundException("Advert banner not found");
+
+		return { message: "Advert banner deleted successfully" };
+	}
+
+	async publishAdvertBanner(bannerId: number) {
+		const publishedAdvertBanner =
+			await this.adminRepository.publishAdvertBanner(bannerId);
+
+		if (publishedAdvertBanner[0].affectedRows === 0)
+			throw new NotFoundException("Advert banner not found");
+
+		return { message: "Advert banner published successfully" };
+	}
+
+	async unpublishAdvertBanner(bannerId: number) {
+		const unpublishedAdvertBanner =
+			await this.adminRepository.unpublishAdvertBanner(bannerId);
+
+		if (unpublishedAdvertBanner[0].affectedRows === 0)
+			throw new NotFoundException("Advert banner not found");
+
+		return { message: "Advert banner unpublished successfully" };
 	}
 }
