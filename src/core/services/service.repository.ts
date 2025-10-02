@@ -1,7 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { DatabaseService } from "src/database/database.service";
-import { eq } from "drizzle-orm";
-import { foodCategories, foods } from "src/database/schema";
+import { and, desc, eq, like, sql } from "drizzle-orm";
+import {
+	foodAddonCategories,
+	foodAddonsItems,
+	foodCategories,
+	foods,
+	foodToAddonsCategories,
+} from "src/database/schema";
 
 @Injectable()
 export class ServicesRepository {
@@ -69,56 +75,113 @@ export class ServicesRepository {
 		categoryId,
 		search,
 	}: { offset: number; limit: number; categoryId?: number; search?: string }) {
-		const result = await this.databaseService.db.query.foods.findMany({
-			where: (foods, { and, like }) =>
+		// Old way using relations (Didn't work with mariadb on cpanel)
+		// const result = await this.databaseService.db.query.foods.findMany({
+		// 	where: (foods, { and, like }) =>
+		// 		and(
+		// 			categoryId ? eq(foods.categoryId, categoryId) : undefined,
+		// 			search ? like(foods.name, `%${search}%`) : undefined,
+		// 			eq(foods.isAvailable, true),
+		// 		),
+		// 	with: {
+		// 		category: {
+		// 			columns: {
+		// 				createdAt: false,
+		// 				updatedAt: false,
+		// 			},
+		// 		},
+		// 		addons: {
+		// 			columns: {
+		// 				createdAt: false,
+		// 				updatedAt: false,
+		// 				foodId: false,
+		// 				addonCategoryId: false,
+		// 			},
+		// 			with: {
+		// 				category: {
+		// 					columns: {
+		// 						createdAt: false,
+		// 						updatedAt: false,
+		// 					},
+		// 					with: {
+		// 						items: {
+		// 							columns: {
+		// 								createdAt: false,
+		// 								updatedAt: false,
+		// 							},
+		// 						},
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// 	limit,
+		// 	offset,
+		// 	orderBy: (foods, { desc }) => [desc(foods.createdAt)],
+		// });
+
+		const result = await this.databaseService.db
+			.select({
+				id: foods.id,
+				name: foods.name,
+				description: foods.description,
+				price: foods.price,
+				imageUrls: foods.imageUrls,
+				categoryId: foods.categoryId,
+				isAvailable: foods.isAvailable,
+				category: {
+					id: foodCategories.id,
+					name: foodCategories.name,
+				},
+				addons: sql<{
+					id: string;
+					name: string;
+					items: { id: string; name: string; price: number }[];
+				}>`CASE 
+    WHEN COUNT(${foodAddonCategories.id}) = 0 
+    THEN JSON_ARRAY()
+    ELSE JSON_ARRAYAGG(
+        JSON_OBJECT(
+            'id', ${foodAddonCategories.id},
+            'name', ${foodAddonCategories.name},
+            'description', ${foodAddonCategories.description},
+            'items', COALESCE((
+                SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'id', items.id,
+                        'name', items.name,
+                        'price', items.price
+                    )
+                )
+                FROM ${foodAddonsItems} AS items
+                WHERE items.category_id = ${foodAddonCategories.id}
+            ), JSON_ARRAY())
+        )
+    )
+END`.as("addons"),
+			})
+			.from(foods)
+			.leftJoin(foodCategories, eq(foods.categoryId, foodCategories.id))
+			.leftJoin(
+				foodToAddonsCategories,
+				eq(foodToAddonsCategories.foodId, foods.id),
+			)
+			.leftJoin(
+				foodAddonCategories,
+				eq(foodToAddonsCategories.addonCategoryId, foodAddonCategories.id),
+			)
+			.where(
 				and(
 					categoryId ? eq(foods.categoryId, categoryId) : undefined,
 					search ? like(foods.name, `%${search}%`) : undefined,
 					eq(foods.isAvailable, true),
 				),
-			with: {
-				category: {
-					columns: {
-						createdAt: false,
-						updatedAt: false,
-					},
-				},
-				addons: {
-					columns: {
-						createdAt: false,
-						updatedAt: false,
-						foodId: false,
-						addonCategoryId: false,
-					},
-					with: {
-						category: {
-							columns: {
-								createdAt: false,
-								updatedAt: false,
-							},
-							with: {
-								items: {
-									columns: {
-										createdAt: false,
-										updatedAt: false,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			limit,
-			offset,
-			orderBy: (foods, { desc }) => [desc(foods.createdAt)],
-		});
+			)
+			.groupBy(foods.id, foodCategories.id, foodCategories.name)
+			.limit(limit)
+			.offset(offset)
+			.orderBy(desc(foods.createdAt));
 
-		return result.map((food) => ({
-			...food,
-			addons: food.addons.map((addon) => ({
-				...addon.category,
-				items: addon.category.items,
-			})),
-		}));
+		return result;
 	}
 }
