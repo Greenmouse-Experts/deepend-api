@@ -16,11 +16,12 @@ export class QueryJoiValidationPipe implements PipeTransform {
 		}
 
 		try {
-			await this.schema.validateAsync(value, {
+			const transformedValue = await this.schema.validateAsync(value, {
 				abortEarly: false,
+				convert: true,
 			});
 
-			return value;
+			return transformedValue;
 		} catch (error) {
 			if (error instanceof Joi.ValidationError) {
 				const errorMessages = error.details
