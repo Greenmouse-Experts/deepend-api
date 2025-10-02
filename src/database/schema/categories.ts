@@ -5,6 +5,8 @@ import {
 	varchar,
 	mysqlTable,
 	decimal,
+	json,
+	boolean,
 } from "drizzle-orm/mysql-core";
 
 export const foodCategories = mysqlTable("food_categories", {
@@ -38,6 +40,20 @@ export const foodAddonsItems = mysqlTable("food_addons_items", {
 		.notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at")
+		.notNull()
+		.$onUpdateFn(() => new Date()),
+});
+
+export const advertBanners = mysqlTable("advert_banners", {
+	id: int("id").primaryKey().autoincrement(),
+	name: varchar("name", { length: 255 }).notNull(),
+	imageUrls: json("image_urls")
+		.$type<Array<{ url: string; path: string }>>()
+		.notNull(),
+	linkUrl: text("link_url").notNull(),
+	isPublished: boolean("is_published").default(false).notNull(),
+	createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { fsp: 6 })
 		.notNull()
 		.$onUpdateFn(() => new Date()),
 });
