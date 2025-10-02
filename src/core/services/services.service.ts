@@ -57,4 +57,23 @@ export class ServicesService {
 			},
 		};
 	}
+
+	async getAllAdvertBanners(page = 1, limit = 10) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		const banners = await this.servicesRepository.getAllAdvertBanners(
+			offset,
+			limit,
+		);
+
+		return {
+			banners,
+			pagination: {
+				page,
+				limit,
+				nextPage: banners.length === Number(limit) ? Number(page) + 1 : null,
+				prevPage: Number(page) - 1 > 0 ? Number(page) - 1 : null,
+			},
+		};
+	}
 }

@@ -182,3 +182,83 @@ export const RemoveFoodAddonItemsSchema = Joi.object({
 		.min(1)
 		.required(),
 });
+
+export class CreateAdvertBannerDto {
+	@ApiProperty({
+		description: "Name of advert banner",
+		example: "Spider ads",
+		required: true,
+	})
+	name: string;
+
+	@ApiProperty({
+		example: [
+			{ url: "http://example.com/image1.jpg", path: "/image1.jpeg" },
+			{ url: "http://example.com/image2.jpg", path: "/image2.jpeg" },
+		],
+		description: "List of image URLs for the advert.",
+		required: true,
+		type: [Images],
+	})
+	imageUrls: Images[];
+
+	@ApiProperty({
+		example: "http://example.com/banner",
+		description: "Link to the advert banner source page",
+		required: true,
+	})
+	linkUrl: string;
+}
+
+export const CreateAdvertBannerSchema = Joi.object({
+	name: Joi.string().max(124).required(),
+	imageUrls: Joi.array()
+		.items(
+			Joi.object({
+				url: Joi.string().uri().required(),
+				path: Joi.string().trim().required(),
+			}),
+		)
+		.required(),
+	linkUrl: Joi.string().uri().required(),
+});
+
+export class UpdateAdvertBannerDto {
+	@ApiProperty({
+		description: "Name of advert banner",
+		example: "Spider ads",
+		required: false,
+	})
+	name?: string;
+
+	@ApiProperty({
+		example: [
+			{ url: "http://example.com/image1.jpg", path: "/image1.jpeg" },
+			{ url: "http://example.com/image2.jpg", path: "/image2.jpeg" },
+		],
+		description: "List of image URLs for the advert.",
+		required: false,
+		type: [Images],
+	})
+	imageUrls?: Images[];
+
+	@ApiProperty({
+		example: "http://example.com/banner",
+		description: "Link to the advert banner source page",
+		required: true,
+	})
+	linkUrl?: string;
+}
+
+export const UpdateAdvertBannerSchema = Joi.object({
+	name: Joi.string().max(124).optional(),
+	imageUrls: Joi.array()
+		.items(
+			Joi.object({
+				url: Joi.string().uri().required(),
+				path: Joi.string().trim().required(),
+			}),
+		)
+		.optional(),
+	linkUrl: Joi.string().uri().optional(),
+});

@@ -8,7 +8,6 @@ import {
 } from "@nestjs/common";
 import { DrizzleQueryError } from "drizzle-orm";
 import { MySQLError } from "../mysql.error";
-import { expression } from "joi";
 
 @Catch()
 export class CustomExceptionFilter implements ExceptionFilter {
