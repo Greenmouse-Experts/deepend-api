@@ -13,13 +13,14 @@ import {
 	foodAddonCategories,
 	foodAddonsItems,
 	foodCategories,
+	vrgamesCategories,
 } from "./categories";
 import { ID_GENERATOR_LENGTH } from "src/common/constants";
 import { generateId } from "src/common/helpers";
-
 import { relations } from "drizzle-orm";
 
 export type CreateFood = typeof foods.$inferInsert;
+export type CreateVRGame = typeof vrgames.$inferInsert;
 
 export const foods = mysqlTable("foods", {
 	id: varchar("id", { length: ID_GENERATOR_LENGTH })
@@ -144,3 +145,26 @@ export const foodToAddonsCategoriesRelations = relations(
 		}),
 	}),
 );
+
+export const vrgames = mysqlTable("vrgames", {
+	id: varchar("id", { length: ID_GENERATOR_LENGTH })
+		.$defaultFn(() => generateId())
+		.primaryKey(),
+	name: varchar("name", { length: 255 }).unique().notNull(),
+	description: varchar("description", { length: 1024 }),
+	categoryId: int("category_id")
+		.notNull()
+		.references(() => vrgamesCategories.id),
+	imageUrls: json("image_urls")
+		.$type<{ url: string; path: string }[]>()
+		.default([])
+		.notNull(),
+	ageRating: int("age_rating").default(0).notNull(),
+	ticketPrice: decimal("ticket_price", { precision: 10, scale: 2 }).notNull(),
+	ticketQuantity: int("tikcet_quantity").default(1).notNull(),
+	isAvailable: boolean("is_available").default(false).notNull(),
+	createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { fsp: 6 })
+		.$onUpdateFn(() => new Date())
+		.notNull(),
+});
