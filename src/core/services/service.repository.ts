@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { DatabaseService } from "src/database/database.service";
-import { and, desc, eq, like, sql } from "drizzle-orm";
+import { and, asc, desc, eq, like, sql } from "drizzle-orm";
 import {
 	advertBanners,
 	foodAddonCategories,
@@ -206,7 +206,7 @@ END`.as("addons"),
 			.from(vrgamesCategories)
 			.limit(limit)
 			.offset(offset)
-			.orderBy(desc(vrgamesCategories.id));
+			.orderBy(asc(vrgamesCategories.id));
 
 		return categories;
 	}
