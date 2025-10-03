@@ -9,6 +9,7 @@ import {
 	foods,
 	foodToAddonsCategories,
 	vrgames,
+	vrgamesCategories,
 } from "src/database/schema";
 
 @Injectable()
@@ -197,6 +198,17 @@ END`.as("addons"),
 			.orderBy(desc(advertBanners.createdAt));
 
 		return banners;
+	}
+
+	async getAllVrGameCategories(offset: number, limit: number) {
+		const categories = await this.databaseService.db
+			.select()
+			.from(vrgamesCategories)
+			.limit(limit)
+			.offset(offset)
+			.orderBy(desc(vrgamesCategories.id));
+
+		return categories;
 	}
 
 	async getVrGames({
