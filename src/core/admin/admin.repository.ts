@@ -1,19 +1,22 @@
 import { Injectable } from "@nestjs/common";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, like, sql } from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
 import {
 	advertBanners,
 	foodAddonCategories,
 	foodAddonsItems,
 	foodCategories,
+	vrgamesCategories,
 } from "src/database/schema/categories";
 import {
 	CreateFood,
+	CreateVRGame,
 	foods,
 	FoodToAddonsCategories,
 	foodToAddonsCategories,
 	foodToAddonsItems,
 	FoodToAddonsItems,
+	vrgames,
 } from "src/database/schema/services";
 
 @Injectable()
@@ -384,4 +387,112 @@ export class AdminRepository {
 			.set({ isPublished: false })
 			.where(eq(advertBanners.id, bannerId));
 	}
+
+	async createVRGameCategory(name: string, description?: string) {
+		const vrgameCategory = await this.databaseService.db
+			.insert(vrgamesCategories)
+			.values({
+				name,
+				description,
+			})
+			.$returningId();
+
+		return vrgameCategory[0];
+	}
+
+	async updateVRGameCategory(id: number, name: string, description?: string) {
+		const result = await this.databaseService.db
+			.update(vrgamesCategories)
+			.set({ name, description })
+			.where(eq(vrgamesCategories.id, id));
+
+		return result;
+	}
+
+	async deleteVRGameCategory(id: number) {
+		const result = await this.databaseService.db
+			.delete(vrgamesCategories)
+			.where(eq(vrgamesCategories.id, id));
+		return result;
+	}
+
+	async getVRGameCategoryById(id: number) {
+		const category = await this.databaseService.db
+			.select()
+			.from(vrgamesCategories)
+			.where(eq(vrgamesCategories.id, id));
+
+		return category;
+	}
+
+	async getAllVRGameCategories(offset: number, limit: number) {
+		const categories = await this.databaseService.db
+			.select()
+			.from(vrgamesCategories)
+			.limit(limit)
+			.offset(offset);
+		return categories;
+	}
+
+	async createVRGame(body: CreateVRGame) {
+		const result = await this.databaseService.db
+			.insert(vrgames)
+			.values(body)
+			.$returningId();
+
+		return result[0];
+	}
+
+	async updateVRGame(id: string, vrgameData: Partial<CreateVRGame>) {
+		const result = await this.databaseService.db
+			.update(vrgames)
+			.set(vrgameData)
+			.where(eq(vrgames.id, id));
+
+		return result;
+	}
+
+	async deleteVRGame(id: string) {
+		const result = await this.databaseService.db
+			.delete(vrgames)
+			.where(eq(vrgames.id, id));
+
+		return result;
+	}
+
+	async getVRGameById(id: string) {
+		const vrgame = await this.databaseService.db
+			.select()
+			.from(vrgames)
+			.where(eq(vrgames.id, id));
+
+		return vrgame;
+	}
+
+  async getAllVrGames(offset: number, limit: number) {
+    const vrgamesList = await this.databaseService.db
+      .select()
+      .from(vrgames)
+      .limit(limit)
+      .offset(offset);
+    return vrgamesList;
+  }
+
+  async makeVrGameAvailable(id: string) {
+    const result = await this.databaseService.db
+      .update(vrgames)
+      .set({ isAvailable: true })
+      .where(eq(vrgames.id, id));
+
+    return result;
+  }
+
+  async makeVrGameUnavailable(id: string) {
+    const result = await this.databaseService.db
+      .update(vrgames)
+      .set({ isAvailable: false })
+      .where(eq(vrgames.id, id));
+
+    return result;
+  }
 }

@@ -5,6 +5,7 @@ import {
 	Get,
 	Param,
 	ParseIntPipe,
+	Patch,
 	Post,
 	Put,
 	Query,
@@ -29,11 +30,15 @@ import {
 	CreateFoodAddonItemsSchema,
 	CreateFoodCategoryDto,
 	CreateFoodCategorySchema,
+	CreateVrGameCategoryDto,
+	CreateVrGameCategorySchema,
 	UpdateFoodAddonCategoryDto,
 	UpdateFoodAddonCategorySchema,
 	UpdateFoodAddonItemDto,
 	UpdateFoodAddonItemSchema,
 	UpdateFoodCategoryDto,
+	UpdateVrGameCategoryDto,
+	UpdateVrGameCategorySchema,
 } from "./dto/category.dto";
 import {
 	AddFoodAddonItemsSchema,
@@ -42,6 +47,8 @@ import {
 	CreateAdvertBannerSchema,
 	CreateFoodDto,
 	CreateFoodSchema,
+	CreateVRGameDto,
+	CreateVRGameSchema,
 	RemoveFoodAddonCategoryDto,
 	RemoveFoodAddonCategorySchema,
 	RemoveFoodAddonItemsDto,
@@ -50,6 +57,8 @@ import {
 	UpdateAdvertBannerSchema,
 	UpdateFoodDto,
 	UpdateFoodSchema,
+	UpdateVRGameDto,
+	UpdateVRGameSchema,
 } from "./dto/service.dto";
 
 @ApiTags("Admin")
@@ -332,5 +341,101 @@ export class AdminController {
 	@ApiOperation({ summary: "Unpublish an advert banner" })
 	async unpublishAdvertBanner(@Param("id", ParseIntPipe) id: number) {
 		return await this.adminService.unpublishAdvertBanner(id);
+	}
+
+	@Post("vrgames/categories")
+	@ApiOperation({ summary: "Create a new VR game category" })
+	@ApiBody({ type: CreateVrGameCategoryDto })
+	@UsePipes(new JoiValidationPipe(CreateVrGameCategorySchema))
+	async createVRGameCategory(@Body() body: CreateVrGameCategoryDto) {
+		return await this.adminService.createVRGameCategory(
+			body.name,
+			body.description,
+		);
+	}
+
+	@Put("vrgames/categories/:id")
+	@ApiOperation({ summary: "Update an existing VR game category" })
+	@ApiBody({ type: UpdateVrGameCategoryDto })
+	@UsePipes(new JoiValidationPipe(UpdateVrGameCategorySchema))
+	async updateVRGameCategory(
+		@Param("id", ParseIntPipe) id: number,
+		@Body() body: UpdateVrGameCategoryDto,
+	) {
+		return await this.adminService.updateVRGameCategory(
+			id,
+			body.name,
+			body.description,
+		);
+	}
+
+	@Delete("vrgames/categories/:id")
+	@ApiOperation({ summary: "Delete a VR game category" })
+	async deleteVRGameCategory(@Param("id", ParseIntPipe) id: number) {
+		return await this.adminService.deleteVRGameCategory(id);
+	}
+
+	@Get("vrgames/categories")
+	@ApiOperation({ summary: "Get all VR game categories" })
+	async getAllVRGameCategories(
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.adminService.getAllVRGameCategories(+page, +limit);
+	}
+
+	@Get("vrgames/categories/:id")
+	@ApiOperation({ summary: "Get a VR game category by ID" })
+	async getVRGameCategoryById(@Param("id", ParseIntPipe) id: number) {
+		return await this.adminService.getVRGameCategoryById(id);
+	}
+
+	@Post("vrgames")
+	@ApiOperation({ summary: "Create a new VR game" })
+	@ApiBody({ type: CreateVRGameDto })
+	@UsePipes(new JoiValidationPipe(CreateVRGameSchema))
+	async createVRGame(@Body() body: CreateVRGameDto) {
+		return await this.adminService.createVRGame(body);
+	}
+
+	@Put("vrgames/:id")
+	@ApiOperation({ summary: "Update an existing VR game" })
+	@ApiBody({ type: UpdateVRGameDto })
+	@UsePipes(new JoiValidationPipe(UpdateVRGameSchema))
+	async updateVRGame(@Param("id") id: string, @Body() body: UpdateVRGameDto) {
+		return await this.adminService.updateVRGame(id, body);
+	}
+
+	@Delete("vrgames/:id")
+	@ApiOperation({ summary: "Delete a VR game" })
+	async deleteVRGame(@Param("id") id: string) {
+		return await this.adminService.deleteVRGame(id);
+	}
+
+	@Get("vrgames")
+	@ApiOperation({ summary: "Get all VR games with pagination" })
+	async getAllVRGames(
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.adminService.getAllVRGames(+page, +limit);
+	}
+
+	@Get("vrgames/:id")
+	@ApiOperation({ summary: "Get a VR game by ID" })
+	async getVRGameById(@Param("id") id: string) {
+		return await this.adminService.getVRGameById(id);
+	}
+
+	@Put("vrgames/:vrGameId/available")
+	@ApiOperation({ summary: "Toggle VR game available" })
+	async toggleVRGameAvailability(@Param("vrGameId") vrGameId: string) {
+		return await this.adminService.makeVRGameAvailable(vrGameId);
+	}
+
+	@Put("vrgames/:vrGameId/unavailable")
+	@ApiOperation({ summary: "Toggle VR game unavailable" })
+	async toggleVRGameUnavailability(@Param("vrGameId") vrGameId: string) {
+		return await this.adminService.makeVRGameUnavailable(vrGameId);
 	}
 }

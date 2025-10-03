@@ -8,6 +8,7 @@ import {
 	foodCategories,
 	foods,
 	foodToAddonsCategories,
+	vrgames,
 } from "src/database/schema";
 
 @Injectable()
@@ -196,5 +197,37 @@ END`.as("addons"),
 			.orderBy(desc(advertBanners.createdAt));
 
 		return banners;
+	}
+
+	async getVrGames({
+		offset,
+		limit,
+		categoryId,
+		search,
+	}: { offset: number; limit: number; categoryId?: number; search?: string }) {
+		const vrgamesList = this.databaseService.db
+			.select()
+			.from(vrgames)
+			.where(
+				and(
+					categoryId ? eq(vrgames.categoryId, categoryId) : undefined,
+					search ? like(vrgames.name, `%${search}%`) : undefined,
+					eq(vrgames.isAvailable, true),
+				),
+			)
+			.limit(limit)
+			.offset(offset);
+
+		return vrgamesList;
+	}
+
+	async getVrGameById(id: string) {
+		const vrgame = await this.databaseService.db
+			.select()
+			.from(vrgames)
+			.where(and(eq(vrgames.id, id), eq(vrgames.isAvailable, true)))
+			.limit(1);
+
+		return vrgame;
 	}
 }

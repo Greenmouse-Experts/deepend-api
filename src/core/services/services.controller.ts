@@ -54,4 +54,24 @@ export class ServicesController {
 	) {
 		return await this.servicesService.getAllAdvertBanners(page, limit);
 	}
+
+	@Get("vrgames")
+	@ApiOperation({ summary: "Get all VR games with pagination" })
+	async getAllVrGames(
+		@Query(new QueryJoiValidationPipe(ServicePaginationQuerySchema))
+		{ page, limit, categoryId, search }: ServicePaginationQueryDto,
+	) {
+		return await this.servicesService.getVrGames({
+			page,
+			limit,
+			categoryId,
+			search,
+		});
+	}
+
+	@Get("vrgames/:id")
+	@ApiOperation({ summary: "Get a VR game by ID" })
+	async getVrGameById(@Param("id") id: string) {
+		return await this.servicesService.getVrGameById(id);
+	}
 }
