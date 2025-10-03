@@ -262,3 +262,127 @@ export const UpdateAdvertBannerSchema = Joi.object({
 		.optional(),
 	linkUrl: Joi.string().uri().optional(),
 });
+
+export class CreateVRGameDto {
+	@ApiProperty({ example: "Beat Saber", description: "Name of the VR game" })
+	name: string;
+
+	@ApiProperty({
+		example: "A rhythm-based VR game",
+		description: "Description of the VR game",
+		required: false,
+	})
+	description?: string;
+
+	@ApiProperty({ example: 1, description: "Category ID of the VR game" })
+	categoryId: number;
+
+	@ApiProperty({
+		example: [
+			{ url: "http://example.com/image1.jpg", path: "/image1.jpeg" },
+			{ url: "http://example.com/image2.jpg", path: "/image2.jpeg" },
+		],
+		description: "List of image URLs for the VR game",
+		required: false,
+		type: [Images],
+	})
+	imageUrls?: Images[];
+
+	@ApiProperty({ example: 12, description: "Age rating for the VR game" })
+	ageRating: number;
+
+	@ApiProperty({ example: 15.0, description: "Ticket price for the VR game" })
+	ticketPrice: string;
+
+	@ApiProperty({ example: 5, description: "Ticket quantity available" })
+	ticketQuantity: number;
+}
+
+export const CreateVRGameSchema = Joi.object({
+	name: Joi.string().max(255).trim().required(),
+	description: Joi.string().max(1024).optional(),
+	categoryId: Joi.number().integer().positive().required(),
+	imageUrls: Joi.array()
+		.items(
+			Joi.object({
+				url: Joi.string().uri().required(),
+				path: Joi.string().required(),
+			}),
+		)
+		.required(),
+	ageRating: Joi.number().integer().min(0).max(100).required(),
+	ticketPrice: Joi.number().precision(2).positive().required(),
+	ticketQuantity: Joi.number().integer().min(1).required(),
+});
+
+export class UpdateVRGameDto {
+	@ApiProperty({
+		example: "Beat Saber",
+		description: "Name of the VR game",
+		required: false,
+	})
+	name?: string;
+
+	@ApiProperty({
+		example: "A rhythm-based VR game",
+		description: "Description of the VR game",
+		required: false,
+	})
+	description?: string;
+
+	@ApiProperty({
+		example: 1,
+		description: "Category ID of the VR game",
+		required: false,
+	})
+	categoryId?: number;
+
+	@ApiProperty({
+		example: [
+			{ url: "http://example.com/image1.jpg", path: "/image1.jpeg" },
+			{ url: "http://example.com/image2.jpg", path: "/image2.jpeg" },
+		],
+		description: "List of image URLs for the VR game",
+		required: false,
+		type: [Images],
+	})
+	imageUrls?: Images[];
+
+	@ApiProperty({
+		example: 12,
+		description: "Age rating for the VR game",
+		required: false,
+	})
+	ageRating?: number;
+
+	@ApiProperty({
+		example: 15.0,
+		description: "Ticket price for the VR game",
+		required: false,
+	})
+	ticketPrice?: string;
+
+	@ApiProperty({
+		example: 5,
+		description: "Ticket quantity available",
+		required: true,
+	})
+	ticketQuantity: number;
+}
+
+export const UpdateVRGameSchema = Joi.object({
+	name: Joi.string().max(255).trim().optional(),
+	description: Joi.string().max(1024).optional(),
+	categoryId: Joi.number().integer().positive().optional(),
+	imageUrls: Joi.array()
+		.items(
+			Joi.object({
+				url: Joi.string().uri().required(),
+				path: Joi.string().required(),
+			}),
+		)
+		.optional(),
+	ageRating: Joi.number().integer().min(0).max(100).optional(),
+	ticketPrice: Joi.number().precision(2).positive().optional(),
+	ticketQuantity: Joi.number().integer().min(1).required(),
+});
