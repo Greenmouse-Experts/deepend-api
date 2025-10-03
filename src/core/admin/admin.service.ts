@@ -6,7 +6,7 @@ import {
 import { AdminRepository } from "./admin.repository";
 import { CreateFood } from "src/database/schema/services";
 import { isDatabaseError, mysqlErrorCodes } from "src/common/mysql.error";
-import { AddFoodAddonItems } from "./dto/service.dto";
+import { AddFoodAddonItems, CreateVRGameDto } from "./dto/service.dto";
 
 @Injectable()
 export class AdminService {
@@ -536,5 +536,177 @@ export class AdminService {
 			throw new NotFoundException("Advert banner not found");
 
 		return { message: "Advert banner unpublished successfully" };
+	}
+
+	async createVRGameCategory(name: string, description?: string) {
+		try {
+			return await this.adminRepository.createVRGameCategory(name, description);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"VR game category with this name already exists",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async updateVRGameCategory(id: number, name: string, description?: string) {
+		try {
+			const updatedVRGameCategory =
+				await this.adminRepository.updateVRGameCategory(id, name, description);
+
+			if (updatedVRGameCategory[0].affectedRows === 0) {
+				throw new BadRequestException("VR game category not found");
+			}
+
+			return { message: "VR game category updated successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"VR game category with this name already exists",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async deleteVRGameCategory(id: number) {
+		const deletedVRGameCategory =
+			await this.adminRepository.deleteVRGameCategory(id);
+
+		if (deletedVRGameCategory[0].affectedRows === 0) {
+			throw new BadRequestException("VR game category not found");
+		}
+
+		return { message: "VR game category deleted successfully" };
+	}
+
+	async getVRGameCategoryById(id: number) {
+		const category = await this.adminRepository.getVRGameCategoryById(id);
+
+		if (category.length === 0) {
+			throw new BadRequestException("VR game category not found");
+		}
+
+		return category[0];
+	}
+
+	async getAllVRGameCategories(page: number, limit: number) {
+		const offset = (page - 1) * limit;
+		return await this.adminRepository.getAllVRGameCategories(offset, limit);
+	}
+
+	async createVRGame(gameData: CreateVRGameDto) {
+		try {
+			return await this.adminRepository.createVRGame(gameData);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("Invalid category ID");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException("VR game with this name already exists");
+			}
+
+			throw error;
+		}
+	}
+
+	async updateVRGame(id: string, gameData: Partial<CreateVRGameDto>) {
+		try {
+			const updatedGame = await this.adminRepository.updateVRGame(id, gameData);
+
+			if (updatedGame[0].affectedRows === 0) {
+				throw new BadRequestException("VR game not found");
+			}
+
+			return { message: "VR game updated successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("Invalid category ID");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException("VR game with this name already exists");
+			}
+
+			throw error;
+		}
+	}
+
+	async deleteVRGame(id: string) {
+		try {
+			const deletedGame = await this.adminRepository.deleteVRGame(id);
+
+			if (deletedGame[0].affectedRows === 0) {
+				throw new BadRequestException("VR game not found");
+			}
+
+			return { message: "VR game deleted successfully" };
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async getVRGameById(id: string) {
+		const game = await this.adminRepository.getVRGameById(id);
+
+		if (game.length === 0) {
+			throw new BadRequestException("VR game not found");
+		}
+
+		return game[0];
+	}
+
+	async getAllVRGames(page: number, limit: number) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getAllVrGames(offset, limit);
+	}
+
+	async makeVRGameAvailable(id: string) {
+		const result = await this.adminRepository.makeVrGameAvailable(id);
+		if (result[0].affectedRows === 0) {
+			throw new BadRequestException("VR game not found or already available");
+		}
+		return { message: "VR game is now available" };
+	}
+
+	async makeVRGameUnavailable(id: string) {
+		const result = await this.adminRepository.makeVrGameUnavailable(id);
+
+		if (result[0].affectedRows === 0) {
+			throw new BadRequestException("VR game not found or already unavailable");
+		}
+		return { message: "VR game is now unavailable" };
 	}
 }
