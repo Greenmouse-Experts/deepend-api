@@ -77,6 +77,25 @@ export class ServicesService {
 		};
 	}
 
+	async getAllVrGameCategories(page = 1, limit = 10) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		const categories = await this.servicesRepository.getAllVrGameCategories(
+			offset,
+			limit,
+		);
+
+		return {
+			categories,
+			pagination: {
+				page,
+				limit,
+				nextPage: categories.length === Number(limit) ? Number(page) + 1 : null,
+				prevPage: Number(page) - 1 > 0 ? Number(page) - 1 : null,
+			},
+		};
+	}
+
 	async getVrGames({
 		page,
 		limit,
