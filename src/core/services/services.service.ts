@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { ServicesRepository } from "./service.repository";
 
 @Injectable()
@@ -75,5 +75,41 @@ export class ServicesService {
 				prevPage: Number(page) - 1 > 0 ? Number(page) - 1 : null,
 			},
 		};
+	}
+
+	async getVrGames({
+		page,
+		limit,
+		categoryId,
+		search,
+	}: { page: number; limit: number; categoryId?: number; search?: string }) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		const vrgames = await this.servicesRepository.getVrGames({
+			offset,
+			limit,
+			categoryId,
+			search,
+		});
+
+		return {
+			vrgames,
+			pagination: {
+				page,
+				limit,
+				nextPage: vrgames.length === Number(limit) ? Number(page) + 1 : null,
+				prevPage: Number(page) - 1 > 0 ? Number(page) - 1 : null,
+			},
+		};
+	}
+
+	async getVrGameById(id: string) {
+		const vrgames = await this.servicesRepository.getVrGameById(id);
+
+		if (vrgames.length === 0) {
+			throw new NotFoundException("VR game not found");
+		}
+
+		return vrgames;
 	}
 }
