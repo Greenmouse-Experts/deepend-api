@@ -69,6 +69,15 @@ export class ServicesController {
 		});
 	}
 
+	@Get("vrgames/categories")
+	@ApiOperation({ summary: "Get VR game categories with pagination" })
+	async getVrGameCategories(
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.servicesService.getAllVrGameCategories(page, limit);
+	}
+
 	@Get("vrgames/:id")
 	@ApiOperation({ summary: "Get a VR game by ID" })
 	async getVrGameById(@Param("id") id: string) {
