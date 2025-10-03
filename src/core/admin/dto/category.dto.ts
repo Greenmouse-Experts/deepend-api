@@ -192,3 +192,41 @@ export const UpdateFoodAddonItemSchema = Joi.object({
 	price: Joi.number().precision(2).min(0).optional(),
 	categoryId: Joi.number().integer().positive().optional(),
 });
+
+export class CreateVrGameCategoryDto {
+	@ApiProperty({
+		example: "action",
+		description: "Name of the vrgame category",
+	})
+	name: string;
+
+	@ApiProperty({
+		example: "Action adventure vrgames",
+		description: "Description of vrgame category",
+	})
+	description?: string;
+}
+
+export const CreateVrGameCategorySchema = Joi.object({
+	name: Joi.string().trim().max(255).required(),
+	description: Joi.string().optional(),
+});
+
+export class UpdateVrGameCategoryDto {
+	@ApiProperty({
+		example: "action",
+		description: "Name of the vrgame category",
+	})
+	name: string;
+
+	@ApiProperty({
+		example: "Action adventure vrgames",
+		description: "Description of vrgame category",
+	})
+	description?: string;
+}
+
+export const UpdateVrGameCategorySchema = Joi.object({
+	name: Joi.string().trim().max(255).optional(),
+	description: Joi.string().optional(),
+});
