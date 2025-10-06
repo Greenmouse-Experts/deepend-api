@@ -42,3 +42,32 @@ export const ServicePaginationQuerySchema = PaginationQuerySchema.keys({
 	categoryId: Joi.number().integer().min(1).optional(),
 	search: Joi.string().max(100).optional(),
 });
+
+export class HotelPaginationQueryDto extends ServicePaginationQueryDto {
+	@ApiProperty({
+		example: 103.8198,
+		description: "Longitude to filter hotels by proximity",
+		required: false,
+	})
+	longitude?: number;
+
+	@ApiProperty({
+		example: 1.3521,
+		description: "Latitude to filter hotels by proximity",
+		required: false,
+	})
+	latitude?: number;
+
+	@ApiProperty({
+		example: 5,
+		description: "Radius in kilometers to filter hotels by proximity",
+		required: false,
+	})
+	radius?: number;
+}
+
+export const hotelPaginationQuerySchema = ServicePaginationQuerySchema.keys({
+	longitude: Joi.number().min(-180).max(180).optional(),
+	latitude: Joi.number().min(-90).max(90).optional(),
+	radius: Joi.number().min(1).max(100).optional(),
+}).and("longitude", "latitude", "radius");
