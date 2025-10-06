@@ -131,4 +131,67 @@ export class ServicesService {
 
 		return vrgames;
 	}
+
+	async getAllHotelAmenities(page = 1, limit = 10) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		const amenities = await this.servicesRepository.getAllHotelAmenities(
+			offset,
+			limit,
+		);
+
+		return {
+			amenities,
+			pagination: {
+				page,
+				limit,
+				nextPage: amenities.length === Number(limit) ? Number(page) + 1 : null,
+				prevPage: Number(page) - 1 > 0 ? Number(page) - 1 : null,
+			},
+		};
+	}
+
+	async getHotelById(id: string) {
+		const hotel = await this.servicesRepository.getHotelById(id);
+
+		if (!hotel) {
+			throw new NotFoundException("Hotel not found");
+		}
+
+		return hotel;
+	}
+
+	async getAllHotels({
+		page,
+		limit,
+		search,
+		coordinates,
+		radius,
+	}: {
+		page: number;
+		limit: number;
+		search?: string;
+		coordinates?: { lat?: number; lon?: number };
+		radius?: number;
+	}) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		const hotels = await this.servicesRepository.getHotels({
+			offset,
+			limit,
+			search,
+			coordinates,
+			radiusInKm: radius,
+		});
+
+		return {
+			hotels,
+			pagination: {
+				page,
+				limit,
+				nextPage: hotels.length === Number(limit) ? Number(page) + 1 : null,
+				prevPage: Number(page) - 1 > 0 ? Number(page) - 1 : null,
+			},
+		};
+	}
 }
