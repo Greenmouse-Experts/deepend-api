@@ -8,6 +8,7 @@ import {
 	foodCategories,
 	foods,
 	foodToAddonsCategories,
+	hotels,
 	vrgames,
 	vrgamesCategories,
 } from "src/database/schema";
@@ -241,5 +242,118 @@ END`.as("addons"),
 			.limit(1);
 
 		return vrgame;
+	}
+
+	async getAllHotelAmenities(offset: number, limit: number) {
+		const amenities = await this.databaseService.db
+			.select()
+			.from(sql`hotel_amenities`)
+			.limit(limit)
+			.offset(offset)
+			.orderBy(asc(sql`id`));
+
+		return amenities;
+	}
+
+	async getHotelById(id: string) {
+		const hotel = await this.databaseService.db.query.hotels.findFirst({
+			where: eq(hotels.id, id),
+			with: {
+				rooms: {
+					columns: {
+						createdAt: false,
+						updatedAt: false,
+						hotelId: false,
+					},
+				},
+				amenities: {
+					columns: {
+						createdAt: false,
+						updatedAt: false,
+						hotelId: false,
+						amenityId: false,
+					},
+					with: {
+						amenity: {
+							columns: {
+								createdAt: false,
+								updatedAt: false,
+							},
+						},
+					},
+				},
+			},
+		});
+
+		const formattedHotel = hotel && {
+			...hotel,
+			amenities: hotel.amenities.map((a) => a.amenity),
+		};
+
+		return formattedHotel;
+	}
+
+	async getHotels({
+		offset,
+		limit,
+		search,
+		coordinates,
+		radiusInKm,
+	}: {
+		offset: number;
+		limit: number;
+		search?: string;
+		coordinates?: { lat?: number; lon?: number };
+		radiusInKm?: number;
+	}) {
+		const hotelsList = await this.databaseService.db.query.hotels.findMany({
+			where: (hotels, { and, like }) =>
+				and(
+					search ? like(hotels.name, `%${search}%`) : undefined,
+					eq(hotels.isAvailable, true),
+					coordinates?.lat && coordinates.lon && radiusInKm
+						? sql`ST_Distance_Sphere(${hotels.coordinates}, ST_GeomFromText('POINT(${coordinates.lat} ${coordinates.lon})',4326)) <= ${radiusInKm * 1000}`
+						: undefined,
+				),
+			columns: {
+				createdAt: false,
+				updatedAt: false,
+			},
+			with: {
+				rooms: {
+					columns: {
+						createdAt: false,
+						updatedAt: false,
+						hotelId: false,
+					},
+				},
+				amenities: {
+					columns: {
+						createdAt: false,
+						updatedAt: false,
+						hotelId: false,
+						amenityId: false,
+					},
+					with: {
+						amenity: {
+							columns: {
+								createdAt: false,
+								updatedAt: false,
+							},
+						},
+					},
+				},
+			},
+			limit,
+			offset,
+			orderBy: (hotels, { desc }) => [desc(hotels.createdAt)],
+		});
+
+		const formattedHotels = hotelsList.map((hotel) => ({
+			...hotel,
+			amenities: hotel.amenities.map((a) => a.amenity),
+		}));
+
+		return formattedHotels;
 	}
 }
