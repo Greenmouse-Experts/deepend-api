@@ -18,6 +18,8 @@ import { UserRoles } from "src/common/decorators/role/role.enum";
 import {
 	PaginationQueryDto,
 	PaginationQuerySchema,
+	ServicePaginationQueryDto,
+	ServicePaginationQuerySchema,
 } from "src/common/dto/requestQuery.dto";
 import { AuthGuard } from "src/common/guards/auth.guard";
 import { QueryJoiValidationPipe } from "src/common/pipes/query-validation.pipe";
@@ -43,20 +45,36 @@ import {
 import {
 	AddFoodAddonItemsSchema,
 	AddFoodAddonsDto,
+	AddHotelAmenitiesDto,
+	AddHotelAmenitiesSchema,
 	CreateAdvertBannerDto,
 	CreateAdvertBannerSchema,
 	CreateFoodDto,
 	CreateFoodSchema,
+	CreateHotelAmenitiesDto,
+	CreateHotelAmenitiesSchema,
+	CreateHotelDto,
+	CreateHotelRoomDto,
+	CreateHotelRoomSchema,
+	CreateHotelSchema,
 	CreateVRGameDto,
 	CreateVRGameSchema,
 	RemoveFoodAddonCategoryDto,
 	RemoveFoodAddonCategorySchema,
 	RemoveFoodAddonItemsDto,
 	RemoveFoodAddonItemsSchema,
+	RemoveHotelAmenitiesDto,
+	RemoveHotelAmenitiesSchema,
 	UpdateAdvertBannerDto,
 	UpdateAdvertBannerSchema,
 	UpdateFoodDto,
 	UpdateFoodSchema,
+	UpdateHotelAmenityDto,
+	UpdateHotelAmenitySchema,
+	UpdateHotelDto,
+	UpdateHotelRoomDto,
+	UpdateHotelRoomSchema,
+	UpdateHotelSchema,
 	UpdateVRGameDto,
 	UpdateVRGameSchema,
 } from "./dto/service.dto";
@@ -437,5 +455,166 @@ export class AdminController {
 	@ApiOperation({ summary: "Toggle VR game unavailable" })
 	async toggleVRGameUnavailability(@Param("vrGameId") vrGameId: string) {
 		return await this.adminService.makeVRGameUnavailable(vrGameId);
+	}
+
+	@Post("hotels/amenities")
+	@ApiOperation({ summary: "Create new hotel amenities" })
+	@ApiBody({ type: CreateHotelAmenitiesDto })
+	@UsePipes(new JoiValidationPipe(CreateHotelAmenitiesSchema))
+	async createHotelAmenities(@Body() body: CreateHotelAmenitiesDto) {
+		return await this.adminService.createHotelAmenities(body.amenities);
+	}
+
+	@Put("hotels/amenities/:id")
+	@ApiOperation({ summary: "Update an existing hotel amenity" })
+	@ApiBody({ type: UpdateHotelAmenityDto })
+	@UsePipes(new JoiValidationPipe(UpdateHotelAmenitySchema))
+	async updateHotelAmenity(
+		@Param("id", ParseIntPipe) id: number,
+		@Body() body: UpdateHotelAmenityDto,
+	) {
+		return await this.adminService.updateHotelAmenity(id, {
+			name: body.name,
+			icon: body.icon,
+			iconPath: body.iconPath,
+		});
+	}
+
+	@Delete("hotels/amenities/:id")
+	@ApiOperation({ summary: "Delete a hotel amenity" })
+	async deleteHotelAmenity(@Param("id", ParseIntPipe) id: number) {
+		return await this.adminService.deleteHotelAmenity(id);
+	}
+
+	@Get("hotels/amenities")
+	@ApiOperation({ summary: "Get all hotel amenities" })
+	async getAllHotelAmenities(
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.adminService.getAllHotelAmenities(+page, +limit);
+	}
+
+	@Post("hotels")
+	@ApiOperation({ summary: "Create a new hotel" })
+	@ApiBody({ type: CreateHotelDto })
+	@UsePipes(new JoiValidationPipe(CreateHotelSchema))
+	async createHotel(@Body() body: CreateHotelDto) {
+		return await this.adminService.createHotel(body);
+	}
+
+	@Put("hotels/:id")
+	@ApiOperation({ summary: "Update an existing hotel" })
+	@ApiBody({ type: UpdateHotelDto })
+	@UsePipes(new JoiValidationPipe(UpdateHotelSchema))
+	async updateHotel(@Param("id") id: string, @Body() body: UpdateHotelDto) {
+		return await this.adminService.updateHotel(id, body);
+	}
+
+	@Delete("hotels/:id")
+	@ApiOperation({ summary: "Delete a hotel" })
+	async deleteHotel(@Param("id") id: string) {
+		return await this.adminService.deleteHotel(id);
+	}
+
+	@Post("hotels/:hotelId/rooms")
+	@ApiOperation({ summary: "Create new hotel rooms" })
+	@ApiBody({ type: CreateHotelRoomDto })
+	@UsePipes(new JoiValidationPipe(CreateHotelRoomSchema))
+	async createHotelRooms(
+		@Param("hotelId") hotelId: string,
+		@Body() body: CreateHotelRoomDto,
+	) {
+		return await this.adminService.createHotelRoom(hotelId, body);
+	}
+
+	@Put("hotels/:hotelId/rooms/:roomId")
+	@ApiOperation({ summary: "Update an existing hotel room" })
+	@ApiBody({ type: UpdateHotelRoomDto })
+	@UsePipes(new JoiValidationPipe(UpdateHotelRoomSchema))
+	async updateHotelRoom(
+		@Param("hotelId") hotelId: string,
+		@Param("roomId") roomId: string,
+		@Body() body: UpdateHotelRoomDto,
+	) {
+		return await this.adminService.updateHotelRoom(hotelId, roomId, body);
+	}
+
+	@Delete("hotels/:hotelId/rooms/:roomId")
+	@ApiOperation({ summary: "Delete a hotel room" })
+	async deleteHotelRoom(
+		@Param("hotelId") hotelId: string,
+		@Param("roomId") roomId: string,
+	) {
+		return await this.adminService.deleteHotelRoom(hotelId, roomId);
+	}
+
+	@Post("hotels/:hotelId/amenities")
+	@ApiOperation({ summary: "Associate amenities with a hotel" })
+	@ApiBody({ type: AddHotelAmenitiesDto })
+	@UsePipes(new JoiValidationPipe(AddHotelAmenitiesSchema))
+	async addHotelAmenities(
+		@Param("hotelId") hotelId: string,
+		@Body() body: AddHotelAmenitiesDto,
+	) {
+		return await this.adminService.addHotelAmenities(hotelId, body.amenityIds);
+	}
+
+	@Delete("hotels/:hotelId/amenities")
+	@ApiOperation({ summary: "Remove associated amenities from a hotel" })
+	@UsePipes(new JoiValidationPipe(RemoveHotelAmenitiesSchema))
+	async removeHotelAmenities(
+		@Param("hotelId") hotelId: string,
+		@Body() body: RemoveHotelAmenitiesDto,
+	) {
+		return await this.adminService.removeHotelAmenities(
+			hotelId,
+			body.amenityIds,
+		);
+	}
+
+	@Get("hotels")
+	@ApiOperation({ summary: "Get all hotels with pagination" })
+	async getAllHotels(
+		@Query(new QueryJoiValidationPipe(ServicePaginationQuerySchema))
+		{ page, limit, search }: ServicePaginationQueryDto,
+	) {
+		return await this.adminService.getAllHotels(+page, +limit, search);
+	}
+
+	@Get("hotels/:id")
+	@ApiOperation({ summary: "Get a hotel by ID" })
+	async getHotelById(@Param("id") id: string) {
+		return await this.adminService.getHotelById(id);
+	}
+
+	@Put("hotels/:hotelId/rooms/:roomId/available")
+	@ApiOperation({ summary: "Toggle hotel room available" })
+	async toggleHotelRoomAvailability(
+		@Param("hotelId") hotelId: string,
+		@Param("roomId") roomId: string,
+	) {
+		return await this.adminService.makeHotelRoomAvailable(hotelId, roomId);
+	}
+
+	@Put("hotels/:hotelId/rooms/:roomId/unavailable")
+	@ApiOperation({ summary: "Toggle hotel room unavailable" })
+	async toggleHotelRoomUnavailability(
+		@Param("hotelId") hotelId: string,
+		@Param("roomId") roomId: string,
+	) {
+		return await this.adminService.makeHotelRoomUnavailable(hotelId, roomId);
+	}
+
+	@Put("hotels/:hotelId/available")
+	@ApiOperation({ summary: "Toggle hotel available" })
+	async toggleHotelAvailability(@Param("hotelId") hotelId: string) {
+		return await this.adminService.makeHotelAvailable(hotelId);
+	}
+
+	@Put("hotels/:hotelId/unavailable")
+	@ApiOperation({ summary: "Toggle hotel unavailable" })
+	async toggleHotelUnavailability(@Param("hotelId") hotelId: string) {
+		return await this.adminService.makeHotelUnavailable(hotelId);
 	}
 }

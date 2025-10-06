@@ -57,6 +57,13 @@
       "when": 1759511732248,
       "tag": "0007_stormy_preak",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1759770608409,
+      "tag": "0008_complete_vampiro",
+      "breakpoints": true
     }
   ]
 }

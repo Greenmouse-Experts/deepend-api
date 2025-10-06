@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { and, eq, inArray, like, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, like, sql } from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
 import {
 	advertBanners,
@@ -10,14 +10,22 @@ import {
 } from "src/database/schema/categories";
 import {
 	CreateFood,
+	CreateHotel,
+	CreateHotelAmenity,
+	CreateHotelRoom,
 	CreateVRGame,
 	foods,
 	FoodToAddonsCategories,
 	foodToAddonsCategories,
 	foodToAddonsItems,
 	FoodToAddonsItems,
+	hotelAmenities,
+	hotelRooms,
+	hotels,
+	hotelToAmenities,
 	vrgames,
 } from "src/database/schema/services";
+import { CreateHotelDto } from "./dto/service.dto";
 
 @Injectable()
 export class AdminRepository {
@@ -469,30 +477,257 @@ export class AdminRepository {
 		return vrgame;
 	}
 
-  async getAllVrGames(offset: number, limit: number) {
-    const vrgamesList = await this.databaseService.db
-      .select()
-      .from(vrgames)
-      .limit(limit)
-      .offset(offset);
-    return vrgamesList;
-  }
+	async getAllVrGames(offset: number, limit: number) {
+		const vrgamesList = await this.databaseService.db
+			.select()
+			.from(vrgames)
+			.limit(limit)
+			.offset(offset);
+		return vrgamesList;
+	}
 
-  async makeVrGameAvailable(id: string) {
-    const result = await this.databaseService.db
-      .update(vrgames)
-      .set({ isAvailable: true })
-      .where(eq(vrgames.id, id));
+	async makeVrGameAvailable(id: string) {
+		const result = await this.databaseService.db
+			.update(vrgames)
+			.set({ isAvailable: true })
+			.where(eq(vrgames.id, id));
 
-    return result;
-  }
+		return result;
+	}
 
-  async makeVrGameUnavailable(id: string) {
-    const result = await this.databaseService.db
-      .update(vrgames)
-      .set({ isAvailable: false })
-      .where(eq(vrgames.id, id));
+	async makeVrGameUnavailable(id: string) {
+		const result = await this.databaseService.db
+			.update(vrgames)
+			.set({ isAvailable: false })
+			.where(eq(vrgames.id, id));
 
-    return result;
-  }
+		return result;
+	}
+
+	async createHotelAmenities(amenities: CreateHotelAmenity[]) {
+		const result = await this.databaseService.db
+			.insert(hotelAmenities)
+			.values(amenities)
+			.$returningId();
+
+		return result;
+	}
+
+	async updateHotelAmenity(id: number, data: Partial<CreateHotelAmenity>) {
+		const result = await this.databaseService.db
+			.update(hotelAmenities)
+			.set(data)
+			.where(eq(hotelAmenities.id, id));
+
+		return result;
+	}
+
+	async deleteHotelAmenity(id: number) {
+		const result = await this.databaseService.db
+			.delete(hotelAmenities)
+			.where(eq(hotelAmenities.id, id));
+
+		return result;
+	}
+
+	async getAllHotelAmenities(offset: number, limit: number) {
+		const amenities = await this.databaseService.db
+			.select()
+			.from(hotelAmenities)
+			.limit(limit)
+			.offset(offset);
+
+		return amenities;
+	}
+
+	async createHotel(hotelData: CreateHotel) {
+		return await this.databaseService.db
+			.insert(hotels)
+			.values(hotelData)
+			.$returningId();
+	}
+
+	async updateHotel(id: string, hotelData: Partial<CreateHotel>) {
+		const result = await this.databaseService.db
+			.update(hotels)
+			.set(hotelData)
+			.where(eq(hotels.id, id));
+
+		return result;
+	}
+
+	async createHotelRoom(roomData: CreateHotelRoom) {
+		const result = await this.databaseService.db
+			.insert(hotelRooms)
+			.values(roomData)
+			.$returningId();
+
+		return result[0];
+	}
+
+	async updateHotelRoom(
+		hotelId: string,
+		roomId: string,
+		roomData: Partial<CreateHotelRoom>,
+	) {
+		const result = await this.databaseService.db
+			.update(hotelRooms)
+			.set(roomData)
+			.where(and(eq(hotelRooms.id, roomId), eq(hotelRooms.hotelId, hotelId)));
+
+		return result;
+	}
+
+	async deleteHotelRoom(hotelId: string, roomId: string) {
+		const result = await this.databaseService.db
+			.delete(hotelRooms)
+			.where(and(eq(hotelRooms.id, roomId), eq(hotelRooms.hotelId, hotelId)));
+
+		return result;
+	}
+
+	async addHotelAmenities(amenities: { hotelId: string; amenityId: number }[]) {
+		const result = await this.databaseService.db
+			.insert(hotelToAmenities)
+			.values(amenities)
+			.$returningId();
+
+		return result;
+	}
+
+	async removeHotelAmenities(hotelId: string, amenityIds: number[]) {
+		const result = await this.databaseService.db
+			.delete(hotelToAmenities)
+			.where(
+				and(
+					eq(hotelToAmenities.hotelId, hotelId),
+					inArray(hotelToAmenities.amenityId, amenityIds),
+				),
+			);
+
+		return result;
+	}
+
+	async getHotelById(id: string) {
+		const hotel = await this.databaseService.db.query.hotels.findFirst({
+			where: eq(hotels.id, id),
+			with: {
+				amenities: {
+					columns: {
+						hotelId: false,
+						amenityId: false,
+						createdAt: false,
+						updatedAt: false,
+					},
+					with: {
+						amenity: {
+							columns: {
+								createdAt: false,
+								updatedAt: false,
+								iconPath: false,
+							},
+						},
+					},
+				},
+				rooms: {
+					columns: {
+						createdAt: false,
+						updatedAt: false,
+						hotelId: false,
+					},
+				},
+			},
+		});
+
+		const formattedHotel = hotel && {
+			...hotel,
+			amenities: hotel.amenities.map((a) => a.amenity),
+		};
+
+		return formattedHotel;
+	}
+
+	async getAllHotels(offset: number, limit: number, search?: string) {
+		const hotelsList = await this.databaseService.db.query.hotels.findMany({
+			where: search ? like(hotels.name, `%${search}%`) : undefined,
+			with: {
+				amenities: {
+					columns: {
+						hotelId: false,
+						amenityId: false,
+						createdAt: false,
+						updatedAt: false,
+					},
+					with: {
+						amenity: {
+							columns: {
+								createdAt: false,
+								updatedAt: false,
+								iconPath: false,
+							},
+						},
+					},
+				},
+				rooms: {
+					columns: {
+						createdAt: false,
+						updatedAt: false,
+						hotelId: false,
+					},
+				},
+			},
+			limit,
+			offset,
+			orderBy: (hotel) => [desc(hotel.createdAt)],
+		});
+
+		return hotelsList.map((hotel) => ({
+			...hotel,
+			amenities: hotel.amenities.map((a) => a.amenity),
+		}));
+	}
+
+	async deleteHotel(id: string) {
+		const result = await this.databaseService.db
+			.delete(hotels)
+			.where(eq(hotels.id, id));
+
+		return result;
+	}
+
+	async makeHotelRoomAvailable(hotelId: string, roomId: string) {
+		const result = await this.databaseService.db
+			.update(hotelRooms)
+			.set({ isAvailable: true })
+			.where(and(eq(hotelRooms.id, roomId), eq(hotelRooms.hotelId, hotelId)));
+
+		return result;
+	}
+
+	async makeHotelRoomUnavailable(hotelId: string, roomId: string) {
+		const result = await this.databaseService.db
+			.update(hotelRooms)
+			.set({ isAvailable: false })
+			.where(and(eq(hotelRooms.id, roomId), eq(hotelRooms.hotelId, hotelId)));
+
+		return result;
+	}
+
+	async makeHotelAvailable(id: string) {
+		const result = await this.databaseService.db
+			.update(hotels)
+			.set({ isAvailable: true })
+			.where(eq(hotels.id, id));
+
+		return result;
+	}
+
+	async makeHotelUnavailable(id: string) {
+		const result = await this.databaseService.db
+			.update(hotels)
+			.set({ isAvailable: false })
+			.where(eq(hotels.id, id));
+
+		return result;
+	}
 }
