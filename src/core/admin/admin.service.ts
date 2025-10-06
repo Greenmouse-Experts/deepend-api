@@ -4,9 +4,15 @@ import {
 	NotFoundException,
 } from "@nestjs/common";
 import { AdminRepository } from "./admin.repository";
-import { CreateFood } from "src/database/schema/services";
+import { CreateFood, CreateHotelAmenity } from "src/database/schema/services";
 import { isDatabaseError, mysqlErrorCodes } from "src/common/mysql.error";
-import { AddFoodAddonItems, CreateVRGameDto } from "./dto/service.dto";
+import {
+	AddFoodAddonItems,
+	CreateHotelDto,
+	CreateHotelRoomDto,
+	CreateVRGameDto,
+	UpdateHotelAmenityDto,
+} from "./dto/service.dto";
 
 @Injectable()
 export class AdminService {
@@ -708,5 +714,384 @@ export class AdminService {
 			throw new BadRequestException("VR game not found or already unavailable");
 		}
 		return { message: "VR game is now unavailable" };
+	}
+
+	async createHotelAmenities(amenities: CreateHotelAmenity[]) {
+		try {
+			return await this.adminRepository.createHotelAmenities(amenities);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"One or more hotel amenities with these names already exist",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async updateHotelAmenity(
+		id: number,
+		{ name, icon, iconPath }: UpdateHotelAmenityDto,
+	) {
+		try {
+			const updatedHotelAmenity = await this.adminRepository.updateHotelAmenity(
+				id,
+				{ name, icon, iconPath },
+			);
+
+			if (updatedHotelAmenity[0].affectedRows === 0) {
+				throw new BadRequestException("Hotel amenity not found");
+			}
+
+			return { message: "Hotel amenity updated successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"Hotel amenity with this name already exists",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async deleteHotelAmenity(id: number) {
+		const deletedHotelAmenity =
+			await this.adminRepository.deleteHotelAmenity(id);
+
+		if (deletedHotelAmenity[0].affectedRows === 0) {
+			throw new BadRequestException("Hotel amenity not found");
+		}
+
+		return { message: "Hotel amenity deleted successfully" };
+	}
+
+	async getAllHotelAmenities(page: number, limit: number) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getAllHotelAmenities(offset, limit);
+	}
+
+	async createHotel(hotelData: CreateHotelDto) {
+		try {
+			const hotel = {
+				name: hotelData.name,
+				description: hotelData.description,
+				address: hotelData.address,
+				imageUrls: hotelData.imageUrls,
+				city: hotelData.city,
+				country: hotelData.country,
+				state: hotelData.state,
+				coordinates: {
+					lat: hotelData.latitude,
+					lon: hotelData.longitude,
+				},
+			};
+
+			return await this.adminRepository.createHotel(hotel);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException("Hotel with this name already exists");
+			}
+
+			throw error;
+		}
+	}
+
+	async updateHotel(id: string, hotelData: Partial<CreateHotelDto>) {
+		try {
+			if (hotelData.latitude && hotelData.longitude) {
+				//@ts-ignore
+				hotelData["coordinates"] = {
+					lat: hotelData.latitude,
+					lon: hotelData.longitude,
+				};
+			}
+
+			const updatedHotel = await this.adminRepository.updateHotel(
+				id,
+				hotelData,
+			);
+
+			if (updatedHotel[0].affectedRows === 0) {
+				throw new BadRequestException("Hotel not found");
+			}
+
+			return { message: "Hotel updated successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException("Hotel with this name already exists");
+			}
+
+			throw error;
+		}
+	}
+
+	async deleteHotel(id: string) {
+		try {
+			const deletedHotel = await this.adminRepository.deleteHotel(id);
+
+			if (deletedHotel[0].affectedRows === 0) {
+				throw new BadRequestException("Hotel not found");
+			}
+
+			return { message: "Hotel deleted successfully" };
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async createHotelRoom(hotelId: string, hotelRoom: CreateHotelRoomDto) {
+		try {
+			const hotelRoomData = {
+				hotelId,
+				...hotelRoom,
+			};
+
+			return await this.adminRepository.createHotelRoom(hotelRoomData);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("Invalid hotel ID");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"Hotel room with this name already exists",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async updateHotelRoom(
+		hotelId: string,
+		roomId: string,
+		hotelRoomData: Partial<CreateHotelRoomDto>,
+	) {
+		try {
+			const updatedHotelRoom = await this.adminRepository.updateHotelRoom(
+				hotelId,
+				roomId,
+				hotelRoomData,
+			);
+
+			if (updatedHotelRoom[0].affectedRows === 0) {
+				throw new BadRequestException("Hotel room not found");
+			}
+
+			return { message: "Hotel room updated successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("Invalid hotel ID");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"Hotel room with this name already exists",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async deleteHotelRoom(hotelId: string, roomId: string) {
+		try {
+			const deletedHotelRoom = await this.adminRepository.deleteHotelRoom(
+				hotelId,
+				roomId,
+			);
+
+			if (deletedHotelRoom[0].affectedRows === 0) {
+				throw new BadRequestException("Hotel room not found");
+			}
+
+			return { message: "Hotel room deleted successfully" };
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async addHotelAmenities(hotelId: string, amenityIds: number[]) {
+		try {
+			const hotel = await this.adminRepository.getHotelById(hotelId);
+
+			if (!hotel) {
+				throw new BadRequestException("Hotel not found");
+			}
+
+			const hotelAmenities = amenityIds.map((amenityId) => ({
+				hotelId,
+				amenityId,
+			}));
+
+			await this.adminRepository.addHotelAmenities(hotelAmenities);
+
+			return { message: "Hotel amenities added successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("One or more invalid Amenity IDs");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"One or more hotel amenities with these IDs already exist for this hotel",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async removeHotelAmenities(hotelId: string, amenityIds: number[]) {
+		try {
+			const deletedHotelAmenities =
+				await this.adminRepository.removeHotelAmenities(hotelId, amenityIds);
+
+			if (
+				deletedHotelAmenities &&
+				deletedHotelAmenities[0].affectedRows === 0
+			) {
+				throw new BadRequestException(
+					"No matching amenities found for this hotel",
+				);
+			}
+
+			return { message: "Hotel amenities removed successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("One or more invalid Amenity IDs");
+			}
+
+			throw error;
+		}
+	}
+
+	async getHotelById(id: string) {
+		const hotel = await this.adminRepository.getHotelById(id);
+
+		if (!hotel) {
+			throw new BadRequestException("Hotel not found");
+		}
+
+		return hotel;
+	}
+
+	async getAllHotels(page: number, limit: number, search?: string) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getAllHotels(offset, limit, search);
+	}
+
+	async makeHotelRoomAvailable(hotelId: string, roomId: string) {
+		const result = await this.adminRepository.makeHotelRoomAvailable(
+			hotelId,
+			roomId,
+		);
+
+		if (result[0].affectedRows === 0) {
+			throw new BadRequestException(
+				"Hotel room not found or already available",
+			);
+		}
+
+		return { message: "Hotel room is now available" };
+	}
+
+	async makeHotelRoomUnavailable(hotelId: string, roomId: string) {
+		const result = await this.adminRepository.makeHotelRoomUnavailable(
+			hotelId,
+			roomId,
+		);
+
+		if (result[0].affectedRows === 0) {
+			throw new BadRequestException(
+				"Hotel room not found or already unavailable",
+			);
+		}
+		return { message: "Hotel room is now unavailable" };
+	}
+
+	async makeHotelAvailable(id: string) {
+		const hotel = await this.adminRepository.getHotelById(id);
+
+		if (hotel && !hotel.isAvailable) {
+			// Ensure at least one room is available before making the hotel available
+			const rooms = hotel.rooms || [];
+
+			const hasAvailableRoom = rooms.some((room) => room.isAvailable);
+
+			if (!hasAvailableRoom) {
+				throw new BadRequestException(
+					"Cannot make hotel available without at least one available room",
+				);
+			}
+		}
+
+		const result = await this.adminRepository.makeHotelAvailable(id);
+		if (result[0].affectedRows === 0) {
+			throw new BadRequestException("Hotel not found or already available");
+		}
+		return { message: "Hotel is now available" };
+	}
+
+	async makeHotelUnavailable(id: string) {
+		const result = await this.adminRepository.makeHotelUnavailable(id);
+
+		if (result[0].affectedRows === 0) {
+			throw new BadRequestException("Hotel not found or already unavailable");
+		}
+		return { message: "Hotel is now unavailable" };
 	}
 }
