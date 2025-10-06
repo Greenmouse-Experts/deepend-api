@@ -89,6 +89,9 @@ importers:
       winston-daily-rotate-file:
         specifier: ^5.0.0
         version: 5.0.0(winston@3.17.0)
+      wkx:
+        specifier: ^0.5.0
+        version: 0.5.0
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3.2.0
@@ -4917,6 +4920,9 @@ packages:
   with@7.0.2:
     resolution: {integrity: sha512-RNGKj82nUPg3g5ygxkQl0R937xLyho1J24ItRCBTr/m1YnZkzJy1hUiHUJrc/VlsDQzsCnInEGSg3bci0Lmd4w==}
     engines: {node: '>= 10.0.0'}
+
+  wkx@0.5.0:
+    resolution: {integrity: sha512-Xng/d4Ichh8uN4l0FToV/258EjMGU9MGcA0HV2d9B/ZpZB3lqQm7nkOdZdm5GhKtLLhAE7PiVQwN4eN+2YJJUg==}
 
   word-wrap@1.2.5:
     resolution: {integrity: sha512-BN22B5eaMMI9UMtjrGd5g5eCYPpCPDUy0FJXbYsaT5zYxjFOckS53SQDE3pWkVoWpHXVb3BrYcEN4Twa55B5cA==}
@@ -10755,6 +10761,10 @@ snapshots:
       assert-never: 1.4.0
       babel-walk: 3.0.0-canary-5
     optional: true
+
+  wkx@0.5.0:
+    dependencies:
+      '@types/node': 22.18.6
 
   word-wrap@1.2.5: {}
 
