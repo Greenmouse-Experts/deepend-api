@@ -2,6 +2,8 @@ import { Controller, Get, Param, Query } from "@nestjs/common";
 import { ServicesService } from "./services.service";
 import { QueryJoiValidationPipe } from "src/common/pipes/query-validation.pipe";
 import {
+	HotelPaginationQueryDto,
+	hotelPaginationQuerySchema,
 	PaginationQueryDto,
 	PaginationQuerySchema,
 	ServicePaginationQueryDto,
@@ -82,5 +84,44 @@ export class ServicesController {
 	@ApiOperation({ summary: "Get a VR game by ID" })
 	async getVrGameById(@Param("id") id: string) {
 		return await this.servicesService.getVrGameById(id);
+	}
+
+	@Get("hotels/amenities")
+	@ApiOperation({ summary: "Get all hotel amenities" })
+	async getAllHotelAmenities(
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.servicesService.getAllHotelAmenities(page, limit);
+	}
+
+	@Get("hotels/:id")
+	@ApiOperation({ summary: "Get a hotel by ID" })
+	async getHotelById(@Param("id") id: string) {
+		return await this.servicesService.getHotelById(id);
+	}
+
+	@Get("hotels")
+	@ApiOperation({
+		summary: "Get all hotels with pagination, filtering, and search",
+	})
+	async getAllHotels(
+		@Query(new QueryJoiValidationPipe(hotelPaginationQuerySchema))
+		{
+			page,
+			limit,
+			search,
+			longitude,
+			latitude,
+			radius,
+		}: HotelPaginationQueryDto,
+	) {
+		return await this.servicesService.getAllHotels({
+			page,
+			limit,
+			search,
+			coordinates: { lon: longitude, lat: latitude },
+			radius,
+		});
 	}
 }
