@@ -3,6 +3,8 @@ import { DatabaseService } from "src/database/database.service";
 import { and, asc, desc, eq, like, sql } from "drizzle-orm";
 import {
 	advertBanners,
+	equipmentCategories,
+	equipmentRentals,
 	foodAddonCategories,
 	foodAddonsItems,
 	foodCategories,
@@ -355,5 +357,74 @@ END`.as("addons"),
 		}));
 
 		return formattedHotels;
+	}
+
+	async getEquipmentRentalById(id: string) {
+		const equipment =
+			await this.databaseService.db.query.equipmentRentals.findFirst({
+				where: and(
+					eq(equipmentRentals.id, id),
+					eq(equipmentRentals.isAvailable, true),
+				),
+				with: {
+					category: {
+						columns: {
+							createdAt: false,
+							updatedAt: false,
+						},
+					},
+				},
+			});
+
+		return equipment;
+	}
+
+	async getAllEquipmentRentals({
+		offset,
+		limit,
+		search,
+		categoryId,
+	}: { offset: number; limit: number; search?: string; categoryId?: number }) {
+		const equipments =
+			await this.databaseService.db.query.equipmentRentals.findMany({
+				where: (equipmentRentals, { and, like }) =>
+					and(
+						categoryId
+							? eq(equipmentRentals.categoryId, categoryId)
+							: undefined,
+						search ? like(equipmentRentals.name, `%${search}%`) : undefined,
+						eq(equipmentRentals.isAvailable, true),
+					),
+				columns: {
+					categoryId: false,
+					createdAt: false,
+					updatedAt: false,
+				},
+				with: {
+					category: {
+						columns: {
+							createdAt: false,
+							updatedAt: false,
+						},
+					},
+				},
+				limit,
+				offset,
+				orderBy: (equipmentRentals, { desc }) => [
+					desc(equipmentRentals.createdAt),
+				],
+			});
+
+		return equipments;
+	}
+
+	async getEquipmentCategories(offset: number, limit: number) {
+		const categories = await this.databaseService.db
+			.select()
+			.from(equipmentCategories)
+			.limit(limit)
+			.offset(offset)
+			.orderBy(asc(equipmentCategories.id));
+		return categories;
 	}
 }
