@@ -194,4 +194,59 @@ export class ServicesService {
 			},
 		};
 	}
+
+	async getEquipmentCategories(page = 1, limit = 10) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		const categories = await this.servicesRepository.getEquipmentCategories(
+			offset,
+			limit,
+		);
+
+		return {
+			categories,
+			pagination: {
+				page,
+				limit,
+				nextPage: categories.length === Number(limit) ? Number(page) + 1 : null,
+				prevPage: Number(page) - 1 > 0 ? Number(page) - 1 : null,
+			},
+		};
+	}
+
+	async getAllEquipmentRentals({
+		page,
+		limit,
+		categoryId,
+		search,
+	}: { page: number; limit: number; categoryId?: number; search?: string }) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		const rentals = await this.servicesRepository.getAllEquipmentRentals({
+			offset,
+			limit,
+			categoryId,
+			search,
+		});
+
+		return {
+			rentals,
+			pagination: {
+				page,
+				limit,
+				nextPage: rentals.length === Number(limit) ? Number(page) + 1 : null,
+				prevPage: Number(page) - 1 > 0 ? Number(page) - 1 : null,
+			},
+		};
+	}
+
+	async getEquipmentRentalById(id: string) {
+		const rental = await this.servicesRepository.getEquipmentRentalById(id);
+
+		if (!rental) {
+			throw new NotFoundException("Equipment rental not found");
+		}
+
+		return rental;
+	}
 }
