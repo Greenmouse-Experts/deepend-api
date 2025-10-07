@@ -5,7 +5,6 @@ import {
 	Get,
 	Param,
 	ParseIntPipe,
-	Patch,
 	Post,
 	Put,
 	Query,
@@ -26,6 +25,8 @@ import { QueryJoiValidationPipe } from "src/common/pipes/query-validation.pipe";
 import { JoiValidationPipe } from "src/common/pipes/validation.pipe";
 import { AdminService } from "./admin.service";
 import {
+	CreateEquipmentCategoriesDto,
+	CreateEquipmentCategoriesSchema,
 	CreateFoodAddonCategories,
 	CreateFoodAddonCategoriesSchema,
 	CreateFoodAddonItemsDto,
@@ -34,6 +35,8 @@ import {
 	CreateFoodCategorySchema,
 	CreateVrGameCategoryDto,
 	CreateVrGameCategorySchema,
+	UpdateEquipmentCategoryDto,
+	UpdateEquipmentCategorySchema,
 	UpdateFoodAddonCategoryDto,
 	UpdateFoodAddonCategorySchema,
 	UpdateFoodAddonItemDto,
@@ -49,6 +52,8 @@ import {
 	AddHotelAmenitiesSchema,
 	CreateAdvertBannerDto,
 	CreateAdvertBannerSchema,
+	CreateEquipmentRentalDto,
+	CreateEquipmentRentalSchema,
 	CreateFoodDto,
 	CreateFoodSchema,
 	CreateHotelAmenitiesDto,
@@ -67,6 +72,8 @@ import {
 	RemoveHotelAmenitiesSchema,
 	UpdateAdvertBannerDto,
 	UpdateAdvertBannerSchema,
+	UpdateEquipmentRentalDto,
+	UpdateEquipmentRentalSchema,
 	UpdateFoodDto,
 	UpdateFoodSchema,
 	UpdateHotelAmenityDto,
@@ -616,5 +623,102 @@ export class AdminController {
 	@ApiOperation({ summary: "Toggle hotel unavailable" })
 	async toggleHotelUnavailability(@Param("hotelId") hotelId: string) {
 		return await this.adminService.makeHotelUnavailable(hotelId);
+	}
+
+	@Post("equipments/categories")
+	@ApiOperation({ summary: "Create new equipment categories" })
+	@ApiBody({ type: CreateEquipmentCategoriesDto })
+	@UsePipes(new JoiValidationPipe(CreateEquipmentCategoriesSchema))
+	async createEquipmentCategories(@Body() body: CreateEquipmentCategoriesDto) {
+		return await this.adminService.creaeteEquipmentRentalCategories(body);
+	}
+
+	@Put("equipments/categories/:id")
+	@ApiOperation({ summary: "Update an existing equipment category" })
+	@ApiBody({ type: UpdateEquipmentCategoryDto })
+	@UsePipes(new JoiValidationPipe(UpdateEquipmentCategorySchema))
+	async updateEquipmentCategory(
+		@Param("id", ParseIntPipe) id: number,
+		@Body() body: UpdateEquipmentCategoryDto,
+	) {
+		return await this.adminService.updateEquipmentRentalCategory(id, body);
+	}
+
+	@Delete("equipments/categories/:id")
+	@ApiOperation({ summary: "Delete an equipment category" })
+	async deleteEquipmentCategory(@Param("id", ParseIntPipe) id: number) {
+		return await this.adminService.deleteEquipmentRentalCategory(id);
+	}
+
+	@Get("equipments/categories")
+	@ApiOperation({ summary: "Get all equipment categories" })
+	async getAllEquipmentCategories(
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.adminService.getAllEquipmentRentalCategories(
+			+page,
+			+limit,
+		);
+	}
+
+	@Post("equipments")
+	@ApiOperation({ summary: "Create a new equipment rental item" })
+	@ApiBody({ type: CreateEquipmentRentalDto })
+	@UsePipes(new JoiValidationPipe(CreateEquipmentRentalSchema))
+	async createEquipmentRental(@Body() body: CreateEquipmentRentalDto) {
+		return await this.adminService.createEquipmentRental(body);
+	}
+
+	@Put("equipments/:id")
+	@ApiOperation({ summary: "Update an existing equipment rental item" })
+	@ApiBody({ type: UpdateEquipmentRentalDto })
+	@UsePipes(new JoiValidationPipe(UpdateEquipmentRentalSchema))
+	async updateEquipmentRental(
+		@Param("id") id: string,
+		@Body() body: UpdateEquipmentRentalDto,
+	) {
+		return await this.adminService.updateEquipmentRental(id, body);
+	}
+
+	@Delete("equipments/:id")
+	@ApiOperation({ summary: "Delete an equipment rental item" })
+	async deleteEquipmentRental(@Param("id") id: string) {
+		return await this.adminService.deleteEquipmentRental(id);
+	}
+
+	@Get("equipments/:id")
+	@ApiOperation({ summary: "Get an equipment rental item by ID" })
+	async getEquipmentRentalById(@Param("id") id: string) {
+		return await this.adminService.getEquipmentRentalById(id);
+	}
+
+	@Get("equipments")
+	@ApiOperation({ summary: "Get all equipment rental items with pagination" })
+	async getAllEquipmentRentals(
+		@Query(new QueryJoiValidationPipe(ServicePaginationQuerySchema))
+		{ page, limit, categoryId }: ServicePaginationQueryDto,
+	) {
+		return await this.adminService.getAllEquipmentRentals({
+			page,
+			limit,
+			categoryId,
+		});
+	}
+
+	@Put("equipments/:equipmentId/available")
+	@ApiOperation({ summary: "Toggle equipment rental item available" })
+	async toggleEquipmentRentalAvailability(
+		@Param("equipmentId") equipmentId: string,
+	) {
+		return await this.adminService.makeEquipmentRentalAvailable(equipmentId);
+	}
+
+	@Put("equipments/:equipmentId/unavailable")
+	@ApiOperation({ summary: "Toggle equipment rental item unavailable" })
+	async toggleEquipmentRentalUnavailability(
+		@Param("equipmentId") equipmentId: string,
+	) {
+		return await this.adminService.makeEquipmentRentalUnavailable(equipmentId);
 	}
 }
