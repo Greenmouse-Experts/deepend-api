@@ -64,6 +64,13 @@
       "when": 1759770608409,
       "tag": "0008_complete_vampiro",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1759854282716,
+      "tag": "0009_goofy_zaran",
+      "breakpoints": true
     }
   ]
 }

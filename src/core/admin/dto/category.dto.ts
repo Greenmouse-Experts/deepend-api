@@ -230,3 +230,86 @@ export const UpdateVrGameCategorySchema = Joi.object({
 	name: Joi.string().trim().max(255).optional(),
 	description: Joi.string().optional(),
 });
+
+class CreateEquipmentCategoryDto {
+	@ApiProperty({
+		example: "Laptops",
+		description: "The name of the equipment category",
+	})
+	name: string;
+
+	@ApiProperty({
+		example: "A category for all kinds of laptops",
+		description: "The description of the equipment category",
+		required: false,
+	})
+	description?: string;
+
+	@ApiProperty({
+		example: "https://example.com/icons/laptops.png",
+		description: "The icon URL of the equipment category",
+	})
+	icon?: string;
+
+	@ApiProperty({
+		example: "/uploads/icons/laptops.png",
+		description: "The icon path of the equipment category on the server",
+	})
+	iconPath?: string;
+}
+
+export class CreateEquipmentCategoriesDto {
+	@ApiProperty({
+		type: [CreateEquipmentCategoryDto],
+		description: "List of equipment categories to be created",
+	})
+	categories: CreateEquipmentCategoryDto[];
+}
+
+export const CreateEquipmentCategoriesSchema = Joi.object({
+	categories: Joi.array()
+		.items(
+			Joi.object({
+				name: Joi.string().trim().max(255).required(),
+				description: Joi.string().optional(),
+				icon: Joi.string().uri().required(),
+				iconPath: Joi.string().required(),
+			}),
+		)
+		.min(1)
+		.required(),
+});
+
+export class UpdateEquipmentCategoryDto {
+	@ApiProperty({
+		example: "Laptops",
+		description: "The name of the equipment category",
+	})
+	name: string;
+
+	@ApiProperty({
+		example: "A category for all kinds of laptops",
+		description: "The description of the equipment category",
+		required: false,
+	})
+	description?: string;
+
+	@ApiProperty({
+		example: "https://example.com/icons/laptops.png",
+		description: "The icon URL of the equipment category",
+	})
+	icon?: string;
+
+	@ApiProperty({
+		example: "/uploads/icons/laptops.png",
+		description: "The icon path of the equipment category on the server",
+	})
+	iconPath?: string;
+}
+
+export const UpdateEquipmentCategorySchema = Joi.object({
+	name: Joi.string().trim().max(255).optional(),
+	description: Joi.string().optional(),
+	icon: Joi.string().uri().optional(),
+	iconPath: Joi.string().optional(),
+});

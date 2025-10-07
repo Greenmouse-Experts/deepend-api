@@ -3,17 +3,20 @@ import { and, desc, eq, inArray, like, sql } from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
 import {
 	advertBanners,
+	equipmentCategories,
 	foodAddonCategories,
 	foodAddonsItems,
 	foodCategories,
 	vrgamesCategories,
 } from "src/database/schema/categories";
 import {
+	CreateEquipmentRentals,
 	CreateFood,
 	CreateHotel,
 	CreateHotelAmenity,
 	CreateHotelRoom,
 	CreateVRGame,
+	equipmentRentals,
 	foods,
 	FoodToAddonsCategories,
 	foodToAddonsCategories,
@@ -727,6 +730,143 @@ export class AdminRepository {
 			.update(hotels)
 			.set({ isAvailable: false })
 			.where(eq(hotels.id, id));
+
+		return result;
+	}
+
+	async createEquipmentRentalCategories(
+		categories: {
+			name: string;
+			description?: string;
+			icon?: string;
+			iconPath?: string;
+		}[],
+	) {
+		return await this.databaseService.db
+			.insert(equipmentCategories)
+			.values(categories)
+			.$returningId();
+	}
+
+	async updateEquipmentRentalCategory(
+		id: number,
+		data: {
+			name?: string;
+			description?: string;
+			icon?: string;
+			iconPath?: string;
+		},
+	) {
+		return await this.databaseService.db
+			.update(equipmentCategories)
+			.set(data)
+			.where(eq(equipmentCategories.id, id));
+	}
+
+	async deleteEquipmentRentalCategory(id: number) {
+		return await this.databaseService.db
+			.delete(equipmentCategories)
+			.where(eq(equipmentCategories.id, id));
+	}
+
+	async getAllEquipmentRentalCategories(offset: number, limit: number) {
+		return await this.databaseService.db
+			.select()
+			.from(equipmentCategories)
+			.limit(limit)
+			.offset(offset);
+	}
+
+	async createEquipmentRental(equipmentData: CreateEquipmentRentals) {
+		const result = await this.databaseService.db
+			.insert(equipmentRentals)
+			.values(equipmentData)
+			.$returningId();
+
+		return result[0];
+	}
+
+	async updateEquipmentRental(
+		id: string,
+		equipmentData: Partial<CreateEquipmentRentals>,
+	) {
+		const result = await this.databaseService.db
+			.update(equipmentRentals)
+			.set(equipmentData)
+			.where(eq(equipmentRentals.id, id));
+
+		return result;
+	}
+
+	async deleteEquipmentRental(id: string) {
+		const result = await this.databaseService.db
+			.delete(equipmentRentals)
+			.where(eq(equipmentRentals.id, id));
+
+		return result;
+	}
+
+	async getEquipmentRentalById(id: string) {
+		const equipment =
+			await this.databaseService.db.query.equipmentRentals.findFirst({
+				where: eq(equipmentRentals.id, id),
+				with: {
+					category: {
+						columns: {
+							createdAt: false,
+							updatedAt: false,
+						},
+					},
+				},
+			});
+
+		return equipment;
+	}
+
+	async getAllEquipmentRentals({
+		offset,
+		limit,
+		categoryId,
+	}: { offset: number; limit: number; categoryId?: number }) {
+		const equipmentList =
+			await this.databaseService.db.query.equipmentRentals.findMany({
+				where: categoryId
+					? eq(equipmentRentals.categoryId, categoryId)
+					: undefined,
+				columns: {
+					categoryId: false,
+					createdAt: false,
+					updatedAt: false,
+				},
+				with: {
+					category: {
+						columns: {
+							createdAt: false,
+							updatedAt: false,
+						},
+					},
+				},
+				limit,
+				offset,
+				orderBy: (equipmentRentals) => [desc(equipmentRentals.createdAt)],
+			});
+
+		return equipmentList;
+	}
+
+	async makeEquipmentRentalAvailable(id: string) {
+		const result = await this.databaseService.db
+			.update(equipmentRentals)
+			.set({ isAvailable: true })
+			.where(eq(equipmentRentals.id, id));
+		return result;
+	}
+
+	async makeEquipmentRentalUnavailable(id: string) {
+		const result = await this.databaseService.db
+			.update(equipmentRentals)
+			.set({ isAvailable: false })
+			.where(eq(equipmentRentals.id, id));
 
 		return result;
 	}

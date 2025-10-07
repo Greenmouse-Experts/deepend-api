@@ -8,11 +8,17 @@ import { CreateFood, CreateHotelAmenity } from "src/database/schema/services";
 import { isDatabaseError, mysqlErrorCodes } from "src/common/mysql.error";
 import {
 	AddFoodAddonItems,
+	CreateEquipmentRentalDto,
 	CreateHotelDto,
 	CreateHotelRoomDto,
 	CreateVRGameDto,
+	UpdateEquipmentRentalDto,
 	UpdateHotelAmenityDto,
 } from "./dto/service.dto";
+import {
+	CreateEquipmentCategoriesDto,
+	UpdateEquipmentCategoryDto,
+} from "./dto/category.dto";
 
 @Injectable()
 export class AdminService {
@@ -1093,5 +1099,207 @@ export class AdminService {
 			throw new BadRequestException("Hotel not found or already unavailable");
 		}
 		return { message: "Hotel is now unavailable" };
+	}
+
+	async creaeteEquipmentRentalCategories(
+		categoriesData: CreateEquipmentCategoriesDto,
+	) {
+		try {
+			return await this.adminRepository.createEquipmentRentalCategories(
+				categoriesData.categories,
+			);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"One or more equipment categories with these names already exist",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async updateEquipmentRentalCategory(
+		id: number,
+		categoryData: UpdateEquipmentCategoryDto,
+	) {
+		try {
+			const updatedEquipmentCategory =
+				await this.adminRepository.updateEquipmentRentalCategory(
+					id,
+					categoryData,
+				);
+
+			if (updatedEquipmentCategory[0].affectedRows === 0) {
+				throw new BadRequestException("Equipment category not found");
+			}
+
+			return { message: "Equipment category updated successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"Equipment category with this name already exists",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async deleteEquipmentRentalCategory(id: number) {
+		const deletedEquipmentCategory =
+			await this.adminRepository.deleteEquipmentRentalCategory(id);
+
+		if (deletedEquipmentCategory[0].affectedRows === 0) {
+			throw new BadRequestException("Equipment category not found");
+		}
+
+		return { message: "Equipment category deleted successfully" };
+	}
+
+	async getAllEquipmentRentalCategories(page: number, limit: number) {
+		const offset = (page - 1) * limit;
+		return await this.adminRepository.getAllEquipmentRentalCategories(
+			offset,
+			limit,
+		);
+	}
+
+	async createEquipmentRental(equipmentData: CreateEquipmentRentalDto) {
+		try {
+			return await this.adminRepository.createEquipmentRental(equipmentData);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("Invalid category ID");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"Equipment rental with this name already exists",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async updateEquipmentRental(
+		id: string,
+		equipmentData: UpdateEquipmentRentalDto,
+	) {
+		try {
+			const updatedEquipment = await this.adminRepository.updateEquipmentRental(
+				id,
+				equipmentData,
+			);
+
+			if (updatedEquipment[0].affectedRows === 0) {
+				throw new BadRequestException("Equipment rental not found");
+			}
+
+			return { message: "Equipment rental updated successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("Invalid category ID");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"Equipment rental with this name already exists",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async deleteEquipmentRental(id: string) {
+		try {
+			const deletedEquipment =
+				await this.adminRepository.deleteEquipmentRental(id);
+
+			if (deletedEquipment[0].affectedRows === 0) {
+				throw new BadRequestException("Equipment rental not found");
+			}
+
+			return { message: "Equipment rental deleted successfully" };
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async getEquipmentRentalById(id: string) {
+		const equipment = await this.adminRepository.getEquipmentRentalById(id);
+
+		if (!equipment) {
+			throw new BadRequestException("Equipment rental not found");
+		}
+
+		return equipment;
+	}
+
+	async getAllEquipmentRentals({
+		page,
+		limit,
+		categoryId,
+	}: { page: number; limit: number; categoryId?: number }) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getAllEquipmentRentals({
+			offset,
+			limit,
+			categoryId,
+		});
+	}
+
+	async makeEquipmentRentalAvailable(id: string) {
+		const result = await this.adminRepository.makeEquipmentRentalAvailable(id);
+
+		if (result[0].affectedRows === 0) {
+			throw new BadRequestException(
+				"Equipment rental not found or already available",
+			);
+		}
+
+		return { message: "Equipment rental is now available" };
+	}
+
+	async makeEquipmentRentalUnavailable(id: string) {
+		const result =
+			await this.adminRepository.makeEquipmentRentalUnavailable(id);
+
+		if (result[0].affectedRows === 0) {
+			throw new BadRequestException(
+				"Equipment rental not found or already unavailable",
+			);
+		}
+
+		return { message: "Equipment rental is now unavailable" };
 	}
 }

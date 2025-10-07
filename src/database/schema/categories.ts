@@ -67,3 +67,15 @@ export const vrgamesCategories = mysqlTable("vrgames_categories", {
 		.notNull()
 		.$onUpdateFn(() => new Date()),
 });
+
+export const equipmentCategories = mysqlTable("equipment_categories", {
+	id: int("id").primaryKey().autoincrement(),
+	name: varchar("name", { length: 255 }).notNull().unique(),
+	description: text("description"),
+	icon: text("icon"),
+	iconPath: text("icon_path"),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at")
+		.notNull()
+		.$onUpdateFn(() => new Date()),
+});

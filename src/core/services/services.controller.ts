@@ -124,4 +124,36 @@ export class ServicesController {
 			radius,
 		});
 	}
+
+	@Get("equipments/categories")
+	@ApiOperation({ summary: "Get equipment categories with pagination" })
+	async getEquipmentCategories(
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.servicesService.getEquipmentCategories(page, limit);
+	}
+
+	@Get("equipments/:id")
+	@ApiOperation({ summary: "Get an equipment item by ID" })
+	async getEquipmentRentalById(@Param("id") id: string) {
+		return await this.servicesService.getEquipmentRentalById(id);
+	}
+
+	@Get("equipments")
+	@ApiOperation({
+		summary:
+			"Get all equipment rental items with pagination, filtering, and search",
+	})
+	async getAllEquipmentRentals(
+		@Query(new QueryJoiValidationPipe(ServicePaginationQuerySchema))
+		{ page, limit, categoryId, search }: ServicePaginationQueryDto,
+	) {
+		return await this.servicesService.getAllEquipmentRentals({
+			page,
+			limit,
+			categoryId,
+			search,
+		});
+	}
 }

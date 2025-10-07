@@ -10,6 +10,7 @@ import {
 	foreignKey,
 } from "drizzle-orm/mysql-core";
 import {
+	equipmentCategories,
 	foodAddonCategories,
 	foodAddonsItems,
 	foodCategories,
@@ -25,6 +26,7 @@ export type CreateVRGame = typeof vrgames.$inferInsert;
 export type CreateHotelAmenity = typeof hotelAmenities.$inferInsert;
 export type CreateHotel = typeof hotels.$inferInsert;
 export type CreateHotelRoom = typeof hotelRooms.$inferInsert;
+export type CreateEquipmentRentals = typeof equipmentRentals.$inferInsert;
 
 export const foods = mysqlTable("foods", {
 	id: varchar("id", { length: ID_GENERATOR_LENGTH })
@@ -282,3 +284,47 @@ export const hotelRoomsRelations = relations(hotelRooms, ({ one }) => ({
 		references: [hotels.id],
 	}),
 }));
+
+export const equipmentRentals = mysqlTable(
+	"equipment_rentals",
+	{
+		id: varchar("id", { length: ID_GENERATOR_LENGTH })
+			.$defaultFn(() => generateId())
+			.primaryKey(),
+		name: varchar("name", { length: 255 }).unique().notNull(),
+		description: varchar("description", { length: 1024 }),
+		categoryId: int("category_id").notNull(),
+		imageUrls: json("image_urls")
+			.$type<{ url: string; path: string }[]>()
+			.default([])
+			.notNull(),
+		rentalPricePerDay: decimal("rental_price_per_day", {
+			precision: 10,
+			scale: 2,
+		}).notNull(),
+		address: varchar("address", { length: 512 }).notNull(),
+		quantityAvailable: int("quantity_available").default(1).notNull(),
+		isAvailable: boolean("is_available").default(false).notNull(),
+		createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+		updatedAt: timestamp("updated_at", { fsp: 6 })
+			.$onUpdateFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		foreignKey({
+			name: "fk_equipment_rentals_category_id",
+			columns: [table.categoryId],
+			foreignColumns: [equipmentCategories.id],
+		}).onDelete("cascade"),
+	],
+);
+
+export const equipmentRentalsRelation = relations(
+	equipmentRentals,
+	({ one }) => ({
+		category: one(equipmentCategories, {
+			fields: [equipmentRentals.categoryId],
+			references: [equipmentCategories.id],
+		}),
+	}),
+);
