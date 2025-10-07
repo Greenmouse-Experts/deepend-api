@@ -746,3 +746,133 @@ export const RemoveHotelAmenitiesSchema = Joi.object({
 		.min(1)
 		.required(),
 });
+
+export class CreateEquipmentRentalDto {
+	@ApiProperty({ example: "Camera", description: "Name of the equipment" })
+	name: string;
+
+	@ApiProperty({
+		example: "High-quality DSLR camera",
+		description: "Description of the equipment",
+		required: false,
+	})
+	description?: string;
+
+	@ApiProperty({ example: 1, description: "Category ID of the equipment" })
+	categoryId: number;
+
+	@ApiProperty({ example: 50.0, description: "Rental price per day" })
+	rentalPricePerDay: string;
+
+	@ApiProperty({
+		example: [
+			{ url: "http://example.com/image1.jpg", path: "/image1.jpeg" },
+			{ url: "http://example.com/image2.jpg", path: "/image2.jpeg" },
+		],
+		description: "List of image URLs for the equipment",
+		required: false,
+		type: [Images],
+	})
+	imageUrls?: Images[];
+
+	@ApiProperty({
+		example: 10,
+		description: "Quantity of the equipment available",
+	})
+	quantityAvailable: number;
+
+	@ApiProperty({
+		example: "123 Main St, City, Country",
+		description: "Address where the equipment can be picked up",
+	})
+	address: string;
+}
+
+export const CreateEquipmentRentalSchema = Joi.object({
+	name: Joi.string().max(255).trim().required(),
+	description: Joi.string().max(1024).optional(),
+	categoryId: Joi.number().integer().positive().required(),
+	rentalPricePerDay: Joi.number().precision(2).positive().required(),
+	imageUrls: Joi.array()
+		.items(
+			Joi.object({
+				url: Joi.string().uri().required(),
+				path: Joi.string().required(),
+			}),
+		)
+		.required(),
+	quantityAvailable: Joi.number().integer().min(1).required(),
+	address: Joi.string().max(512).trim().required(),
+});
+
+export class UpdateEquipmentRentalDto {
+	@ApiProperty({
+		example: "Camera",
+		description: "Name of the equipment",
+		required: false,
+	})
+	name?: string;
+
+	@ApiProperty({
+		example: "High-quality DSLR camera",
+		description: "Description of the equipment",
+		required: false,
+	})
+	description?: string;
+
+	@ApiProperty({
+		example: 1,
+		description: "Category ID of the equipment",
+		required: false,
+	})
+	categoryId?: number;
+
+	@ApiProperty({
+		example: 50.0,
+		description: "Rental price per day",
+		required: false,
+	})
+	rentalPricePerDay?: string;
+
+	@ApiProperty({
+		example: [
+			{ url: "http://example.com/image1.jpg", path: "/image1.jpeg" },
+			{ url: "http://example.com/image2.jpg", path: "/image2.jpeg" },
+		],
+		description: "List of image URLs for the equipment",
+		required: false,
+		type: [Images],
+	})
+	imageUrls?: Images[];
+
+	@ApiProperty({
+		example: 10,
+		description: "Quantity of the equipment available",
+		required: true,
+	})
+	quantityAvailable: number;
+
+	@ApiProperty({
+		example: "123 Main St, City, Country",
+		description: "Address where the equipment can be picked up",
+		required: false,
+	})
+	address?: string;
+}
+
+export const UpdateEquipmentRentalSchema = Joi.object({
+	name: Joi.string().max(255).trim().optional(),
+	description: Joi.string().max(1024).optional(),
+	categoryId: Joi.number().integer().positive().optional(),
+	rentalPricePerDay: Joi.number().precision(2).positive().optional(),
+	imageUrls: Joi.array()
+		.items(
+			Joi.object({
+				url: Joi.string().uri().required(),
+				path: Joi.string().required(),
+			}),
+		)
+		.optional(),
+	quantityAvailable: Joi.number().integer().min(1).required(),
+	address: Joi.string().max(512).trim().optional(),
+});
