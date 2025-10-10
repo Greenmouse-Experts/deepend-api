@@ -100,3 +100,16 @@ export const MoviePaginationQuerySchema = PaginationQuerySchema.keys({
 	search: Joi.string().max(100).optional(),
 	genreId: Joi.number().integer().min(1).optional(),
 });
+
+export class MovieShowtimePaginationQueryDto extends PaginationQueryDto {
+	@ApiProperty({
+		example: "2023-10-01",
+		description: "Date to filter showtimes (YYYY-MM-DD)",
+		required: false,
+	})
+	date: string;
+}
+
+export const MovieShowtimePaginationQuerySchema = PaginationQuerySchema.keys({
+	date: Joi.date().iso().required(),
+});
