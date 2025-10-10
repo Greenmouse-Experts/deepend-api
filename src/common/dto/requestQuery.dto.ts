@@ -43,7 +43,14 @@ export const ServicePaginationQuerySchema = PaginationQuerySchema.keys({
 	search: Joi.string().max(100).optional(),
 });
 
-export class HotelPaginationQueryDto extends ServicePaginationQueryDto {
+export class HotelPaginationQueryDto extends PaginationQueryDto {
+	@ApiProperty({
+		example: "Hilton",
+		description: "Search term to filter hotels by name or description",
+		required: false,
+	})
+	search?: string;
+
 	@ApiProperty({
 		example: 103.8198,
 		description: "Longitude to filter hotels by proximity",
@@ -66,8 +73,30 @@ export class HotelPaginationQueryDto extends ServicePaginationQueryDto {
 	radius?: number;
 }
 
-export const hotelPaginationQuerySchema = ServicePaginationQuerySchema.keys({
+export const hotelPaginationQuerySchema = PaginationQuerySchema.keys({
 	longitude: Joi.number().min(-180).max(180).optional(),
 	latitude: Joi.number().min(-90).max(90).optional(),
 	radius: Joi.number().min(1).max(100).optional(),
+	search: Joi.string().max(100).optional(),
 }).and("longitude", "latitude", "radius");
+
+export class MoviePaginationQueryDto extends PaginationQueryDto {
+	@ApiProperty({
+		example: "Inception",
+		description: "Search term to filter movies by title or description",
+		required: false,
+	})
+	search?: string;
+
+	@ApiProperty({
+		example: 1,
+		description: "Genre ID to filter movies",
+		required: false,
+	})
+	genreId: number;
+}
+
+export const MoviePaginationQuerySchema = PaginationQuerySchema.keys({
+	search: Joi.string().max(100).optional(),
+	genreId: Joi.number().integer().min(1).optional(),
+});
