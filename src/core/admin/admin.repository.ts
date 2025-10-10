@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { and, asc, desc, eq, gt, inArray, like, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, like, sql } from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
 import {
 	advertBanners,
@@ -1240,96 +1240,134 @@ export class AdminRepository {
 	}
 
 	async getUpcomingMovies(offset: number, limit: number) {
-		const movies =
-			await this.databaseService.db.query.cinemaMoviesShowtimes.findMany({
-				where: (showtime) =>
-					and(
-						eq(showtime.isAvailable, true),
-						gt(showtime.showDate, sql`CURDATE()`),
-					),
-				columns: {
-					id: false,
-					createdAt: false,
-					updatedAt: false,
-				},
-				with: {
-					movie: {
-						columns: {
-							createdAt: false,
-							updatedAt: false,
-						},
-						with: {
-							genres: {
-								columns: {
-									movieId: false,
-									genreId: false,
-									createdAt: false,
-									updatedAt: false,
-								},
-								with: {
-									genre: {
-										columns: {
-											createdAt: false,
-											updatedAt: false,
-										},
-									},
-								},
+		const movies = await this.databaseService.db.query.cinemaMovies.findMany({
+			where: inArray(
+				cinemaMovies.id,
+				this.databaseService.db
+					.select({ movieId: cinemaMoviesShowtimes.movieId })
+					.from(cinemaMoviesShowtimes)
+					.where(gt(cinemaMoviesShowtimes.showDate, sql`CURDATE()`))
+					.orderBy(cinemaMoviesShowtimes.showDate)
+					.groupBy(cinemaMoviesShowtimes.movieId),
+			),
+			with: {
+				genres: {
+					columns: {
+						movieId: false,
+						genreId: false,
+						createdAt: false,
+						updatedAt: false,
+					},
+					with: {
+						genre: {
+							columns: {
+								createdAt: false,
+								updatedAt: false,
 							},
 						},
 					},
 				},
-				limit,
-				offset,
-				orderBy: (showtime) => [asc(showtime.showDate)],
-			});
+				cinema: {
+					columns: {
+						createdAt: false,
+						updatedAt: false,
+						countryId: false,
+					},
+				},
+				showtimes: {
+					columns: {
+						createdAt: false,
+						updatedAt: false,
+						cinemaHallId: false,
+						movieId: false,
+					},
+					limit: 4,
+					orderBy: (showtime) => [
+						asc(showtime.showDate),
+						asc(showtime.showtime),
+					],
+					where: (showtime) => gt(showtime.showDate, sql`CURDATE()`),
+				},
+			},
+			offset,
+			limit,
+		});
 
-		return movies;
+		return movies.map((movie) => ({
+			...movie,
+			genres: movie.genres.map((g) => g.genre),
+		}));
 	}
 
-	async getTodayMovies(offset: number, limit: number) {
-		const movies =
-			await this.databaseService.db.query.cinemaMoviesShowtimes.findMany({
-				where: (showtime) =>
-					and(
-						eq(showtime.isAvailable, true),
-						eq(showtime.showDate, sql`CURDATE()`),
-					),
-				columns: {
-					id: false,
-					createdAt: false,
-					updatedAt: false,
-				},
-				with: {
-					movie: {
-						columns: {
-							createdAt: false,
-							updatedAt: false,
-						},
-						with: {
-							genres: {
-								columns: {
-									movieId: false,
-									genreId: false,
-									createdAt: false,
-									updatedAt: false,
-								},
-								with: {
-									genre: {
-										columns: {
-											createdAt: false,
-											updatedAt: false,
-										},
-									},
-								},
+	async getMoviesByShowtime(
+		currentDate: string,
+		offset: number,
+		limit: number,
+	) {
+		const movies = await this.databaseService.db.query.cinemaMovies.findMany({
+			where: inArray(
+				cinemaMovies.id,
+				this.databaseService.db
+					.select({ movieId: cinemaMoviesShowtimes.movieId })
+					.from(cinemaMoviesShowtimes)
+					.where(
+						and(
+							eq(
+								sql`DATE(${cinemaMoviesShowtimes.showDate})`,
+								sql`DATE(${currentDate})`,
+							),
+						),
+					)
+					.orderBy(cinemaMoviesShowtimes.showtime)
+					.groupBy(cinemaMoviesShowtimes.movieId),
+			),
+			with: {
+				genres: {
+					columns: {
+						movieId: false,
+						genreId: false,
+						createdAt: false,
+						updatedAt: false,
+					},
+					with: {
+						genre: {
+							columns: {
+								createdAt: false,
+								updatedAt: false,
 							},
 						},
 					},
 				},
-				limit,
-				offset,
-				orderBy: (showtime) => [asc(showtime.showDate)],
-			});
+				cinema: {
+					columns: {
+						countryId: false,
+						createdAt: false,
+						updatedAt: false,
+					},
+				},
+				showtimes: {
+					columns: {
+						createdAt: false,
+						updatedAt: false,
+						cinemaHallId: false,
+						movieId: false,
+					},
+					limit: 4,
+					orderBy: (showtime) => [
+						asc(showtime.showDate),
+						asc(showtime.showtime),
+					],
+					where: (showtime) =>
+						gte(sql`DATE(${showtime.showDate})`, sql`CURDATE()`),
+				},
+			},
+			offset,
+			limit,
+		});
 
-		return movies;
+		return movies.map((movie) => ({
+			...movie,
+			genres: movie.genres.map((g) => g.genre),
+		}));
 	}
 }
