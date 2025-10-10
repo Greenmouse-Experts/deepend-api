@@ -1,8 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import { and, desc, eq, inArray, like, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, like, sql } from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
 import {
 	advertBanners,
+	cinemaMoviesGenres,
 	equipmentCategories,
 	foodAddonCategories,
 	foodAddonsItems,
@@ -10,6 +11,15 @@ import {
 	vrgamesCategories,
 } from "src/database/schema/categories";
 import {
+	cinemaHalls,
+	cinemaMovies,
+	cinemaMoviesShowtimes,
+	cinemaMoviesToGenres,
+	cinemas,
+	CreateCinema,
+	CreateCinemaHall,
+	CreateCinemaMovie,
+	CreateCinemaMovieShowtime,
 	CreateEquipmentRentals,
 	CreateFood,
 	CreateHotel,
@@ -28,7 +38,6 @@ import {
 	hotelToAmenities,
 	vrgames,
 } from "src/database/schema/services";
-import { CreateHotelDto } from "./dto/service.dto";
 
 @Injectable()
 export class AdminRepository {
@@ -869,5 +878,458 @@ export class AdminRepository {
 			.where(eq(equipmentRentals.id, id));
 
 		return result;
+	}
+
+	async createMovieGenres(genres: { name: string; description?: string }[]) {
+		return await this.databaseService.db
+			.insert(cinemaMoviesGenres)
+			.values(genres)
+			.$returningId();
+	}
+
+	async updateMovieGenre(
+		id: number,
+		data: { name?: string; description?: string },
+	) {
+		return await this.databaseService.db
+			.update(cinemaMoviesGenres)
+			.set(data)
+			.where(eq(cinemaMoviesGenres.id, id));
+	}
+
+	async deleteMovieGenre(id: number) {
+		return await this.databaseService.db
+			.delete(cinemaMoviesGenres)
+			.where(eq(cinemaMoviesGenres.id, id));
+	}
+
+	async getAllMovieGenres(offset: number, limit: number) {
+		return await this.databaseService.db
+			.select()
+			.from(cinemaMoviesGenres)
+			.limit(limit)
+			.offset(offset);
+	}
+
+	async createCinema(cinemaData: CreateCinema) {
+		const result = await this.databaseService.db
+			.insert(cinemas)
+			.values(cinemaData)
+			.$returningId();
+
+		return result[0];
+	}
+
+	async updateCinema(id: string, cinemaData: Partial<CreateCinema>) {
+		const result = await this.databaseService.db
+			.update(cinemas)
+			.set(cinemaData)
+			.where(eq(cinemas.id, id));
+
+		return result;
+	}
+
+	async deleteCinema(id: string) {
+		const result = await this.databaseService.db
+			.delete(cinemas)
+			.where(eq(cinemas.id, id));
+
+		return result;
+	}
+
+	async getCinemaById(id: string) {
+		const cinema = await this.databaseService.db
+			.select()
+			.from(cinemas)
+			.where(eq(cinemas.id, id));
+
+		return cinema;
+	}
+
+	async getAllCinemas(offset: number, limit: number) {
+		const cinemasList = await this.databaseService.db
+			.select()
+			.from(cinemas)
+			.limit(limit)
+			.offset(offset);
+		return cinemasList;
+	}
+
+	async createCinemaHall(hallData: CreateCinemaHall) {
+		const result = await this.databaseService.db
+			.insert(cinemaHalls)
+			.values(hallData)
+			.$returningId();
+
+		return result[0];
+	}
+
+	async updateCinemaHall(
+		cinemaId: string,
+		hallId: string,
+		hallData: Partial<CreateCinemaHall>,
+	) {
+		const result = await this.databaseService.db
+			.update(cinemaHalls)
+			.set(hallData)
+			.where(
+				and(eq(cinemaHalls.id, hallId), eq(cinemaHalls.cinemaId, cinemaId)),
+			);
+
+		return result;
+	}
+
+	async deleteCinemaHall(cinemaId: string, hallId: string) {
+		const result = await this.databaseService.db
+			.delete(cinemaHalls)
+			.where(
+				and(eq(cinemaHalls.id, hallId), eq(cinemaHalls.cinemaId, cinemaId)),
+			);
+
+		return result;
+	}
+
+	async getCinemaHallById(hallId: string) {
+		const hall = await this.databaseService.db
+			.select()
+			.from(cinemaHalls)
+			.where(eq(cinemaHalls.id, hallId));
+
+		return hall;
+	}
+
+	async getAllCinemaHallsByCinemaId(
+		cinemaId: string,
+		offset: number,
+		limit: number,
+	) {
+		const hallsList = await this.databaseService.db
+			.select()
+			.from(cinemaHalls)
+			.where(eq(cinemaHalls.cinemaId, cinemaId))
+			.limit(limit)
+			.offset(offset);
+		return hallsList;
+	}
+
+	async getAllCinemaHalls(offset: number, limit: number) {
+		const hallsList = await this.databaseService.db
+			.select()
+			.from(cinemaHalls)
+			.limit(limit)
+			.offset(offset);
+		return hallsList;
+	}
+
+	async createCinemaMovie(movieData: CreateCinemaMovie) {
+		const result = await this.databaseService.db
+			.insert(cinemaMovies)
+			.values(movieData)
+			.$returningId();
+
+		return result[0];
+	}
+
+	async updateCinemaMovie(id: string, movieData: Partial<CreateCinemaMovie>) {
+		const result = await this.databaseService.db
+			.update(cinemaMovies)
+			.set(movieData)
+			.where(eq(cinemaMovies.id, id));
+
+		return result;
+	}
+
+	async deleteCinemaMovie(id: string) {
+		const result = await this.databaseService.db
+			.delete(cinemaMovies)
+			.where(eq(cinemaMovies.id, id));
+		return result;
+	}
+
+	async getCinemaMovieById(id: string) {
+		const movie = await this.databaseService.db.query.cinemaMovies.findFirst({
+			where: eq(cinemaMovies.id, id),
+			with: {
+				genres: {
+					columns: {
+						movieId: false,
+						genreId: false,
+						createdAt: false,
+						updatedAt: false,
+					},
+					with: {
+						genre: {
+							columns: {
+								createdAt: false,
+								updatedAt: false,
+							},
+						},
+					},
+				},
+			},
+		});
+
+		return movie
+			? { ...movie, genres: movie.genres.map((g) => g.genre) }
+			: null;
+	}
+
+	async getAllCinemaMovies({
+		offset,
+		limit,
+		genreId,
+	}: { offset: number; limit: number; genreId?: number }) {
+		const moviesList =
+			await this.databaseService.db.query.cinemaMovies.findMany({
+				where: genreId
+					? sql`EXISTS (SELECT 1 FROM cinema_movies_genres cmg WHERE cmg.movie_id = cinema_movies.id AND cmg.genre_id = ${genreId})`
+					: undefined,
+				columns: {
+					createdAt: false,
+					updatedAt: false,
+				},
+				with: {
+					genres: {
+						columns: {
+							movieId: false,
+							genreId: false,
+							createdAt: false,
+							updatedAt: false,
+						},
+						with: {
+							genre: {
+								columns: {
+									createdAt: false,
+									updatedAt: false,
+								},
+							},
+						},
+					},
+				},
+				limit,
+				offset,
+				orderBy: (movie) => [desc(movie.createdAt)],
+			});
+
+		return moviesList.map((movie) => ({
+			...movie,
+			genres: movie.genres.map((g) => g.genre),
+		}));
+	}
+
+	async addMovieGenresToMovie(
+		movieGenres: { movieId: string; genreId: number }[],
+	) {
+		return await this.databaseService.db
+			.insert(cinemaMoviesToGenres)
+			.values(movieGenres)
+			.$returningId();
+	}
+
+	async removeMovieGenresFromMovie(movieId: string, genreIds: number[]) {
+		return await this.databaseService.db
+			.delete(cinemaMoviesToGenres)
+			.where(
+				and(
+					eq(cinemaMoviesToGenres.movieId, movieId),
+					inArray(cinemaMoviesToGenres.genreId, genreIds),
+				),
+			);
+	}
+
+	async createMovieShowtime(movieShowTime: CreateCinemaMovieShowtime) {
+		const result = await this.databaseService.db
+			.insert(cinemaMoviesShowtimes)
+			.values(movieShowTime)
+			.$returningId();
+
+		return result[0];
+	}
+
+	async updateMovieShowtime(
+		id: number,
+		movieShowTime: Partial<CreateCinemaMovieShowtime>,
+	) {
+		const result = await this.databaseService.db
+			.update(cinemaMoviesShowtimes)
+			.set(movieShowTime)
+			.where(eq(cinemaMoviesShowtimes.id, id));
+
+		return result;
+	}
+
+	async deleteMovieShowtime(id: number) {
+		const result = await this.databaseService.db
+			.delete(cinemaMoviesShowtimes)
+			.where(eq(cinemaMoviesShowtimes.id, id));
+
+		return result;
+	}
+
+	async getMovieShowtimeById(id: number) {
+		const showtime =
+			await this.databaseService.db.query.cinemaMoviesShowtimes.findFirst({
+				where: eq(cinemaMoviesShowtimes.id, id),
+				with: {
+					movie: {
+						columns: {
+							createdAt: false,
+							updatedAt: false,
+						},
+						with: {
+							genres: {
+								columns: {
+									movieId: false,
+									genreId: false,
+									createdAt: false,
+									updatedAt: false,
+								},
+								with: {
+									genre: {
+										columns: {
+											createdAt: false,
+											updatedAt: false,
+										},
+									},
+								},
+							},
+						},
+					},
+					cinemaHall: {
+						columns: {
+							createdAt: false,
+							updatedAt: false,
+							cinemaId: false,
+						},
+					},
+				},
+			});
+		return showtime;
+	}
+
+	async makeMovieShowtimeAvailable(id: number) {
+		const result = await this.databaseService.db
+			.update(cinemaMoviesShowtimes)
+			.set({ isAvailable: true })
+			.where(eq(cinemaMoviesShowtimes.id, id));
+		return result;
+	}
+
+	async makeMovieShowtimeUnavailable(id: number) {
+		const result = await this.databaseService.db
+			.update(cinemaMoviesShowtimes)
+			.set({ isAvailable: false })
+			.where(eq(cinemaMoviesShowtimes.id, id));
+
+		return result;
+	}
+
+	async getMovieShowtimeByMovieId(
+		movieId: string,
+		offset: number,
+		limit: number,
+	) {
+		const showtimes = await this.databaseService.db
+			.select()
+			.from(cinemaMoviesShowtimes)
+			.where(eq(cinemaMoviesShowtimes.movieId, movieId))
+			.limit(limit)
+			.offset(offset);
+
+		return showtimes;
+	}
+
+	async getUpcomingMovies(offset: number, limit: number) {
+		const movies =
+			await this.databaseService.db.query.cinemaMoviesShowtimes.findMany({
+				where: (showtime) =>
+					and(
+						eq(showtime.isAvailable, true),
+						gt(showtime.showDate, sql`CURDATE()`),
+					),
+				columns: {
+					id: false,
+					createdAt: false,
+					updatedAt: false,
+				},
+				with: {
+					movie: {
+						columns: {
+							createdAt: false,
+							updatedAt: false,
+						},
+						with: {
+							genres: {
+								columns: {
+									movieId: false,
+									genreId: false,
+									createdAt: false,
+									updatedAt: false,
+								},
+								with: {
+									genre: {
+										columns: {
+											createdAt: false,
+											updatedAt: false,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				limit,
+				offset,
+				orderBy: (showtime) => [asc(showtime.showDate)],
+			});
+
+		return movies;
+	}
+
+	async getTodayMovies(offset: number, limit: number) {
+		const movies =
+			await this.databaseService.db.query.cinemaMoviesShowtimes.findMany({
+				where: (showtime) =>
+					and(
+						eq(showtime.isAvailable, true),
+						eq(showtime.showDate, sql`CURDATE()`),
+					),
+				columns: {
+					id: false,
+					createdAt: false,
+					updatedAt: false,
+				},
+				with: {
+					movie: {
+						columns: {
+							createdAt: false,
+							updatedAt: false,
+						},
+						with: {
+							genres: {
+								columns: {
+									movieId: false,
+									genreId: false,
+									createdAt: false,
+									updatedAt: false,
+								},
+								with: {
+									genre: {
+										columns: {
+											createdAt: false,
+											updatedAt: false,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				limit,
+				offset,
+				orderBy: (showtime) => [asc(showtime.showDate)],
+			});
+
+		return movies;
 	}
 }
