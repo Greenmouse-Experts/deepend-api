@@ -250,13 +250,20 @@ export class ServicesService {
 		return rental;
 	}
 
-	async getUpcomingMovies(page = 1, limit = 10) {
+	async getUpcomingMovies({
+		page = 1,
+		limit = 10,
+		search,
+		genreId,
+	}: { page: number; limit: number; search?: string; genreId?: number }) {
 		const offset = (Number(page) - 1) * Number(limit);
 
-		const movies = await this.servicesRepository.getUpcomingMovies(
+		const movies = await this.servicesRepository.getUpcomingMovies({
 			offset,
 			limit,
-		);
+			search,
+			genreId,
+		});
 
 		return {
 			movies,
@@ -269,14 +276,28 @@ export class ServicesService {
 		};
 	}
 
-	async getMoviesByShowtime(currentDate: string, page = 1, limit = 10) {
+	async getMoviesByShowtime({
+		currentDate,
+		page = 1,
+		limit = 10,
+		search,
+		genreId,
+	}: {
+		currentDate: string;
+		page: number;
+		limit: number;
+		search?: string;
+		genreId?: number;
+	}) {
 		const offset = (Number(page) - 1) * Number(limit);
 
-		const movies = await this.servicesRepository.getMoviesByShowtime(
+		const movies = await this.servicesRepository.getMoviesByShowtime({
 			currentDate,
 			offset,
 			limit,
-		);
+			search,
+			genreId,
+		});
 
 		return {
 			movies,
