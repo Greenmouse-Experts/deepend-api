@@ -15,6 +15,10 @@ import { ApiBody, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Role } from "src/common/decorators/role/role.decorator";
 import { UserRoles } from "src/common/decorators/role/role.enum";
 import {
+	MoviePaginationQueryDto,
+	MoviePaginationQuerySchema,
+	MovieShowtimePaginationQueryDto,
+	MovieShowtimePaginationQuerySchema,
 	PaginationQueryDto,
 	PaginationQuerySchema,
 	ServicePaginationQueryDto,
@@ -33,6 +37,8 @@ import {
 	CreateFoodAddonItemsSchema,
 	CreateFoodCategoryDto,
 	CreateFoodCategorySchema,
+	CreateMovieGenresDto,
+	CreateMovieGenresSchema,
 	CreateVrGameCategoryDto,
 	CreateVrGameCategorySchema,
 	UpdateEquipmentCategoryDto,
@@ -42,6 +48,8 @@ import {
 	UpdateFoodAddonItemDto,
 	UpdateFoodAddonItemSchema,
 	UpdateFoodCategoryDto,
+	UpdateMovieGenreDto,
+	UpdateMovieGenreSchema,
 	UpdateVrGameCategoryDto,
 	UpdateVrGameCategorySchema,
 } from "./dto/category.dto";
@@ -50,8 +58,16 @@ import {
 	AddFoodAddonsDto,
 	AddHotelAmenitiesDto,
 	AddHotelAmenitiesSchema,
+	AddMovieGenresToMovieDto,
+	AddMovieGenresToMovieSchema,
 	CreateAdvertBannerDto,
 	CreateAdvertBannerSchema,
+	CreateCinemaDto,
+	CreateCinemaHallDto,
+	CreateCinemaHallSchema,
+	CreateCinemaMovieDto,
+	CreateCinemaMovieSchema,
+	CreateCinemaSchema,
 	CreateEquipmentRentalDto,
 	CreateEquipmentRentalSchema,
 	CreateFoodDto,
@@ -62,6 +78,8 @@ import {
 	CreateHotelRoomDto,
 	CreateHotelRoomSchema,
 	CreateHotelSchema,
+	CreateMovieShowtimeDto,
+	CreateMovieShowtimeSchema,
 	CreateVRGameDto,
 	CreateVRGameSchema,
 	RemoveFoodAddonCategoryDto,
@@ -70,8 +88,16 @@ import {
 	RemoveFoodAddonItemsSchema,
 	RemoveHotelAmenitiesDto,
 	RemoveHotelAmenitiesSchema,
+	RemoveMovieGenresFromMovieDto,
+	RemoveMovieGenresFromMovieSchema,
 	UpdateAdvertBannerDto,
 	UpdateAdvertBannerSchema,
+	UpdateCinemaDto,
+	UpdateCinemaHallDto,
+	UpdateCinemaHallSchema,
+	UpdateCinemaMovieDto,
+	UpdateCinemaMovieSchema,
+	UpdateCinemaSchema,
 	UpdateEquipmentRentalDto,
 	UpdateEquipmentRentalSchema,
 	UpdateFoodDto,
@@ -82,6 +108,8 @@ import {
 	UpdateHotelRoomDto,
 	UpdateHotelRoomSchema,
 	UpdateHotelSchema,
+	UpdateMovieShowtimeDto,
+	UpdateMovieShowtimeSchema,
 	UpdateVRGameDto,
 	UpdateVRGameSchema,
 } from "./dto/service.dto";
@@ -720,5 +748,276 @@ export class AdminController {
 		@Param("equipmentId") equipmentId: string,
 	) {
 		return await this.adminService.makeEquipmentRentalUnavailable(equipmentId);
+	}
+
+	@Post("movies/genres")
+	@ApiOperation({ summary: "Create new movie genres" })
+	@ApiBody({ type: CreateMovieGenresDto })
+	@UsePipes(new JoiValidationPipe(CreateMovieGenresSchema))
+	async createMovieGenres(@Body() body: CreateMovieGenresDto) {
+		return await this.adminService.createMovieGenres(body);
+	}
+
+	@Put("movies/genres/:id")
+	@ApiOperation({ summary: "Update an existing movie genre" })
+	@ApiBody({ type: UpdateMovieGenreDto })
+	@UsePipes(new JoiValidationPipe(UpdateMovieGenreSchema))
+	async updateMovieGenre(
+		@Param("id", ParseIntPipe) id: number,
+		@Body() body: UpdateMovieGenreDto,
+	) {
+		return await this.adminService.updateMovieGenre(id, body);
+	}
+
+	@Delete("movies/genres/:id")
+	@ApiOperation({ summary: "Delete a movie genre" })
+	async deleteMovieGenre(@Param("id", ParseIntPipe) id: number) {
+		return await this.adminService.deleteMovieGenre(id);
+	}
+
+	@Get("movies/genres")
+	@ApiOperation({ summary: "Get all movie genres" })
+	async getAllMovieGenres(
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.adminService.getAllMovieGenres(+page, +limit);
+	}
+
+	@Post("cinemas")
+	@ApiOperation({ summary: "Create a new cinema" })
+	@ApiBody({ type: CreateCinemaDto })
+	@UsePipes(new JoiValidationPipe(CreateCinemaSchema))
+	async createCinema(@Body() body: CreateCinemaDto) {
+		return await this.adminService.createCinema(body);
+	}
+
+	@Put("cinemas/:id")
+	@ApiOperation({ summary: "Update an existing cinema" })
+	@ApiBody({ type: UpdateCinemaDto })
+	@UsePipes(new JoiValidationPipe(UpdateCinemaSchema))
+	async updateCinema(@Param("id") id: string, @Body() body: UpdateCinemaDto) {
+		return await this.adminService.updateCinema(id, body);
+	}
+
+	@Delete("cinemas/:id")
+	@ApiOperation({ summary: "Delete a cinema" })
+	async deleteCinema(@Param("id") id: string) {
+		return await this.adminService.deleteCinema(id);
+	}
+
+	@Get("cinemas/halls")
+	@ApiOperation({ summary: "Get all cinema halls with pagination" })
+	async getAllCinemaHallsGeneral(
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.adminService.getAllCinemaHalls(+page, +limit);
+	}
+
+	@Get("cinemas/:id")
+	@ApiOperation({ summary: "Get a cinema by ID" })
+	async getCinemaById(@Param("id") id: string) {
+		return await this.adminService.getCinemaById(id);
+	}
+
+	@Get("cinemas")
+	@ApiOperation({ summary: "Get all cinemas with pagination" })
+	async getAllCinemas(
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.adminService.getAllCinemas(+page, +limit);
+	}
+
+	@Post("cinemas/halls")
+	@ApiOperation({ summary: "Add halls to a cinema" })
+	@ApiBody({ type: CreateCinemaHallDto })
+	@UsePipes(new JoiValidationPipe(CreateCinemaHallSchema))
+	async addCinemaHalls(@Body() body: CreateCinemaHallDto) {
+		return await this.adminService.createCinemaHall(body);
+	}
+
+	@Put("cinemas/:cinemaId/halls/:hallId")
+	@ApiOperation({ summary: "Update a cinema hall" })
+	@ApiBody({ type: UpdateCinemaHallDto })
+	@UsePipes(new JoiValidationPipe(UpdateCinemaHallSchema))
+	async updateCinemaHall(
+		@Param("cinemaId") cinemaId: string,
+		@Param("hallId") hallId: string,
+		@Body() body: UpdateCinemaHallDto,
+	) {
+		return await this.adminService.updateCinemaHall(cinemaId, hallId, body);
+	}
+
+	@Delete("cinemas/:cinemaId/halls/:hallId")
+	@ApiOperation({ summary: "Delete a cinema hall" })
+	async deleteCinemaHall(
+		@Param("cinemaId") cinemaId: string,
+		@Param("hallId") hallId: string,
+	) {
+		return await this.adminService.deleteCinemaHall(cinemaId, hallId);
+	}
+
+	@Get("cinemas/halls/:hallId")
+	@ApiOperation({ summary: "Get a cinema hall by ID" })
+	async getCinemaHallById(@Param("hallId") hallId: string) {
+		return await this.adminService.getCinemaHallById(hallId);
+	}
+
+	@Get("cinemas/:cinemaId/halls")
+	@ApiOperation({ summary: "Get all halls in a cinema with pagination" })
+	async getAllCinemaHalls(
+		@Param("cinemaId") cinemaId: string,
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.adminService.getAllCinemaHallsByCinemaId(
+			cinemaId,
+			+page,
+			+limit,
+		);
+	}
+
+	@Post("movies")
+	@ApiOperation({ summary: "Create a new movie cinema" })
+	@ApiBody({ type: CreateCinemaMovieDto })
+	@UsePipes(new JoiValidationPipe(CreateCinemaMovieSchema))
+	async createCinemaMovie(@Body() body: CreateCinemaMovieDto) {
+		return await this.adminService.createCinemaMovie(body);
+	}
+
+	@Put("movies/:id")
+	@ApiOperation({ summary: "Update an existing movie cinema" })
+	@ApiBody({ type: UpdateCinemaMovieDto })
+	@UsePipes(new JoiValidationPipe(UpdateCinemaMovieSchema))
+	async updateCinemaMovie(
+		@Param("id") id: string,
+		@Body() body: UpdateCinemaMovieDto,
+	) {
+		return await this.adminService.updateCinemaMovie(id, body);
+	}
+
+	@Delete("movies/:id")
+	@ApiOperation({ summary: "Delete a movie cinema" })
+	async deleteCinemaMovie(@Param("id") id: string) {
+		return await this.adminService.deleteCinemaMovie(id);
+	}
+
+	@Get("movies/showtimes")
+	@ApiOperation({ summary: "Get all movies by showtime" })
+	async getTodayMovieShowtimes(
+		@Query(new QueryJoiValidationPipe(MovieShowtimePaginationQuerySchema))
+		{ page, limit, date }: MovieShowtimePaginationQueryDto,
+	) {
+		return await this.adminService.getMoviesByShowtime(date, +page, +limit);
+	}
+
+	@Get("movies/:id")
+	@ApiOperation({ summary: "Get a movie cinema by ID" })
+	async getCinemaMovieById(@Param("id") id: string) {
+		return await this.adminService.getCinemaMovieById(id);
+	}
+
+	@Get("movies")
+	@ApiOperation({ summary: "Get all movie cinemas with pagination" })
+	async getAllCinemaMovies(
+		@Query(new QueryJoiValidationPipe(MoviePaginationQuerySchema))
+		{ page, limit, genreId }: MoviePaginationQueryDto,
+	) {
+		return await this.adminService.getAllCinemaMovies({
+			page,
+			limit,
+			genreId,
+		});
+	}
+
+	@Post("movies/:movieId/genres")
+	@ApiOperation({ summary: "Associate genres with a movie" })
+	@ApiBody({ type: AddMovieGenresToMovieDto })
+	@UsePipes(new JoiValidationPipe(AddMovieGenresToMovieSchema))
+	async addGenresToMovie(
+		@Param("movieId") movieId: string,
+		@Body() body: AddMovieGenresToMovieDto,
+	) {
+		return await this.adminService.addMovieGenresToCinemaMovie(
+			movieId,
+			body.genreIds,
+		);
+	}
+
+	@Delete("movies/:movieId/genres")
+	@ApiOperation({ summary: "Remove associated genres from a movie" })
+	@UsePipes(new JoiValidationPipe(RemoveMovieGenresFromMovieSchema))
+	async removeGenresFromMovie(
+		@Param("movieId") movieId: string,
+		@Body() body: RemoveMovieGenresFromMovieDto,
+	) {
+		return await this.adminService.removeMovieGenresFromCinemaMovie(
+			movieId,
+			body.genreIds,
+		);
+	}
+
+	@Post("movies/showtimes")
+	@ApiOperation({ summary: "Add showtimes to a movie" })
+	@ApiBody({ type: CreateMovieShowtimeDto })
+	@UsePipes(new JoiValidationPipe(CreateMovieShowtimeSchema))
+	async addShowtimesToMovie(@Body() body: CreateMovieShowtimeDto) {
+		return await this.adminService.createMovieShowtime(body);
+	}
+
+	@Put("movies/showtimes/:id")
+	@ApiOperation({ summary: "Update a movie showtime" })
+	@ApiBody({ type: UpdateMovieShowtimeDto })
+	@UsePipes(new JoiValidationPipe(UpdateMovieShowtimeSchema))
+	async updateMovieShowtime(
+		@Param("id") id: number,
+		@Body() body: UpdateMovieShowtimeDto,
+	) {
+		return await this.adminService.updateMovieShowtime(id, body);
+	}
+
+	@Delete("movies/showtimes/:id")
+	@ApiOperation({ summary: "Delete a movie showtime" })
+	async deleteMovieShowtime(@Param("id", ParseIntPipe) id: number) {
+		return await this.adminService.deleteMovieShowtime(id);
+	}
+
+	@Put("movies/showtimes/:id/available")
+	@ApiOperation({ summary: "Toggle movie showtime available" })
+	async toggleMovieShowtimeAvailability(@Param("id", ParseIntPipe) id: number) {
+		return await this.adminService.makeMovieShowtimeAvailable(id);
+	}
+
+	@Put("movies/showtimes/:id/unavailable")
+	@ApiOperation({ summary: "Toggle movie showtime unavailable" })
+	async toggleMovieShowtimeUnavailability(
+		@Param("id", ParseIntPipe) id: number,
+	) {
+		return await this.adminService.makeMovieShowtimeUnavailable(id);
+	}
+
+	@Get("movies/:movieId/showtimes")
+	@ApiOperation({ summary: "Get all showtimes for a specific movie" })
+	async getShowtimesByMovieId(
+		@Param("movieId") movieId: string,
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.adminService.getMovieShowtimeByMovieId(
+			movieId,
+			+page,
+			+limit,
+		);
+	}
+
+	@Get("movies/showtimes/upcoming")
+	@ApiOperation({ summary: "Get all upcoming movie showtimes" })
+	async getUpcomingMovieShowtimes(
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.adminService.getUpcomingMovies(+page, +limit);
 	}
 }

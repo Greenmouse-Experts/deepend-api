@@ -1,0 +1,1 @@
+ALTER TABLE `cinema_movies` ADD CONSTRAINT `cinema_movies_title_unique` UNIQUE(`title`);

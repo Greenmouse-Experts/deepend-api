@@ -8,8 +8,13 @@ import {
 	boolean,
 	primaryKey,
 	foreignKey,
+	time,
+	date,
+	text,
+	unique,
 } from "drizzle-orm/mysql-core";
 import {
+	cinemaMoviesGenres,
 	equipmentCategories,
 	foodAddonCategories,
 	foodAddonsItems,
@@ -20,6 +25,7 @@ import { ID_GENERATOR_LENGTH } from "src/common/constants";
 import { generateId } from "src/common/helpers";
 import { relations } from "drizzle-orm";
 import { point } from "../customTypes";
+import { countries } from "./countries";
 
 export type CreateFood = typeof foods.$inferInsert;
 export type CreateVRGame = typeof vrgames.$inferInsert;
@@ -27,6 +33,11 @@ export type CreateHotelAmenity = typeof hotelAmenities.$inferInsert;
 export type CreateHotel = typeof hotels.$inferInsert;
 export type CreateHotelRoom = typeof hotelRooms.$inferInsert;
 export type CreateEquipmentRentals = typeof equipmentRentals.$inferInsert;
+export type CreateCinema = typeof cinemas.$inferInsert;
+export type CreateCinemaHall = typeof cinemaHalls.$inferInsert;
+export type CreateCinemaMovie = typeof cinemaMovies.$inferInsert;
+export type CreateCinemaMovieShowtime =
+	typeof cinemaMoviesShowtimes.$inferInsert;
 
 export const foods = mysqlTable("foods", {
 	id: varchar("id", { length: ID_GENERATOR_LENGTH })
@@ -325,6 +336,178 @@ export const equipmentRentalsRelation = relations(
 		category: one(equipmentCategories, {
 			fields: [equipmentRentals.categoryId],
 			references: [equipmentCategories.id],
+		}),
+	}),
+);
+
+export const cinemas = mysqlTable("cinemas", {
+	id: varchar("id", { length: ID_GENERATOR_LENGTH })
+		.$defaultFn(() => generateId())
+		.primaryKey(),
+	name: varchar("name", { length: 255 }).unique().notNull(),
+	address: varchar("address", { length: 512 }).notNull(),
+	city: varchar("city", { length: 255 }).notNull(),
+	state: varchar("state", { length: 255 }).notNull(),
+	countryId: int("country_id")
+		.references(() => countries.id)
+		.notNull(),
+	createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { fsp: 6 })
+		.$onUpdateFn(() => new Date())
+		.notNull(),
+});
+
+export const cinemaHalls = mysqlTable("cinema_halls", {
+	id: varchar("id", { length: ID_GENERATOR_LENGTH })
+		.$defaultFn(() => generateId())
+		.primaryKey(),
+	cinemaId: varchar("cinema_id", { length: ID_GENERATOR_LENGTH })
+		.notNull()
+		.references(() => cinemas.id, { onDelete: "cascade" }),
+	name: varchar("name", { length: 255 }).notNull(),
+	createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { fsp: 6 })
+		.$onUpdateFn(() => new Date())
+		.notNull(),
+});
+
+export const cinemaMovies = mysqlTable("cinema_movies", {
+	id: varchar("id", { length: ID_GENERATOR_LENGTH })
+		.$defaultFn(() => generateId())
+		.primaryKey(),
+	cinemaId: varchar("cinema_id", { length: ID_GENERATOR_LENGTH })
+		.notNull()
+		.references(() => cinemas.id, { onDelete: "cascade" }),
+	title: varchar("title", { length: 255 }).unique().notNull(),
+	description: varchar("description", { length: 1024 }),
+	durationMinutes: int("duration_minutes").notNull(),
+	ageRating: int("age_rating").default(0).notNull(),
+	posterUrl: varchar("poster_url", { length: 512 }),
+	posterPath: varchar("poster_path", { length: 512 }),
+	trailerUrl: text("trailer_url"),
+	trailerPath: text("trailer_path"),
+	createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { fsp: 6 })
+		.$onUpdateFn(() => new Date())
+		.notNull(),
+});
+
+export const cinemaMoviesToGenres = mysqlTable(
+	"cinema_movies_to_genres",
+	{
+		movieId: varchar("movie_id", { length: ID_GENERATOR_LENGTH }).notNull(),
+		genreId: int("genre_id").notNull(),
+		createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+		updatedAt: timestamp("updated_at", { fsp: 6 })
+			.notNull()
+			.$onUpdateFn(() => new Date()),
+	},
+	(table) => [
+		primaryKey({ columns: [table.movieId, table.genreId] }),
+		foreignKey({
+			name: "fk_cinema_movie_to_genre_movie_id",
+			columns: [table.movieId],
+			foreignColumns: [cinemaMovies.id],
+		}).onDelete("cascade"),
+		foreignKey({
+			name: "fk_cinema_movie_to_genre_genre_id",
+			columns: [table.genreId],
+			foreignColumns: [cinemaMoviesGenres.id],
+		}).onDelete("cascade"),
+	],
+);
+
+export const cinemaMoviesShowtimes = mysqlTable(
+	"cinema_movies_showtimes",
+	{
+		id: int("id").autoincrement().primaryKey(),
+		movieId: varchar("movie_id", { length: ID_GENERATOR_LENGTH }).notNull(),
+		cinemaHallId: varchar("cinema_hall_id", {
+			length: ID_GENERATOR_LENGTH,
+		}).notNull(),
+		showDate: date("show_date", { mode: "string" }).notNull(),
+		showtime: time("showtime").notNull(),
+		ticketPrice: decimal("ticket_price", { precision: 10, scale: 2 }).notNull(),
+		totalSeats: int("total_seats").default(100).notNull(),
+		isAvailable: boolean("is_available").default(false).notNull(),
+		createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+		updatedAt: timestamp("updated_at", { fsp: 6 })
+			.notNull()
+			.$onUpdateFn(() => new Date()),
+	},
+	(table) => [
+		foreignKey({
+			name: "fk_cinema_movie_showtime_movie_id",
+			columns: [table.movieId],
+			foreignColumns: [cinemaMovies.id],
+		}).onDelete("cascade"),
+		foreignKey({
+			name: "fk_cinema_movie_showtime_cinema_hall_id",
+			columns: [table.cinemaHallId],
+			foreignColumns: [cinemaHalls.id],
+		}).onDelete("cascade"),
+		unique("uk_cinema_movie_showtime_unique").on(
+			table.movieId,
+			table.cinemaHallId,
+			table.showDate,
+			table.showtime,
+		),
+	],
+);
+
+export const cinemasRelations = relations(cinemas, ({ one, many }) => ({
+	halls: many(cinemaHalls),
+	movies: many(cinemaMovies),
+	country: one(countries, {
+		fields: [cinemas.countryId],
+		references: [countries.id],
+	}),
+}));
+
+export const cinemaHallsRelations = relations(cinemaHalls, ({ one, many }) => ({
+	cinema: one(cinemas, {
+		fields: [cinemaHalls.cinemaId],
+		references: [cinemas.id],
+	}),
+	showtimes: many(cinemaMoviesShowtimes),
+}));
+
+export const cinemaMoviesRelations = relations(
+	cinemaMovies,
+	({ one, many }) => ({
+		cinema: one(cinemas, {
+			fields: [cinemaMovies.cinemaId],
+			references: [cinemas.id],
+		}),
+		genres: many(cinemaMoviesToGenres),
+		showtimes: many(cinemaMoviesShowtimes),
+	}),
+);
+
+export const cinemaMoviesToGenresRelations = relations(
+	cinemaMoviesToGenres,
+	({ one }) => ({
+		movie: one(cinemaMovies, {
+			fields: [cinemaMoviesToGenres.movieId],
+			references: [cinemaMovies.id],
+		}),
+		genre: one(cinemaMoviesGenres, {
+			fields: [cinemaMoviesToGenres.genreId],
+			references: [cinemaMoviesGenres.id],
+		}),
+	}),
+);
+
+export const cinemaMoviesShowtimesRelations = relations(
+	cinemaMoviesShowtimes,
+	({ one }) => ({
+		movie: one(cinemaMovies, {
+			fields: [cinemaMoviesShowtimes.movieId],
+			references: [cinemaMovies.id],
+		}),
+		cinemaHall: one(cinemaHalls, {
+			fields: [cinemaMoviesShowtimes.cinemaHallId],
+			references: [cinemaHalls.id],
 		}),
 	}),
 );

@@ -876,3 +876,385 @@ export const UpdateEquipmentRentalSchema = Joi.object({
 	quantityAvailable: Joi.number().integer().min(1).required(),
 	address: Joi.string().max(512).trim().optional(),
 });
+
+export class CreateCinemaDto {
+	@ApiProperty({
+		example: "Downtown Cinema",
+		description: "The name of the cinema",
+	})
+	name: string;
+
+	@ApiProperty({
+		example: "123 Main St, Anytown, USA",
+		description: "The address of the cinema",
+	})
+	address: string;
+
+	@ApiProperty({
+		example: "Anytown",
+		description: "The city where the cinema is located",
+	})
+	city: string;
+
+	@ApiProperty({
+		example: "California",
+		description: "The state where the cinema is located",
+	})
+	state: string;
+
+	@ApiProperty({
+		example: 1,
+		description: "The ID of the country where the cinema is located",
+	})
+	countryId: number;
+}
+
+export const CreateCinemaSchema = Joi.object({
+	name: Joi.string().trim().max(255).required(),
+	address: Joi.string().trim().max(500).required(),
+	city: Joi.string().trim().max(100).required(),
+	state: Joi.string().trim().max(100).required(),
+	countryId: Joi.number().integer().positive().required(),
+});
+
+export class UpdateCinemaDto {
+	@ApiProperty({
+		example: "Downtown Cinema",
+		description: "The name of the cinema",
+	})
+	name?: string;
+
+	@ApiProperty({
+		example: "123 Main St, Anytown, USA",
+		description: "The address of the cinema",
+	})
+	address?: string;
+
+	@ApiProperty({
+		example: "Anytown",
+		description: "The city where the cinema is located",
+	})
+	city?: string;
+
+	@ApiProperty({
+		example: "California",
+		description: "The state where the cinema is located",
+	})
+	state?: string;
+
+	@ApiProperty({
+		example: 1,
+		description: "The ID of the country where the cinema is located",
+	})
+	countryId?: number;
+}
+
+export const UpdateCinemaSchema = Joi.object({
+	name: Joi.string().trim().max(255).optional(),
+	address: Joi.string().trim().max(500).optional(),
+	city: Joi.string().trim().max(100).optional(),
+	state: Joi.string().trim().max(100).optional(),
+	countryId: Joi.number().integer().positive().optional(),
+});
+
+export class CreateCinemaHallDto {
+	@ApiProperty({
+		example: "Hall 1",
+		description: "The name of the cinema hall",
+	})
+	name: string;
+
+	@ApiProperty({
+		example: "iiujiodjk",
+		description: "The ID of the cinema this hall belongs to",
+	})
+	cinemaId: string;
+}
+
+export const CreateCinemaHallSchema = Joi.object({
+	name: Joi.string().trim().max(255).required(),
+	cinemaId: Joi.string().required(),
+});
+
+export class UpdateCinemaHallDto {
+	@ApiProperty({
+		example: "Hall 1",
+		description: "The name of the cinema hall",
+	})
+	name?: string;
+}
+
+export const UpdateCinemaHallSchema = Joi.object({
+	name: Joi.string().trim().max(255).optional(),
+});
+
+export class CreateCinemaMovieDto {
+	@ApiProperty({
+		example: "iiujiodjk",
+		description: "The ID of the cinema this movie is being shown at",
+	})
+	cinemaId: string;
+
+	@ApiProperty({
+		example: "Inception",
+		description: "The title of the movie",
+	})
+	title: string;
+
+	@ApiProperty({
+		example: "A mind-bending thriller by Christopher Nolan.",
+		description: "The description of the movie",
+	})
+	description: string;
+
+	@ApiProperty({
+		example: 148,
+		description: "The duration of the movie in minutes",
+	})
+	durationMinutes: number;
+
+	@ApiProperty({
+		example: 1,
+		description: "The genre ID of the movie",
+	})
+	ageRating: number;
+
+	@ApiProperty({
+		example: "http://example.com/poster.jpg",
+		description: "The URL of the movie poster",
+	})
+	posterUrl: string;
+
+	@ApiProperty({
+		example: "/images/poster.jpg",
+		description: "The path of the movie poster on the server",
+	})
+	posterPath: string;
+
+	@ApiProperty({
+		example: "http://example.com/trailer.mp4",
+		description: "The URL of the movie trailer",
+	})
+	trailerUrl: string;
+
+	@ApiProperty({
+		example: "/videos/trailer.mp4",
+		description: "The path of the movie trailer on the server",
+	})
+	trailerPath: string;
+}
+
+export const CreateCinemaMovieSchema = Joi.object({
+	cinemaId: Joi.string().required(),
+	title: Joi.string().trim().max(255).required(),
+	description: Joi.string().trim().max(2000).required(),
+	durationMinutes: Joi.number().integer().positive().required(),
+	ageRating: Joi.number().integer().min(0).max(100).required(),
+	posterUrl: Joi.string().uri().required(),
+	posterPath: Joi.string().trim().required(),
+	trailerUrl: Joi.string().uri().required(),
+	trailerPath: Joi.string().trim().required(),
+});
+
+export class UpdateCinemaMovieDto {
+	@ApiProperty({
+		example: "iiujiodjk",
+		description: "The ID of the cinema this movie is being shown at",
+	})
+	cinemaId?: string;
+
+	@ApiProperty({
+		example: "Inception",
+		description: "The title of the movie",
+	})
+	title?: string;
+
+	@ApiProperty({
+		example: "A mind-bending thriller by Christopher Nolan.",
+		description: "The description of the movie",
+	})
+	description?: string;
+
+	@ApiProperty({
+		example: 148,
+		description: "The duration of the movie in minutes",
+	})
+	durationMinutes?: number;
+
+	@ApiProperty({
+		example: 1,
+		description: "The genre ID of the movie",
+	})
+	ageRating?: number;
+
+	@ApiProperty({
+		example: "http://example.com/poster.jpg",
+		description: "The URL of the movie poster",
+	})
+	posterUrl?: string;
+
+	@ApiProperty({
+		example: "/images/poster.jpg",
+		description: "The path of the movie poster on the server",
+	})
+	posterPath?: string;
+
+	@ApiProperty({
+		example: "http://example.com/trailer.mp4",
+		description: "The URL of the movie trailer",
+	})
+	trailerUrl?: string;
+
+	@ApiProperty({
+		example: "/videos/trailer.mp4",
+		description: "The path of the movie trailer on the server",
+	})
+	trailerPath?: string;
+}
+
+export const UpdateCinemaMovieSchema = Joi.object({
+	cinemaId: Joi.string().optional(),
+	title: Joi.string().trim().max(255).optional(),
+	description: Joi.string().trim().max(2000).optional(),
+	durationMinutes: Joi.number().integer().positive().optional(),
+	ageRating: Joi.number().integer().min(0).max(100).optional(),
+	posterUrl: Joi.string().uri().optional(),
+	posterPath: Joi.string().trim().optional(),
+	trailerUrl: Joi.string().uri().optional(),
+	trailerPath: Joi.string().trim().optional(),
+});
+
+export class AddMovieGenresToMovieDto {
+	@ApiProperty({
+		example: [1, 2, 3],
+		description: "List of genre IDs to be added to the movie",
+	})
+	genreIds: number[];
+}
+
+export const AddMovieGenresToMovieSchema = Joi.object({
+	genreIds: Joi.array()
+		.items(Joi.number().integer().positive())
+		.min(1)
+		.required(),
+});
+
+export class RemoveMovieGenresFromMovieDto {
+	@ApiProperty({
+		example: [1, 2, 3],
+		description: "List of genre IDs to be removed from the movie",
+	})
+	genreIds: number[];
+}
+
+export const RemoveMovieGenresFromMovieSchema = Joi.object({
+	genreIds: Joi.array()
+		.items(Joi.number().integer().positive())
+		.min(1)
+		.required(),
+});
+
+export class CreateMovieShowtimeDto {
+	@ApiProperty({
+		example: "15.00",
+		description: "Ticket price for the movie showtime",
+	})
+	ticketPrice: string;
+
+	@ApiProperty({
+		example: "iiujiodjk",
+		description: "The ID of the movie being shown",
+	})
+	movieId: string;
+
+	@ApiProperty({
+		example: "iiujiodjk",
+		description: "The ID of the cinema hall where the movie is shown",
+	})
+	cinemaHallId: string;
+
+	@ApiProperty({
+		example: "2023-10-15",
+		description: "The date of the movie showtime",
+	})
+	showDate: string;
+
+	@ApiProperty({
+		example: "18:30",
+		description: "The time of the movie showtime",
+	})
+	showtime: string;
+
+	@ApiProperty({
+		example: 100,
+		description: "Total number of seats available for the showtime",
+	})
+	totalSeats?: number | undefined;
+}
+
+export const CreateMovieShowtimeSchema = Joi.object({
+	ticketPrice: Joi.number().precision(2).positive().required(),
+	movieId: Joi.string().required(),
+	cinemaHallId: Joi.string().required(),
+	showDate: Joi.date().required().greater("now"),
+	showtime: Joi.string()
+		.pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/)
+		.required(),
+	totalSeats: Joi.number().integer().min(1).optional(),
+}).messages({
+	"string.pattern.base": "showtime must be in HH:mm format",
+	"date.base": "showDate must be a valid date",
+  "date.greater": "showDate must be in the future",
+});
+
+export class UpdateMovieShowtimeDto {
+	@ApiProperty({
+		example: "15.00",
+		description: "Ticket price for the movie showtime",
+	})
+	ticketPrice?: string;
+
+	@ApiProperty({
+		example: "iiujiodjk",
+		description: "The ID of the movie being shown",
+	})
+	movieId?: string;
+
+	@ApiProperty({
+		example: "iiujiodjk",
+		description: "The ID of the cinema hall where the movie is shown",
+	})
+	cinemaHallId?: string;
+
+	@ApiProperty({
+		example: "2023-10-15",
+		description: "The date of the movie showtime",
+	})
+	showDate?: string;
+
+	@ApiProperty({
+		example: "18:30",
+		description: "The time of the movie showtime",
+	})
+	showtime?: string;
+
+	@ApiProperty({
+		example: 100,
+		description: "Total number of seats available for the showtime",
+	})
+	totalSeats?: number | undefined;
+}
+
+export const UpdateMovieShowtimeSchema = Joi.object({
+	ticketPrice: Joi.number().precision(2).positive().optional(),
+	movieId: Joi.string().optional(),
+	cinemaHallId: Joi.string().optional(),
+	showDate: Joi.date().optional().greater("now"),
+	showtime: Joi.string()
+		.pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/)
+		.optional(),
+	totalSeats: Joi.number().integer().min(1).optional(),
+}).messages({
+	"string.pattern.base": "showtime must be in HH:mm format",
+	"date.greater": "showDate must be in the future",
+});

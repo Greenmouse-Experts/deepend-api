@@ -313,3 +313,58 @@ export const UpdateEquipmentCategorySchema = Joi.object({
 	icon: Joi.string().uri().optional(),
 	iconPath: Joi.string().optional(),
 });
+
+export class CreateMovieGenreDto {
+	@ApiProperty({
+		example: "Action",
+		description: "The name of the movie genre",
+	})
+	name: string;
+
+	@ApiProperty({
+		example: "Movies that are action-packed and thrilling",
+		description: "The description of the movie genre",
+		required: false,
+	})
+	description?: string;
+}
+
+export class CreateMovieGenresDto {
+	@ApiProperty({
+		type: [CreateMovieGenreDto],
+		description: "List of movie genres to be created",
+	})
+	genres: CreateMovieGenreDto[];
+}
+
+export const CreateMovieGenresSchema = Joi.object({
+	genres: Joi.array()
+		.items(
+			Joi.object({
+				name: Joi.string().trim().max(255).required(),
+				description: Joi.string().optional(),
+			}),
+		)
+		.min(1)
+		.required(),
+});
+
+export class UpdateMovieGenreDto {
+	@ApiProperty({
+		example: "Action",
+		description: "The name of the movie genre",
+	})
+	name: string;
+
+	@ApiProperty({
+		example: "Movies that are action-packed and thrilling",
+		description: "The description of the movie genre",
+		required: false,
+	})
+	description?: string;
+}
+
+export const UpdateMovieGenreSchema = Joi.object({
+	name: Joi.string().trim().max(255).optional(),
+	description: Joi.string().optional(),
+});

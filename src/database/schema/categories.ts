@@ -79,3 +79,13 @@ export const equipmentCategories = mysqlTable("equipment_categories", {
 		.notNull()
 		.$onUpdateFn(() => new Date()),
 });
+
+export const cinemaMoviesGenres = mysqlTable("cinema_movies_genres", {
+	id: int("id").primaryKey().autoincrement(),
+	name: varchar("name", { length: 255 }).notNull().unique(),
+	description: text("description"),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at")
+		.notNull()
+		.$onUpdateFn(() => new Date()),
+});
