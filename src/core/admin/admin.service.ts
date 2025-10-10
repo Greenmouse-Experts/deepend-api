@@ -8,16 +8,26 @@ import { CreateFood, CreateHotelAmenity } from "src/database/schema/services";
 import { isDatabaseError, mysqlErrorCodes } from "src/common/mysql.error";
 import {
 	AddFoodAddonItems,
+	CreateCinemaDto,
+	CreateCinemaHallDto,
+	CreateCinemaMovieDto,
 	CreateEquipmentRentalDto,
 	CreateHotelDto,
 	CreateHotelRoomDto,
+	CreateMovieShowtimeDto,
 	CreateVRGameDto,
+	UpdateCinemaDto,
+	UpdateCinemaHallDto,
+	UpdateCinemaMovieDto,
 	UpdateEquipmentRentalDto,
 	UpdateHotelAmenityDto,
+	UpdateMovieShowtimeDto,
 } from "./dto/service.dto";
 import {
 	CreateEquipmentCategoriesDto,
+	CreateMovieGenresDto,
 	UpdateEquipmentCategoryDto,
+	UpdateMovieGenreDto,
 } from "./dto/category.dto";
 
 @Injectable()
@@ -1301,5 +1311,582 @@ export class AdminService {
 		}
 
 		return { message: "Equipment rental is now unavailable" };
+	}
+
+	async createMovieGenres(genresData: CreateMovieGenresDto) {
+		try {
+			return await this.adminRepository.createMovieGenres(genresData.genres);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"One or more movie genres with these names already exist",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async updateMovieGenre(id: number, genre: UpdateMovieGenreDto) {
+		try {
+			const updatedMovieGenre = await this.adminRepository.updateMovieGenre(
+				id,
+				genre,
+			);
+
+			if (updatedMovieGenre[0].affectedRows === 0) {
+				throw new BadRequestException("Movie genre not found");
+			}
+
+			return { message: "Movie genre updated successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"Movie genre with this name already exists",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async deleteMovieGenre(id: number) {
+		const deletedMovieGenre = await this.adminRepository.deleteMovieGenre(id);
+
+		if (deletedMovieGenre[0].affectedRows === 0) {
+			throw new BadRequestException("Movie genre not found");
+		}
+
+		return { message: "Movie genre deleted successfully" };
+	}
+
+	async getAllMovieGenres(page: number, limit: number) {
+		const offset = (page - 1) * limit;
+		return await this.adminRepository.getAllMovieGenres(offset, limit);
+	}
+
+	async createCinema(movieData: CreateCinemaDto) {
+		try {
+			return await this.adminRepository.createCinema(movieData);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("Invalid country ID");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException("Cinema with this name already exists");
+			}
+
+			throw error;
+		}
+	}
+
+	async updateCinema(id: string, movieData: UpdateCinemaDto) {
+		try {
+			const updatedCinema = await this.adminRepository.updateCinema(
+				id,
+				movieData,
+			);
+
+			if (updatedCinema[0].affectedRows === 0) {
+				throw new BadRequestException("Cinema not found");
+			}
+
+			return { message: "Cinema updated successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("Invalid country ID");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException("Cinema with this title already exists");
+			}
+
+			throw error;
+		}
+	}
+
+	async deleteCinema(id: string) {
+		try {
+			const deletedCinema = await this.adminRepository.deleteCinema(id);
+
+			if (deletedCinema[0].affectedRows === 0) {
+				throw new BadRequestException("Cinema not found");
+			}
+
+			return { message: "Cinema deleted successfully" };
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async getCinemaById(id: string) {
+		const cinema = await this.adminRepository.getCinemaById(id);
+
+		if (cinema.length === 0) {
+			throw new BadRequestException("Cinema not found");
+		}
+
+		return cinema;
+	}
+
+	async getAllCinemas(page: number, limit: number) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getAllCinemas(offset, limit);
+	}
+
+	async createCinemaHall(hallData: CreateCinemaHallDto) {
+		try {
+			return await this.adminRepository.createCinemaHall(hallData);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("Invalid cinema ID");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"Cinema hall with this name already exists in this cinema",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async updateCinemaHall(
+		cinemaId: string,
+		hallId: string,
+		hallData: UpdateCinemaHallDto,
+	) {
+		try {
+			const updatedCinemaHall = await this.adminRepository.updateCinemaHall(
+				cinemaId,
+				hallId,
+				hallData,
+			);
+
+			if (updatedCinemaHall[0].affectedRows === 0) {
+				throw new BadRequestException("Cinema hall not found");
+			}
+
+			return { message: "Cinema hall updated successfully" };
+		} catch (error) {
+			console.error(error);
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("Invalid cinema ID");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"Cinema hall with this name already exists in this cinema",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async deleteCinemaHall(cinemaId: string, hallId: string) {
+		try {
+			const deletedCinemaHall = await this.adminRepository.deleteCinemaHall(
+				cinemaId,
+				hallId,
+			);
+
+			if (deletedCinemaHall[0].affectedRows === 0) {
+				throw new BadRequestException("Cinema hall not found");
+			}
+
+			return { message: "Cinema hall deleted successfully" };
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async getCinemaHallById(hallId: string) {
+		const cinemaHall = await this.adminRepository.getCinemaHallById(hallId);
+
+		if (cinemaHall.length === 0) {
+			throw new BadRequestException("Cinema hall not found");
+		}
+
+		return cinemaHall;
+	}
+
+	async getAllCinemaHallsByCinemaId(
+		cinemaId: string,
+		page: number,
+		limit: number,
+	) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getAllCinemaHallsByCinemaId(
+			cinemaId,
+			offset,
+			limit,
+		);
+	}
+
+	async getAllCinemaHalls(page: number, limit: number) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getAllCinemaHalls(offset, limit);
+	}
+
+	async createCinemaMovie(movieData: CreateCinemaMovieDto) {
+		try {
+			return await this.adminRepository.createCinemaMovie(movieData);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("Invalid cinema ID or genre ID");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"Cinema movie with this title already exists in this cinema",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async updateCinemaMovie(id: string, movieData: UpdateCinemaMovieDto) {
+		try {
+			const updatedCinemaMovie = await this.adminRepository.updateCinemaMovie(
+				id,
+				movieData,
+			);
+
+			if (updatedCinemaMovie[0].affectedRows === 0) {
+				throw new BadRequestException("Cinema movie not found");
+			}
+
+			return { message: "Cinema movie updated successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("Invalid cinema ID or genre ID");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"Cinema movie with this title already exists in this cinema",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async deleteCinemaMovie(id: string) {
+		try {
+			const deletedCinemaMovie =
+				await this.adminRepository.deleteCinemaMovie(id);
+
+			if (deletedCinemaMovie[0].affectedRows === 0) {
+				throw new BadRequestException("Cinema movie not found");
+			}
+
+			return { message: "Cinema movie deleted successfully" };
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async getCinemaMovieById(id: string) {
+		const cinemaMovie = await this.adminRepository.getCinemaMovieById(id);
+
+		if (!cinemaMovie) {
+			throw new BadRequestException("Cinema movie not found");
+		}
+
+		return cinemaMovie;
+	}
+
+	async getAllCinemaMovies({
+		genreId,
+		page,
+		limit,
+	}: { genreId: number; page: number; limit: number }) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getAllCinemaMovies({
+			offset,
+			limit,
+			genreId,
+		});
+	}
+
+	async addMovieGenresToCinemaMovie(movieId: string, genreIds: number[]) {
+		try {
+			const movies = genreIds.map((genreId) => ({
+				movieId,
+				genreId,
+			}));
+
+			await this.adminRepository.addMovieGenresToMovie(movies);
+
+			return { message: "Movie genres added to cinema movie successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("One or more invalid Genre IDs");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"One or more movie genres with these IDs already exist for this movie",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async removeMovieGenresFromCinemaMovie(movieId: string, genreIds: number[]) {
+		try {
+			const deletedMovieGenres =
+				await this.adminRepository.removeMovieGenresFromMovie(
+					movieId,
+					genreIds,
+				);
+
+			if (deletedMovieGenres && deletedMovieGenres[0].affectedRows === 0) {
+				throw new BadRequestException(
+					"No matching genres found for this cinema movie",
+				);
+			}
+
+			return { message: "Movie genres removed from cinema movie successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("One or more invalid Genre IDs");
+			}
+
+			throw error;
+		}
+	}
+
+	async createMovieShowtime(showtimeData: CreateMovieShowtimeDto) {
+		try {
+			return await this.adminRepository.createMovieShowtime(showtimeData);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException(
+					"Invalid cinema ID, hall ID, or movie ID",
+				);
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"Showtime with this time already exists in this hall",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async updateMovieShowtime(id: number, showtimeData: UpdateMovieShowtimeDto) {
+		try {
+			const updatedShowtime = await this.adminRepository.updateMovieShowtime(
+				id,
+				showtimeData,
+			);
+
+			if (updatedShowtime[0].affectedRows === 0) {
+				throw new BadRequestException("Movie showtime not found");
+			}
+
+			return { message: "Movie showtime updated successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException(
+					"Invalid cinema ID, hall ID, or movie ID",
+				);
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"Showtime with this time already exists in this hall",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async deleteMovieShowtime(id: number) {
+		try {
+			const deletedShowtime =
+				await this.adminRepository.deleteMovieShowtime(id);
+
+			if (deletedShowtime[0].affectedRows === 0) {
+				throw new BadRequestException("Movie showtime not found");
+			}
+
+			return { message: "Movie showtime deleted successfully" };
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async makeMovieShowtimeAvailable(id: number) {
+		const showtime = await this.adminRepository.getMovieShowtimeById(id);
+
+		if (showtime && !showtime.isAvailable) {
+			// Ensure the associated movie is available before making the showtime available
+			const movie = showtime?.movie;
+
+			if (!movie) {
+				throw new BadRequestException(
+					"Cannot make showtime available for an unavailable movie",
+				);
+			}
+		}
+		const movieGenres =
+			showtime?.movie.genres.map((genre) => genre.genre) || [];
+
+		if (movieGenres.length === 0) {
+			throw new BadRequestException(
+				"Cannot make showtime available for a movie without genres",
+			);
+		}
+
+		const result = await this.adminRepository.makeMovieShowtimeAvailable(id);
+
+		if (result[0].affectedRows === 0) {
+			throw new BadRequestException(
+				"Movie showtime not found or already available",
+			);
+		}
+
+		return { message: "Movie showtime is now available" };
+	}
+
+	async makeMovieShowtimeUnavailable(id: number) {
+		const result = await this.adminRepository.makeMovieShowtimeUnavailable(id);
+
+		if (result[0].affectedRows === 0) {
+			throw new BadRequestException(
+				"Movie showtime not found or already unavailable",
+			);
+		}
+		return { message: "Movie showtime is now unavailable" };
+	}
+
+	async getMovieShowtimeByMovieId(id: string, page: number, limit: number) {
+		const offset = (page - 1) * limit;
+
+		const showtime = await this.adminRepository.getMovieShowtimeByMovieId(
+			id,
+			offset,
+			limit,
+		);
+
+		if (!showtime) {
+			throw new BadRequestException("Movie showtime not found");
+		}
+
+		return showtime;
+	}
+
+	async getUpcomingMovies(page: number, limit: number) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getUpcomingMovies(offset, limit);
+	}
+
+	async getTodayMovies(page: number, limit: number) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getTodayMovies(offset, limit);
 	}
 }
