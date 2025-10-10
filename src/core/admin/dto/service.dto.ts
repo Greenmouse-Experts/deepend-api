@@ -1196,13 +1196,15 @@ export const CreateMovieShowtimeSchema = Joi.object({
 	ticketPrice: Joi.number().precision(2).positive().required(),
 	movieId: Joi.string().required(),
 	cinemaHallId: Joi.string().required(),
-	showDate: Joi.date().required(),
+	showDate: Joi.date().required().greater("now"),
 	showtime: Joi.string()
 		.pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/)
 		.required(),
 	totalSeats: Joi.number().integer().min(1).optional(),
 }).messages({
 	"string.pattern.base": "showtime must be in HH:mm format",
+	"date.base": "showDate must be a valid date",
+  "date.greater": "showDate must be in the future",
 });
 
 export class UpdateMovieShowtimeDto {
@@ -1247,9 +1249,12 @@ export const UpdateMovieShowtimeSchema = Joi.object({
 	ticketPrice: Joi.number().precision(2).positive().optional(),
 	movieId: Joi.string().optional(),
 	cinemaHallId: Joi.string().optional(),
-	showDate: Joi.date().optional(),
+	showDate: Joi.date().optional().greater("now"),
 	showtime: Joi.string()
 		.pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/)
 		.optional(),
 	totalSeats: Joi.number().integer().min(1).optional(),
+}).messages({
+	"string.pattern.base": "showtime must be in HH:mm format",
+	"date.greater": "showDate must be in the future",
 });
