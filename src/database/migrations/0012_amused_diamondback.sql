@@ -1,0 +1,1 @@
+ALTER TABLE `cinema_movies_showtimes` ADD CONSTRAINT `uk_cinema_movie_showtime_unique` UNIQUE(`movie_id`,`cinema_hall_id`,`show_date`,`showtime`);
