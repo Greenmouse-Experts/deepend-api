@@ -249,4 +249,43 @@ export class ServicesService {
 
 		return rental;
 	}
+
+	async getUpcomingMovies(page = 1, limit = 10) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		const movies = await this.servicesRepository.getUpcomingMovies(
+			offset,
+			limit,
+		);
+
+		return {
+			movies,
+			pagination: {
+				page,
+				limit,
+				nextPage: movies.length === Number(limit) ? Number(page) + 1 : null,
+				prevPage: Number(page) - 1 > 0 ? Number(page) - 1 : null,
+			},
+		};
+	}
+
+	async getMoviesByShowtime(currentDate: string, page = 1, limit = 10) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		const movies = await this.servicesRepository.getMoviesByShowtime(
+			currentDate,
+			offset,
+			limit,
+		);
+
+		return {
+			movies,
+			pagination: {
+				page,
+				limit,
+				nextPage: movies.length === Number(limit) ? Number(page) + 1 : null,
+				prevPage: Number(page) - 1 > 0 ? Number(page) - 1 : null,
+			},
+		};
+	}
 }
