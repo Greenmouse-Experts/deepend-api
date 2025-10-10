@@ -1884,9 +1884,13 @@ export class AdminService {
 		return await this.adminRepository.getUpcomingMovies(offset, limit);
 	}
 
-	async getTodayMovies(page: number, limit: number) {
+	async getMoviesByShowtime(currentDate: string, page: number, limit: number) {
 		const offset = (page - 1) * limit;
 
-		return await this.adminRepository.getTodayMovies(offset, limit);
+		return await this.adminRepository.getMoviesByShowtime(
+			currentDate,
+			offset,
+			limit,
+		);
 	}
 }
