@@ -17,6 +17,8 @@ import { UserRoles } from "src/common/decorators/role/role.enum";
 import {
 	MoviePaginationQueryDto,
 	MoviePaginationQuerySchema,
+	MovieShowtimePaginationQueryDto,
+	MovieShowtimePaginationQuerySchema,
 	PaginationQueryDto,
 	PaginationQuerySchema,
 	ServicePaginationQueryDto,
@@ -902,6 +904,15 @@ export class AdminController {
 		return await this.adminService.deleteCinemaMovie(id);
 	}
 
+	@Get("movies/showtimes")
+	@ApiOperation({ summary: "Get all movies by showtime" })
+	async getTodayMovieShowtimes(
+		@Query(new QueryJoiValidationPipe(MovieShowtimePaginationQuerySchema))
+		{ page, limit, date }: MovieShowtimePaginationQueryDto,
+	) {
+		return await this.adminService.getMoviesByShowtime(date, +page, +limit);
+	}
+
 	@Get("movies/:id")
 	@ApiOperation({ summary: "Get a movie cinema by ID" })
 	async getCinemaMovieById(@Param("id") id: string) {
@@ -1008,14 +1019,5 @@ export class AdminController {
 		{ page, limit }: PaginationQueryDto,
 	) {
 		return await this.adminService.getUpcomingMovies(+page, +limit);
-	}
-
-	@Get("movies/showtimes/today")
-	@ApiOperation({ summary: "Get all movie showtimes for today" })
-	async getTodayMovieShowtimes(
-		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
-		{ page, limit }: PaginationQueryDto,
-	) {
-		return await this.adminService.getTodayMovies(+page, +limit);
 	}
 }
