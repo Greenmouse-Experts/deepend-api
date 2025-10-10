@@ -4,7 +4,9 @@ import { and, asc, desc, eq, gt, gte, inArray, like, sql } from "drizzle-orm";
 import {
 	advertBanners,
 	cinemaMovies,
+	cinemaMoviesGenres,
 	cinemaMoviesShowtimes,
+	cinemaMoviesToGenres,
 	equipmentCategories,
 	equipmentRentals,
 	foodAddonCategories,
@@ -430,21 +432,38 @@ END`.as("addons"),
 		return categories;
 	}
 
-	async getUpcomingMovies(offset: number, limit: number) {
+	async getUpcomingMovies({
+		offset,
+		limit,
+		search,
+		genreId,
+	}: { offset: number; limit: number; search?: string; genreId?: number }) {
 		const movies = await this.databaseService.db.query.cinemaMovies.findMany({
-			where: inArray(
-				cinemaMovies.id,
-				this.databaseService.db
-					.select({ movieId: cinemaMoviesShowtimes.movieId })
-					.from(cinemaMoviesShowtimes)
-					.where(
-						and(
-							gt(cinemaMoviesShowtimes.showDate, sql`CURDATE()`),
-							eq(cinemaMoviesShowtimes.isAvailable, true),
-						),
-					)
-					.orderBy(cinemaMoviesShowtimes.showDate)
-					.groupBy(cinemaMoviesShowtimes.movieId),
+			where: and(
+				inArray(
+					cinemaMovies.id,
+					this.databaseService.db
+						.select({ movieId: cinemaMoviesShowtimes.movieId })
+						.from(cinemaMoviesShowtimes)
+						.where(
+							and(
+								gt(cinemaMoviesShowtimes.showDate, sql`CURDATE()`),
+								eq(cinemaMoviesShowtimes.isAvailable, true),
+							),
+						)
+						.orderBy(cinemaMoviesShowtimes.showDate)
+						.groupBy(cinemaMoviesShowtimes.movieId),
+				),
+				search ? like(cinemaMovies.title, `%${search}%`) : undefined,
+				genreId
+					? inArray(
+							cinemaMovies.id,
+							this.databaseService.db
+								.select({ movieId: cinemaMoviesToGenres.movieId })
+								.from(cinemaMoviesToGenres)
+								.where(eq(cinemaMoviesToGenres.genreId, genreId)),
+						)
+					: undefined,
 			),
 			with: {
 				genres: {
@@ -495,28 +514,48 @@ END`.as("addons"),
 		}));
 	}
 
-	async getMoviesByShowtime(
-		currentDate: string,
-		offset: number,
-		limit: number,
-	) {
+	async getMoviesByShowtime({
+		currentDate,
+		offset,
+		limit,
+		search,
+		genreId,
+	}: {
+		currentDate: string;
+		offset: number;
+		limit: number;
+		search?: string;
+		genreId?: number;
+	}) {
 		const movies = await this.databaseService.db.query.cinemaMovies.findMany({
-			where: inArray(
-				cinemaMovies.id,
-				this.databaseService.db
-					.select({ movieId: cinemaMoviesShowtimes.movieId })
-					.from(cinemaMoviesShowtimes)
-					.where(
-						and(
-							eq(
-								sql`DATE(${cinemaMoviesShowtimes.showDate})`,
-								sql`DATE(${currentDate})`,
+			where: and(
+				inArray(
+					cinemaMovies.id,
+					this.databaseService.db
+						.select({ movieId: cinemaMoviesShowtimes.movieId })
+						.from(cinemaMoviesShowtimes)
+						.where(
+							and(
+								eq(
+									sql`DATE(${cinemaMoviesShowtimes.showDate})`,
+									sql`DATE(${currentDate})`,
+								),
+								eq(cinemaMoviesShowtimes.isAvailable, true),
 							),
-							eq(cinemaMoviesShowtimes.isAvailable, true),
-						),
-					)
-					.orderBy(cinemaMoviesShowtimes.showtime)
-					.groupBy(cinemaMoviesShowtimes.movieId),
+						)
+						.orderBy(cinemaMoviesShowtimes.showtime)
+						.groupBy(cinemaMoviesShowtimes.movieId),
+				),
+				search ? like(cinemaMovies.title, `%${search}%`) : undefined,
+				genreId
+					? inArray(
+							cinemaMovies.id,
+							this.databaseService.db
+								.select({ movieId: cinemaMoviesToGenres.movieId })
+								.from(cinemaMoviesToGenres)
+								.where(eq(cinemaMoviesToGenres.genreId, genreId)),
+						)
+					: undefined,
 			),
 			with: {
 				genres: {

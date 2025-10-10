@@ -4,6 +4,8 @@ import { QueryJoiValidationPipe } from "src/common/pipes/query-validation.pipe";
 import {
 	HotelPaginationQueryDto,
 	hotelPaginationQuerySchema,
+	MoviePaginationQueryDto,
+	MoviePaginationQuerySchema,
 	MovieShowtimePaginationQueryDto,
 	MovieShowtimePaginationQuerySchema,
 	PaginationQueryDto,
@@ -162,18 +164,29 @@ export class ServicesController {
 	@Get("movies/upcoming")
 	@ApiOperation({ summary: "Get all upcoming movie" })
 	async getUpcomingMovieShowtimes(
-		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
-		{ page, limit }: PaginationQueryDto,
+		@Query(new QueryJoiValidationPipe(MoviePaginationQuerySchema))
+		{ page, limit, search, genreId }: MoviePaginationQueryDto,
 	) {
-		return await this.servicesService.getUpcomingMovies(+page, +limit);
+		return await this.servicesService.getUpcomingMovies({
+			page,
+			limit,
+			search,
+			genreId,
+		});
 	}
 
 	@Get("movies/showtimes")
 	@ApiOperation({ summary: "Get all movies by showtime" })
 	async getTodayMovieShowtimes(
 		@Query(new QueryJoiValidationPipe(MovieShowtimePaginationQuerySchema))
-		{ page, limit, date }: MovieShowtimePaginationQueryDto,
+		{ page, limit, date, search, genreId }: MovieShowtimePaginationQueryDto,
 	) {
-		return await this.servicesService.getMoviesByShowtime(date, +page, +limit);
+		return await this.servicesService.getMoviesByShowtime({
+			currentDate: date,
+			page,
+			limit,
+			search,
+			genreId,
+		});
 	}
 }
