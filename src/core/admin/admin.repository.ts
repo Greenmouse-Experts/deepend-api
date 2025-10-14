@@ -25,6 +25,8 @@ import {
 	CreateHotel,
 	CreateHotelAmenity,
 	CreateHotelRoom,
+	CreateMovieSnack,
+	CreateSnack,
 	CreateVRGame,
 	equipmentRentals,
 	foods,
@@ -36,6 +38,8 @@ import {
 	hotelRooms,
 	hotels,
 	hotelToAmenities,
+	moviesSnacks,
+	snacks,
 	vrgames,
 } from "src/database/schema/services";
 
@@ -1044,6 +1048,76 @@ export class AdminRepository {
 			.delete(cinemaMovies)
 			.where(eq(cinemaMovies.id, id));
 		return result;
+	}
+
+	async createSnacks(snackData: CreateSnack) {
+		const result = await this.databaseService.db
+			.insert(snacks)
+			.values(snackData)
+			.$returningId();
+
+		return result[0];
+	}
+
+	async updateSnacks(id: number, snackData: Partial<CreateSnack>) {
+		const result = await this.databaseService.db
+			.update(snacks)
+			.set(snackData)
+			.where(eq(snacks.id, id));
+
+		return result;
+	}
+
+	async deleteSnacks(id: number) {
+		const result = await this.databaseService.db
+			.delete(snacks)
+			.where(eq(snacks.id, id));
+
+		return result;
+	}
+
+	async getAllSnacks(offset: number, limit: number) {
+		const snacksList = await this.databaseService.db
+			.select()
+			.from(snacks)
+			.limit(limit)
+			.offset(offset);
+
+		return snacksList;
+	}
+
+	async AddSnacksToMovie(movieSnacks: CreateMovieSnack[]) {
+		return await this.databaseService.db
+			.insert(moviesSnacks)
+			.values(movieSnacks)
+			.$returningId();
+	}
+
+	async removeSnacksFromMovie(movieId: string, snackIds: number[]) {
+		return await this.databaseService.db
+			.delete(moviesSnacks)
+			.where(
+				and(
+					eq(moviesSnacks.movieId, movieId),
+					inArray(moviesSnacks.snackId, snackIds),
+				),
+			);
+	}
+
+	async getSnacksByMovieId(movieId: string) {
+		const snacks = await this.databaseService.db.query.moviesSnacks.findMany({
+			where: eq(moviesSnacks.movieId, movieId),
+			with: {
+				snack: {
+					columns: {
+						createdAt: false,
+						updatedAt: false,
+					},
+				},
+			},
+		});
+
+		return snacks.map((s) => s.snack);
 	}
 
 	async getCinemaMovieById(id: string) {
