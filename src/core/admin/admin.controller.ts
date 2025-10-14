@@ -80,8 +80,12 @@ import {
 	CreateHotelSchema,
 	CreateMovieShowtimeDto,
 	CreateMovieShowtimeSchema,
+	CreateSnacksDto,
+	CreateSnacksSchema,
 	CreateVRGameDto,
 	CreateVRGameSchema,
+	MovieSnacksIdsDto,
+	MovieSnacksIdsSchema,
 	RemoveFoodAddonCategoryDto,
 	RemoveFoodAddonCategorySchema,
 	RemoveFoodAddonItemsDto,
@@ -110,6 +114,8 @@ import {
 	UpdateHotelSchema,
 	UpdateMovieShowtimeDto,
 	UpdateMovieShowtimeSchema,
+	UpdateSnacksDto,
+	UpdateSnacksSchema,
 	UpdateVRGameDto,
 	UpdateVRGameSchema,
 } from "./dto/service.dto";
@@ -782,6 +788,70 @@ export class AdminController {
 		{ page, limit }: PaginationQueryDto,
 	) {
 		return await this.adminService.getAllMovieGenres(+page, +limit);
+	}
+
+	@Post("movies/snacks")
+	@ApiOperation({ summary: "Create a new movie snack combo" })
+	@ApiBody({ type: CreateSnacksDto })
+	@UsePipes(new JoiValidationPipe(CreateSnacksSchema))
+	async createSnacks(@Body() body: CreateSnacksDto) {
+		return await this.adminService.createSnacks(body);
+	}
+
+	@Put("movies/snacks/:id")
+	@ApiOperation({ summary: "Update an existing movie snack combo" })
+	@ApiBody({ type: UpdateSnacksDto })
+	@UsePipes(new JoiValidationPipe(UpdateSnacksSchema))
+	async updateSnacks(
+		@Param("id", ParseIntPipe) id: number,
+		@Body() body: UpdateSnacksDto,
+	) {
+		return await this.adminService.updateSnacks(id, body);
+	}
+
+	@Delete("movies/snacks/:id")
+	@ApiOperation({ summary: "Delete a movie snack combo" })
+	async deleteSnacks(@Param("id", ParseIntPipe) id: number) {
+		return await this.adminService.deleteSnacks(id);
+	}
+
+	@Get("movies/snacks")
+	@ApiOperation({ summary: "Get all movie snack combos with pagination" })
+	async getAllSnacks(
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.adminService.getAllSnacks(+page, +limit);
+	}
+
+	@Post("movies/:movieId/snacks")
+	@ApiOperation({ summary: "Associate snack combos with a movie" })
+	@ApiBody({ type: MovieSnacksIdsDto })
+	@UsePipes(new JoiValidationPipe(MovieSnacksIdsSchema))
+	async addSnacksToMovie(
+		@Param("movieId") movieId: string,
+		@Body() body: MovieSnacksIdsDto,
+	) {
+		return await this.adminService.addSnacksToMovie(movieId, body.snackIds);
+	}
+
+	@Delete("movies/:movieId/snacks")
+	@ApiOperation({ summary: "Remove associated snack combos from a movie" })
+	@UsePipes(new JoiValidationPipe(MovieSnacksIdsSchema))
+	async removeSnacksFromMovie(
+		@Param("movieId") movieId: string,
+		@Body() body: MovieSnacksIdsDto,
+	) {
+		return await this.adminService.removeSnacksFromMovie(
+			movieId,
+			body.snackIds,
+		);
+	}
+
+	@Get("movies/:movieId/snacks")
+	@ApiOperation({ summary: "Get all snack combos associated with a movie" })
+	async getSnacksByMovieId(@Param("movieId") movieId: string) {
+		return await this.adminService.getSnacksByMovieId(movieId);
 	}
 
 	@Post("cinemas")
