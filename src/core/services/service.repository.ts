@@ -489,6 +489,22 @@ END`.as("addons"),
 						countryId: false,
 					},
 				},
+				snacks: {
+					columns: {
+						createdAt: false,
+						updatedAt: false,
+						movieId: false,
+						snackId: false,
+					},
+					with: {
+						snack: {
+							columns: {
+								createdAt: false,
+								updatedAt: false,
+							},
+						},
+					},
+				},
 				showtimes: {
 					columns: {
 						createdAt: false,
@@ -511,6 +527,7 @@ END`.as("addons"),
 		return movies.map((movie) => ({
 			...movie,
 			genres: movie.genres.map((g) => g.genre),
+			snacks: movie.snacks.map((s) => s.snack),
 		}));
 	}
 
@@ -581,6 +598,22 @@ END`.as("addons"),
 						updatedAt: false,
 					},
 				},
+				snacks: {
+					columns: {
+						createdAt: false,
+						updatedAt: false,
+						movieId: false,
+						snackId: false,
+					},
+					with: {
+						snack: {
+							columns: {
+								createdAt: false,
+								updatedAt: false,
+							},
+						},
+					},
+				},
 				showtimes: {
 					columns: {
 						createdAt: false,
@@ -604,6 +637,7 @@ END`.as("addons"),
 		return movies.map((movie) => ({
 			...movie,
 			genres: movie.genres.map((g) => g.genre),
+			snacks: movie.snacks.map((s) => s.snack),
 		}));
 	}
 }
