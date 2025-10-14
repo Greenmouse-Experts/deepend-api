@@ -1008,6 +1008,12 @@ export class CreateCinemaMovieDto {
 	description: string;
 
 	@ApiProperty({
+		example: "Leonardo DiCaprio, Joseph Gordon-Levitt, Ellen Page",
+		description: "The main cast of the movie",
+	})
+	cast: string;
+
+	@ApiProperty({
 		example: 148,
 		description: "The duration of the movie in minutes",
 	})
@@ -1048,6 +1054,7 @@ export const CreateCinemaMovieSchema = Joi.object({
 	cinemaId: Joi.string().required(),
 	title: Joi.string().trim().max(255).required(),
 	description: Joi.string().trim().max(2000).required(),
+	cast: Joi.string().trim().max(1000).required(),
 	durationMinutes: Joi.number().integer().positive().required(),
 	ageRating: Joi.number().integer().min(0).max(100).required(),
 	posterUrl: Joi.string().uri().required(),
@@ -1074,6 +1081,12 @@ export class UpdateCinemaMovieDto {
 		description: "The description of the movie",
 	})
 	description?: string;
+
+	@ApiProperty({
+		example: "Leonardo DiCaprio, Joseph Gordon-Levitt, Ellen Page",
+		description: "The main cast of the movie",
+	})
+	cast?: string;
 
 	@ApiProperty({
 		example: 148,
@@ -1116,6 +1129,7 @@ export const UpdateCinemaMovieSchema = Joi.object({
 	cinemaId: Joi.string().optional(),
 	title: Joi.string().trim().max(255).optional(),
 	description: Joi.string().trim().max(2000).optional(),
+	cast: Joi.string().trim().max(1000).optional(),
 	durationMinutes: Joi.number().integer().positive().optional(),
 	ageRating: Joi.number().integer().min(0).max(100).optional(),
 	posterUrl: Joi.string().uri().optional(),
@@ -1149,6 +1163,59 @@ export class RemoveMovieGenresFromMovieDto {
 
 export const RemoveMovieGenresFromMovieSchema = Joi.object({
 	genreIds: Joi.array()
+		.items(Joi.number().integer().positive())
+		.min(1)
+		.required(),
+});
+
+export class CreateSnacksDto {
+	@ApiProperty({
+		example: "Popcorn",
+		description: "Name of the snack item",
+	})
+	name: string;
+
+	@ApiProperty({
+		example: 5.99,
+		description: "Price of the snack item",
+	})
+	price: string;
+}
+
+export const CreateSnacksSchema = Joi.object({
+	name: Joi.string().max(255).trim().required(),
+	price: Joi.number().precision(2).positive().required(),
+});
+
+export class UpdateSnacksDto {
+	@ApiProperty({
+		example: "Popcorn",
+		description: "Name of the snack item",
+	})
+	name?: string;
+
+	@ApiProperty({
+		example: 5.99,
+		description: "Price of the snack item",
+	})
+	price?: string;
+}
+
+export const UpdateSnacksSchema = Joi.object({
+	name: Joi.string().max(255).trim().optional(),
+	price: Joi.number().precision(2).positive().optional(),
+});
+
+export class MovieSnacksIdsDto {
+	@ApiProperty({
+		example: [1, 2, 3],
+		description: "List of snack IDs to be associated with the movie",
+	})
+	snackIds: number[];
+}
+
+export const MovieSnacksIdsSchema = Joi.object({
+	snackIds: Joi.array()
 		.items(Joi.number().integer().positive())
 		.min(1)
 		.required(),
@@ -1204,7 +1271,7 @@ export const CreateMovieShowtimeSchema = Joi.object({
 }).messages({
 	"string.pattern.base": "showtime must be in HH:mm format",
 	"date.base": "showDate must be a valid date",
-  "date.greater": "showDate must be in the future",
+	"date.greater": "showDate must be in the future",
 });
 
 export class UpdateMovieShowtimeDto {
