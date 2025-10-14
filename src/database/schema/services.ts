@@ -38,6 +38,8 @@ export type CreateCinemaHall = typeof cinemaHalls.$inferInsert;
 export type CreateCinemaMovie = typeof cinemaMovies.$inferInsert;
 export type CreateCinemaMovieShowtime =
 	typeof cinemaMoviesShowtimes.$inferInsert;
+export type CreateSnack = typeof snacks.$inferInsert;
+export type CreateMovieSnack = typeof moviesSnacks.$inferInsert;
 
 export const foods = mysqlTable("foods", {
 	id: varchar("id", { length: ID_GENERATOR_LENGTH })
@@ -380,6 +382,7 @@ export const cinemaMovies = mysqlTable("cinema_movies", {
 		.references(() => cinemas.id, { onDelete: "cascade" }),
 	title: varchar("title", { length: 255 }).unique().notNull(),
 	description: varchar("description", { length: 1024 }),
+	cast: text("cast"),
 	durationMinutes: int("duration_minutes").notNull(),
 	ageRating: int("age_rating").default(0).notNull(),
 	posterUrl: varchar("poster_url", { length: 512 }),
@@ -455,6 +458,41 @@ export const cinemaMoviesShowtimes = mysqlTable(
 	],
 );
 
+export const snacks = mysqlTable("snacks", {
+	id: int("id").autoincrement().primaryKey(),
+	name: varchar("name", { length: 255 }).unique().notNull(),
+	price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+	createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { fsp: 6 })
+		.$onUpdateFn(() => new Date())
+		.notNull(),
+});
+
+export const moviesSnacks = mysqlTable(
+	"movies_snacks",
+	{
+		movieId: varchar("movie_id", { length: ID_GENERATOR_LENGTH }).notNull(),
+		snackId: int("snack_id").notNull(),
+		createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+		updatedAt: timestamp("updated_at", { fsp: 6 })
+			.notNull()
+			.$onUpdateFn(() => new Date()),
+	},
+	(table) => [
+		primaryKey({ columns: [table.movieId, table.snackId] }),
+		foreignKey({
+			name: "fk_movies_snacks_movie_id",
+			columns: [table.movieId],
+			foreignColumns: [cinemaMovies.id],
+		}).onDelete("cascade"),
+		foreignKey({
+			name: "fk_movies_snacks_snack_id",
+			columns: [table.snackId],
+			foreignColumns: [snacks.id],
+		}).onDelete("cascade"),
+	],
+);
+
 export const cinemasRelations = relations(cinemas, ({ one, many }) => ({
 	halls: many(cinemaHalls),
 	movies: many(cinemaMovies),
@@ -481,6 +519,7 @@ export const cinemaMoviesRelations = relations(
 		}),
 		genres: many(cinemaMoviesToGenres),
 		showtimes: many(cinemaMoviesShowtimes),
+		snacks: many(moviesSnacks),
 	}),
 );
 
@@ -511,3 +550,18 @@ export const cinemaMoviesShowtimesRelations = relations(
 		}),
 	}),
 );
+
+export const snacksRelations = relations(snacks, ({ many }) => ({
+	movies: many(moviesSnacks),
+}));
+
+export const moviesSnacksRelations = relations(moviesSnacks, ({ one }) => ({
+	movie: one(cinemaMovies, {
+		fields: [moviesSnacks.movieId],
+		references: [cinemaMovies.id],
+	}),
+	snack: one(snacks, {
+		fields: [moviesSnacks.snackId],
+		references: [snacks.id],
+	}),
+}));

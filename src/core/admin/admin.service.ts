@@ -15,6 +15,7 @@ import {
 	CreateHotelDto,
 	CreateHotelRoomDto,
 	CreateMovieShowtimeDto,
+	CreateSnacksDto,
 	CreateVRGameDto,
 	UpdateCinemaDto,
 	UpdateCinemaHallDto,
@@ -22,6 +23,7 @@ import {
 	UpdateEquipmentRentalDto,
 	UpdateHotelAmenityDto,
 	UpdateMovieShowtimeDto,
+	UpdateSnacksDto,
 } from "./dto/service.dto";
 import {
 	CreateEquipmentCategoriesDto,
@@ -1650,6 +1652,134 @@ export class AdminService {
 		} catch (error) {
 			throw error;
 		}
+	}
+
+	async createSnacks(snackData: CreateSnacksDto) {
+		try {
+			return await this.adminRepository.createSnacks(snackData);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException("Snack with this name already exists");
+			}
+
+			throw error;
+		}
+	}
+
+	async updateSnacks(id: number, snackData: UpdateSnacksDto) {
+		try {
+			const updatedSnack = await this.adminRepository.updateSnacks(
+				id,
+				snackData,
+			);
+
+			if (updatedSnack[0].affectedRows === 0) {
+				throw new BadRequestException("Snack not found");
+			}
+
+			return { message: "Snack updated successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException("Snack with this name already exists");
+			}
+
+			throw error;
+		}
+	}
+
+	async deleteSnacks(id: number) {
+		try {
+			const deletedSnack = await this.adminRepository.deleteSnacks(id);
+
+			if (deletedSnack[0].affectedRows === 0) {
+				throw new BadRequestException("Snack not found");
+			}
+
+			return { message: "Snack deleted successfully" };
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async getAllSnacks(page: number, limit: number) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getAllSnacks(offset, limit);
+	}
+
+	async addSnacksToMovie(movieId: string, snackIds: number[]) {
+		const snacks = snackIds.map((snackId) => ({
+			movieId,
+			snackId,
+		}));
+
+		try {
+			await this.adminRepository.AddSnacksToMovie(snacks);
+
+			return { message: "Snacks added to cinema movie successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("One or more invalid Snack IDs");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"One or more snacks with these IDs already exist for this movie",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async removeSnacksFromMovie(movieId: string, snackIds: number[]) {
+		try {
+			const deletedSnacks = await this.adminRepository.removeSnacksFromMovie(
+				movieId,
+				snackIds,
+			);
+
+			if (deletedSnacks && deletedSnacks[0].affectedRows === 0) {
+				throw new BadRequestException(
+					"No matching snacks found for this cinema movie",
+				);
+			}
+
+			return { message: "Snacks removed from cinema movie successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("One or more invalid Snack IDs");
+			}
+
+			throw error;
+		}
+	}
+
+	async getSnacksByMovieId(movieId: string) {
+		return await this.adminRepository.getSnacksByMovieId(movieId);
 	}
 
 	async getCinemaMovieById(id: string) {
