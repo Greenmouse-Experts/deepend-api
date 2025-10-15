@@ -15,6 +15,7 @@ import {
 	foods,
 	foodToAddonsCategories,
 	hotels,
+	studios,
 	vrgames,
 	vrgamesCategories,
 } from "src/database/schema";
@@ -639,5 +640,24 @@ END`.as("addons"),
 			genres: movie.genres.map((g) => g.genre),
 			snacks: movie.snacks.map((s) => s.snack),
 		}));
+	}
+
+	async getStudios({
+		search,
+		offset,
+		limit,
+	}: { search?: string; offset: number; limit: number }) {
+		return await this.databaseService.db
+			.select()
+			.from(studios)
+			.where(
+				and(
+					eq(studios.isAvailable, true),
+					search ? like(studios.name, `%${search}%`) : undefined,
+				),
+			)
+			.limit(limit)
+			.offset(offset)
+			.orderBy(desc(studios.createdAt));
 	}
 }
