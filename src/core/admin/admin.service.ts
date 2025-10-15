@@ -16,6 +16,8 @@ import {
 	CreateHotelRoomDto,
 	CreateMovieShowtimeDto,
 	CreateSnacksDto,
+	CreateStudioAvailabilityDto,
+	CreateStudioDto,
 	CreateVRGameDto,
 	UpdateCinemaDto,
 	UpdateCinemaHallDto,
@@ -24,6 +26,7 @@ import {
 	UpdateHotelAmenityDto,
 	UpdateMovieShowtimeDto,
 	UpdateSnacksDto,
+	UpdateStudioDto,
 } from "./dto/service.dto";
 import {
 	CreateEquipmentCategoriesDto,
@@ -2022,5 +2025,162 @@ export class AdminService {
 			offset,
 			limit,
 		);
+	}
+
+	async createStudio(studioData: CreateStudioDto) {
+		try {
+			return await this.adminRepository.createStudio(studioData);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException("Studio with this name already exists");
+			}
+
+			throw error;
+		}
+	}
+
+	async updateStudio(id: number, studioData: UpdateStudioDto) {
+		try {
+			const updatedStudio = await this.adminRepository.updateStudio(
+				id,
+				studioData,
+			);
+
+			if (updatedStudio[0].affectedRows === 0) {
+				throw new BadRequestException("Studio not found");
+			}
+
+			return { message: "Studio updated successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException("Studio with this name already exists");
+			}
+
+			throw error;
+		}
+	}
+
+	async deleteStudio(id: number) {
+		try {
+			const deletedStudio = await this.adminRepository.deleteStudio(id);
+
+			if (deletedStudio[0].affectedRows === 0) {
+				throw new BadRequestException("Studio not found");
+			}
+
+			return { message: "Studio deleted successfully" };
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async makeStudioAvailable(id: number) {
+		const result = await this.adminRepository.makeStudioAvailable(id);
+
+		if (result[0].affectedRows === 0) {
+			throw new BadRequestException("Studio not found or already available");
+		}
+
+		return { message: "Studio is now available" };
+	}
+
+	async makeStudioUnavailable(id: number) {
+		const result = await this.adminRepository.makeStudioUnavailable(id);
+
+		if (result[0].affectedRows === 0) {
+			throw new BadRequestException("Studio not found or already unavailable");
+		}
+
+		return { message: "Studio is now unavailable" };
+	}
+
+	async getAllStudios(page: number, limit: number) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getAllStudios(offset, limit);
+	}
+
+	async createStudioAvailability(
+		availabilityData: CreateStudioAvailabilityDto,
+	) {
+		try {
+			const availabilities =
+				await this.adminRepository.checkStudioAvailabilityConflict(
+					availabilityData.studioId,
+					availabilityData.dayOfWeek,
+				);
+
+			if (availabilities) {
+				throw new BadRequestException(
+					"Studio availability for this day already exists",
+				);
+			}
+			return await this.adminRepository.createStudioAvailability(
+				availabilityData,
+			);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("Invalid studio ID");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"Studio availability for this date already exists",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async removeStudioAvailability(studioId: number, ids: string[]) {
+		try {
+			const deletedAvailabilities =
+				await this.adminRepository.removeStudioAvailability(studioId, ids);
+
+			if (
+				deletedAvailabilities &&
+				deletedAvailabilities[0].affectedRows === 0
+			) {
+				throw new BadRequestException(
+					"No matching studio availabilities found",
+				);
+			}
+
+			return { message: "Studio availabilities removed successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("One or more invalid Availability IDs");
+			}
+
+			throw error;
+		}
+	}
+
+	async getStudioAvailabilitiesByStudioId(studioId: number) {
+		return await this.adminRepository.getStudioAvailabilityByStudioId(studioId);
 	}
 }
