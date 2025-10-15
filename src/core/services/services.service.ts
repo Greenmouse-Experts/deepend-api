@@ -309,4 +309,28 @@ export class ServicesService {
 			},
 		};
 	}
+
+	async getStudios({
+		search,
+		page = 1,
+		limit = 10,
+	}: { search?: string; page: number; limit: number }) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		const studios = await this.servicesRepository.getStudios({
+			search,
+			offset,
+			limit,
+		});
+
+		return {
+			studios,
+			pagination: {
+				page,
+				limit,
+				nextPage: studios.length === Number(limit) ? Number(page) + 1 : null,
+				prevPage: Number(page) - 1 > 0 ? Number(page) - 1 : null,
+			},
+		};
+	}
 }
