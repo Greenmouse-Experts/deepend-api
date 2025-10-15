@@ -82,6 +82,10 @@ import {
 	CreateMovieShowtimeSchema,
 	CreateSnacksDto,
 	CreateSnacksSchema,
+	CreateStudioAvailabilityDto,
+	CreateStudioAvailabilitySchema,
+	CreateStudioDto,
+	CreateStudioSchema,
 	CreateVRGameDto,
 	CreateVRGameSchema,
 	MovieSnacksIdsDto,
@@ -94,6 +98,8 @@ import {
 	RemoveHotelAmenitiesSchema,
 	RemoveMovieGenresFromMovieDto,
 	RemoveMovieGenresFromMovieSchema,
+	RemoveStudioAvailabilityDto,
+	RemoveStudioAvailabilitySchema,
 	UpdateAdvertBannerDto,
 	UpdateAdvertBannerSchema,
 	UpdateCinemaDto,
@@ -116,6 +122,8 @@ import {
 	UpdateMovieShowtimeSchema,
 	UpdateSnacksDto,
 	UpdateSnacksSchema,
+	UpdateStudioDto,
+	UpdateStudioSchema,
 	UpdateVRGameDto,
 	UpdateVRGameSchema,
 } from "./dto/service.dto";
@@ -1089,5 +1097,78 @@ export class AdminController {
 		{ page, limit }: PaginationQueryDto,
 	) {
 		return await this.adminService.getUpcomingMovies(+page, +limit);
+	}
+
+	@Post("studios")
+	@ApiOperation({ summary: "Create a new studio" })
+	@ApiBody({ type: CreateStudioDto })
+	@UsePipes(new JoiValidationPipe(CreateStudioSchema))
+	async createStudio(@Body() body: CreateStudioDto) {
+		return await this.adminService.createStudio(body);
+	}
+
+	@Put("studios/:id")
+	@ApiOperation({ summary: "Update an existing studio" })
+	@ApiBody({ type: UpdateStudioDto })
+	@UsePipes(new JoiValidationPipe(UpdateStudioSchema))
+	async updateStudio(@Param("id") id: number, @Body() body: UpdateStudioDto) {
+		return await this.adminService.updateStudio(id, body);
+	}
+
+	@Delete("studios/:id")
+	@ApiOperation({ summary: "Delete a studio" })
+	async deleteStudio(@Param("id", ParseIntPipe) id: number) {
+		return await this.adminService.deleteStudio(id);
+	}
+
+	@Put("studios/:studioId/available")
+	@ApiOperation({ summary: "Toggle studio available" })
+	async toggleStudioAvailability(
+		@Param("studioId", ParseIntPipe) studioId: number,
+	) {
+		return await this.adminService.makeStudioAvailable(studioId);
+	}
+
+	@Put("studios/:studioId/unavailable")
+	@ApiOperation({ summary: "Toggle studio unavailable" })
+	async toggleStudioUnavailability(
+		@Param("studioId", ParseIntPipe) studioId: number,
+	) {
+		return await this.adminService.makeStudioUnavailable(studioId);
+	}
+
+	@Get("studios")
+	@ApiOperation({ summary: "Get all studios with pagination" })
+	async getAllStudios(
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.adminService.getAllStudios(+page, +limit);
+	}
+
+	@Post("studios/availability")
+	@ApiOperation({ summary: "Set studio availability" })
+	@ApiBody({ type: CreateStudioAvailabilityDto })
+	@UsePipes(new JoiValidationPipe(CreateStudioAvailabilitySchema))
+	async createStudioAvailability(@Body() body: CreateStudioAvailabilityDto) {
+		return await this.adminService.createStudioAvailability(body);
+	}
+
+	@Delete("studios/availability")
+	@ApiOperation({ summary: "Delete a studio availability" })
+	@UsePipes(new JoiValidationPipe(RemoveStudioAvailabilitySchema))
+	async removeStudioAvailability(@Body() body: RemoveStudioAvailabilityDto) {
+		return await this.adminService.removeStudioAvailability(
+			body.studioId,
+			body.availabilityIds,
+		);
+	}
+
+	@Get("studios/:studioId/availability")
+	@ApiOperation({ summary: "Get all availability for a specific studio" })
+	async getStudioAvailabilityByStudioId(
+		@Param("studioId", ParseIntPipe) studioId: number,
+	) {
+		return await this.adminService.getStudioAvailabilitiesByStudioId(studioId);
 	}
 }
