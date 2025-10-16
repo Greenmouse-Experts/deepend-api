@@ -3,7 +3,7 @@ import {
 	Injectable,
 	NotFoundException,
 } from "@nestjs/common";
-import { AdminRepository } from "./admin.repository";
+import { AdminRepository, StudioBookingStatus } from "./admin.repository";
 import { CreateFood, CreateHotelAmenity } from "src/database/schema/services";
 import { isDatabaseError, mysqlErrorCodes } from "src/common/mysql.error";
 import {
@@ -2182,5 +2182,23 @@ export class AdminService {
 
 	async getStudioAvailabilitiesByStudioId(studioId: number) {
 		return await this.adminRepository.getStudioAvailabilityByStudioId(studioId);
+	}
+
+	async getStudioBookings({
+		page,
+		limit,
+		status,
+	}: {
+		page: number;
+		limit: number;
+		status?: StudioBookingStatus;
+	}) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getStudioBookings({
+			offset,
+			limit,
+			status,
+		});
 	}
 }
