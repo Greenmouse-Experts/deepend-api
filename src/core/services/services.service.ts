@@ -441,6 +441,9 @@ export class ServicesService {
 				);
 			}
 
+			if (process.env.NODE_ENV === "production")
+				throw new BadRequestException("Booking service is disabled for now.");
+
 			const existingBookings =
 				await this.servicesRepository.getBookedStudioSessionsByDate(
 					bookingData.studioId,
