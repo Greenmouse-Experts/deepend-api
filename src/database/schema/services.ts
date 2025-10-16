@@ -44,6 +44,7 @@ export type CreateSnack = typeof snacks.$inferInsert;
 export type CreateMovieSnack = typeof moviesSnacks.$inferInsert;
 export type CreateStudio = typeof studios.$inferInsert;
 export type CreateStudioAvailability = typeof studioAvailability.$inferInsert;
+export type CreateStudioBooking = typeof studioBookings.$inferInsert;
 
 export const foods = mysqlTable("foods", {
 	id: varchar("id", { length: ID_GENERATOR_LENGTH })
@@ -594,10 +595,6 @@ export const studioAvailability = mysqlTable(
 		dayOfWeek: smallint("day_of_week").notNull(), // 0 (Sunday) to 6 (Saturday)
 		startTime: time("start_time").notNull(),
 		endTime: time("end_time").notNull(),
-		status: varchar("status", { length: 50 })
-			.default("available")
-			.notNull()
-			.$type<"available" | "booked" | "unavailable">(),
 		createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
 		updatedAt: timestamp("updated_at", { fsp: 6 })
 			.$onUpdateFn(() => new Date())
@@ -612,10 +609,6 @@ export const studioAvailability = mysqlTable(
 		check(
 			"chk_studio_availability_time",
 			sql`${table.startTime} < ${table.endTime}`,
-		),
-		check(
-			"chk_studio_availability_status",
-			sql`${table.status} IN ('available', 'booked', 'unavailable')`,
 		),
 		unique("uk_studio_availability_unique").on(table.studioId, table.dayOfWeek),
 		check(
@@ -664,3 +657,15 @@ export const studioBookings = mysqlTable(
 		),
 	],
 );
+
+export const studiosRelations = relations(studios, ({ many }) => ({
+	availability: many(studioAvailability),
+	bookings: many(studioBookings),
+}));
+
+export const studioBookingsRelations = relations(studioBookings, ({ one }) => ({
+	studio: one(studios, {
+		fields: [studioBookings.studioId],
+		references: [studios.id],
+	}),
+}));
