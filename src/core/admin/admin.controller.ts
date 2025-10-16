@@ -23,6 +23,8 @@ import {
 	PaginationQuerySchema,
 	ServicePaginationQueryDto,
 	ServicePaginationQuerySchema,
+	StudioBookingPaginationQueryDto,
+	StudioBookingPaginationQuerySchema,
 } from "src/common/dto/requestQuery.dto";
 import { AuthGuard } from "src/common/guards/auth.guard";
 import { QueryJoiValidationPipe } from "src/common/pipes/query-validation.pipe";
@@ -1154,12 +1156,14 @@ export class AdminController {
 		return await this.adminService.createStudioAvailability(body);
 	}
 
-	@Delete("studios/availability")
+	@Delete("studios/:studioId/availability")
 	@ApiOperation({ summary: "Delete a studio availability" })
 	@UsePipes(new JoiValidationPipe(RemoveStudioAvailabilitySchema))
-	async removeStudioAvailability(@Body() body: RemoveStudioAvailabilityDto) {
+	async removeStudioAvailability(
+    @Param("studioId", ParseIntPipe) studioId: number,
+    @Body() body: RemoveStudioAvailabilityDto) {
 		return await this.adminService.removeStudioAvailability(
-			body.studioId,
+			studioId,
 			body.availabilityIds,
 		);
 	}
@@ -1170,5 +1174,18 @@ export class AdminController {
 		@Param("studioId", ParseIntPipe) studioId: number,
 	) {
 		return await this.adminService.getStudioAvailabilitiesByStudioId(studioId);
+	}
+
+	@Get("studios/bookings")
+	@ApiOperation({ summary: "Get all studio bookings with pagination" })
+	async getAllStudioBookings(
+		@Query(new QueryJoiValidationPipe(StudioBookingPaginationQuerySchema))
+		{ page, limit, status }: StudioBookingPaginationQueryDto,
+	) {
+		return await this.adminService.getStudioBookings({
+			page,
+			limit,
+			status,
+		});
 	}
 }
