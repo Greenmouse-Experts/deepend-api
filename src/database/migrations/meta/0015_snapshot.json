@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "d987ab93-5e11-4efc-adf4-04f038a59f22",
+  "id": "1451dd05-7b01-498f-9745-adca3ba7d4c7",
   "prevId": "50ee27b2-947e-44a9-8acd-8b82d55f6e95",
   "tables": {
     "advert_banners": {
@@ -2172,14 +2172,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "status": {
-          "name": "status",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'available'"
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp(6)",
@@ -2238,9 +2230,7 @@
           "name": "uk_studio_availability_unique",
           "columns": [
             "studio_id",
-            "day_of_week",
-            "start_time",
-            "end_time"
+            "day_of_week"
           ]
         }
       },
@@ -2249,9 +2239,134 @@
           "name": "chk_studio_availability_time",
           "value": "`studios_availability`.`start_time` < `studios_availability`.`end_time`"
         },
-        "chk_studio_availability_status": {
-          "name": "chk_studio_availability_status",
-          "value": "`studios_availability`.`status` IN ('available', 'booked', 'unavailable')"
+        "chk_studio_availability_day_of_week": {
+          "name": "chk_studio_availability_day_of_week",
+          "value": "`studios_availability`.`day_of_week` BETWEEN 0 AND 6"
+        }
+      }
+    },
+    "studio_bookings": {
+      "name": "studio_bookings",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(15)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "studio_id": {
+          "name": "studio_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar(15)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "booking_date": {
+          "name": "booking_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "start_time": {
+          "name": "start_time",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "end_time": {
+          "name": "end_time",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "total_price": {
+          "name": "total_price",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(6)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(6)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "studio_bookings_studio_id_studios_id_fk": {
+          "name": "studio_bookings_studio_id_studios_id_fk",
+          "tableFrom": "studio_bookings",
+          "tableTo": "studios",
+          "columnsFrom": [
+            "studio_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fk_studio_bookings_studio_id": {
+          "name": "fk_studio_bookings_studio_id",
+          "tableFrom": "studio_bookings",
+          "tableTo": "studios",
+          "columnsFrom": [
+            "studio_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "studio_bookings_id": {
+          "name": "studio_bookings_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {
+        "chk_studio_bookings_time": {
+          "name": "chk_studio_bookings_time",
+          "value": "`studio_bookings`.`start_time` < `studio_bookings`.`end_time`"
+        },
+        "chk_studio_bookings_status": {
+          "name": "chk_studio_bookings_status",
+          "value": "`studio_bookings`.`status` IN ('pending', 'confirmed', 'cancelled', 'completed')"
         }
       }
     },
@@ -2285,6 +2400,14 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "is_available": {
+          "name": "is_available",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
