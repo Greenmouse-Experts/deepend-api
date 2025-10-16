@@ -1,5 +1,17 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+} from "@nestjs/common";
 import { ServicesRepository } from "./service.repository";
+import { BookStudioSessionDto } from "../admin/dto/service.dto";
+import {
+	calculateStudioTotalPrice,
+	doIntervalsOverlap,
+	getDayFromDate,
+	isBookingWithinStudioHours,
+} from "src/common/helpers";
+import { isDatabaseError, mysqlErrorCodes } from "src/common/mysql.error";
 
 @Injectable()
 export class ServicesService {
@@ -310,14 +322,14 @@ export class ServicesService {
 		};
 	}
 
-	async getStudios({
+	async getAllStudios({
 		search,
 		page = 1,
 		limit = 10,
 	}: { search?: string; page: number; limit: number }) {
 		const offset = (Number(page) - 1) * Number(limit);
 
-		const studios = await this.servicesRepository.getStudios({
+		const studios = await this.servicesRepository.getAllStudios({
 			search,
 			offset,
 			limit,
@@ -332,5 +344,141 @@ export class ServicesService {
 				prevPage: Number(page) - 1 > 0 ? Number(page) - 1 : null,
 			},
 		};
+	}
+
+	async getStudioTotalPrice(
+		studioId: number,
+		startTime: string,
+		endTime: string,
+	) {
+		const studio = await this.servicesRepository.getStudioById(studioId);
+
+		if (!studio) {
+			throw new NotFoundException("Studio not found");
+		}
+
+		const studioTotalPrice = calculateStudioTotalPrice(
+			Number(studio.hourlyRate),
+			startTime,
+			endTime,
+		);
+
+		return { totalPrice: studioTotalPrice };
+	}
+
+	async getStudioAvailabilityByStudioId(studioId: number) {
+		const availability =
+			await this.servicesRepository.getStudioAvailabilityByStudioId(studioId);
+
+		return availability;
+	}
+
+	async getBookedStudioSessionsByDate(studioId: number, bookingDate: string) {
+		const bookings =
+			await this.servicesRepository.getBookedStudioSessionsByDate(
+				studioId,
+				bookingDate,
+			);
+
+		return bookings;
+	}
+
+	async getBookedStudioSessionsByDateRange(
+		studioId: number,
+		startDate: string,
+		endDate: string,
+	) {
+		const bookings =
+			await this.servicesRepository.getBookedStudioSessionsByDateRange(
+				studioId,
+				startDate,
+				endDate,
+			);
+
+		return bookings;
+	}
+
+	async bookStudioSession(userId: string, bookingData: BookStudioSessionDto) {
+		try {
+			const studio = await this.servicesRepository.getStudioById(
+				bookingData.studioId,
+			);
+
+			if (!studio) {
+				throw new NotFoundException("Studio not found");
+			}
+
+			const bookingDayOfWeek = getDayFromDate(bookingData.bookingDate);
+
+			const studioAvailability =
+				await this.servicesRepository.getStudioAvailabilityByIdAndDayofWeek(
+					bookingData.studioId,
+					bookingDayOfWeek,
+				);
+
+			if (!studioAvailability) {
+				throw new NotFoundException(
+					"Studio is not available on the selected day",
+				);
+			}
+
+			const studioTotalPrice = calculateStudioTotalPrice(
+				Number(studio.hourlyRate),
+				bookingData.startTime,
+				bookingData.endTime,
+			);
+
+			if (
+				!isBookingWithinStudioHours(
+					bookingData.startTime,
+					bookingData.endTime,
+					studioAvailability.startTime,
+					studioAvailability.endTime,
+				)
+			) {
+				throw new NotFoundException(
+					"Studio is not available at the selected time",
+				);
+			}
+
+			const existingBookings =
+				await this.servicesRepository.getBookedStudioSessionsByDate(
+					bookingData.studioId,
+					bookingData.bookingDate,
+				);
+
+			for (const booking of existingBookings) {
+				if (
+					doIntervalsOverlap(
+						booking.startTime,
+						booking.endTime,
+						bookingData.startTime,
+						bookingData.endTime,
+					)
+				) {
+					throw new NotFoundException(
+						"Studio is already booked at the selected time",
+					);
+				}
+			}
+
+			return await this.servicesRepository.bookStudioSession({
+				...bookingData,
+				totalPrice: String(studioTotalPrice),
+				userId,
+			});
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			)
+				throw new BadRequestException(
+					"You have a pending booking for this studio. Please complete or cancel it before making a new booking.",
+				);
+
+			throw error;
+		}
 	}
 }
