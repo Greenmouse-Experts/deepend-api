@@ -721,7 +721,7 @@ END`.as("addons"),
 			.where(
 				and(
 					eq(studioBookings.studioId, studioId),
-					eq(sql`DATE(${studioBookings.startTime})`, sql`DATE(${date})`),
+					eq(sql`DATE(${studioBookings.bookingDate})`, sql`DATE(${date})`),
 				),
 			)
 			.orderBy(asc(studioBookings.startTime));
