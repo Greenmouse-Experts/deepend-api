@@ -448,6 +448,17 @@ export class ServicesService {
 				);
 
 			for (const booking of existingBookings) {
+				console.log(
+					`Checking overlap with booking: ${JSON.stringify(booking)}`,
+				);
+				console.log(`New booking data: ${JSON.stringify(bookingData)}`);
+				console.log(
+					`Booking startTime: ${booking.startTime}, endTime: ${booking.endTime}`,
+				);
+				console.log(
+					`New booking startTime: ${bookingData.startTime}, endTime: ${bookingData.endTime}`,
+				);
+
 				if (
 					doIntervalsOverlap(
 						booking.startTime,
