@@ -721,6 +721,7 @@ END`.as("addons"),
 			.where(
 				and(
 					eq(studioBookings.studioId, studioId),
+					eq(studioBookings.status, "pending"),
 					eq(sql`DATE(${studioBookings.bookingDate})`, sql`DATE(${date})`),
 				),
 			)
@@ -744,7 +745,7 @@ END`.as("addons"),
 			.where(
 				and(
 					eq(studioBookings.studioId, studioId),
-					eq(studioBookings.status, "confirmed"),
+					eq(studioBookings.status, "pending"),
 					between(studioBookings.bookingDate, startDate, endDate),
 				),
 			)
