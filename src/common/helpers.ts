@@ -1,6 +1,13 @@
 import { init } from "@paralleldrive/cuid2";
 import { ID_GENERATOR_LENGTH } from "./constants";
 import crypto from "node:crypto";
+import {
+	addDays,
+	differenceInMinutes,
+	getDay,
+	parse,
+	parseISO,
+} from "date-fns";
 
 export const generateId = init({
 	length: ID_GENERATOR_LENGTH,
@@ -12,11 +19,7 @@ export function generateOtp(): string {
 	return String(n).padStart(6, "0");
 }
 
-export function maskEmail(
-	email: string,
-	keepStart = 2,
-	keepEnd = 2,
-) {
+export function maskEmail(email: string, keepStart = 2, keepEnd = 2) {
 	const [local, domain] = email.split("@");
 	if (!domain) return email;
 
@@ -28,4 +31,88 @@ export function maskEmail(
 	const end = local.slice(-keepEnd);
 	const masked = start + "*".repeat(local.length - keepStart - keepEnd) + end;
 	return `${masked}@${domain}`;
+}
+
+export function getDayFromDate(dateString: string) {
+	const date = parseISO(dateString);
+
+	// Get day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+	const dayOfWeek = getDay(date);
+
+	return dayOfWeek;
+}
+
+export function getHoursBetween(startTime: string, endTime: string) {
+	// Reference date
+	const referenceDate = new Date(2000, 0, 1);
+
+	// Parse the time strings into Date objects
+	const startDate = parse(startTime, "HH:mm", referenceDate);
+
+	let endDate = parse(endTime, "HH:mm", referenceDate);
+
+	// Handle cross-midnight scenario
+	if (endDate < startDate) {
+		endDate = addDays(endDate, 1);
+	}
+
+	// Calculate difference in minutes, then convert to hours
+	const diffMinutes = differenceInMinutes(endDate, startDate);
+
+	return diffMinutes / 60;
+}
+
+export function calculateStudioTotalPrice(
+	hourlyRate: number,
+	startTime: string,
+	endTime: string,
+): number {
+	const hours = getHoursBetween(startTime, endTime);
+
+	const total = hourlyRate * hours;
+
+	return Math.round(total * 100) / 100;
+}
+
+export function timeToMinutes(timeString: string): number {
+	const [hours, minutes] = timeString.split(":").map(Number);
+	return hours * 60 + minutes;
+}
+
+export function doIntervalsOverlap(
+	start1: string,
+	end1: string,
+	start2: string,
+	end2: string,
+): boolean {
+	let start1Min = timeToMinutes(start1);
+	let end1Min = timeToMinutes(end1);
+	let start2Min = timeToMinutes(start2);
+	let end2Min = timeToMinutes(end2);
+
+	// Handle cross-midnight (add 24 hours)
+	if (end1Min <= start1Min) end1Min += 24 * 60;
+	if (end2Min <= start2Min) end2Min += 24 * 60;
+
+	// Check for overlap: intervals overlap if start1 < end2 AND start2 < end1
+	return start1Min < end2Min && start2Min < end1Min;
+}
+
+export function isBookingWithinStudioHours(
+	bookingStart: string,
+	bookingEnd: string,
+	studioOpenTime: string,
+	studioCloseTime: string,
+): boolean {
+	let bookingStartMin = timeToMinutes(bookingStart);
+	let bookingEndMin = timeToMinutes(bookingEnd);
+	let studioOpenMin = timeToMinutes(studioOpenTime);
+	let studioCloseMin = timeToMinutes(studioCloseTime);
+
+	// Handle cross-midnight scenarios
+	if (bookingEndMin <= bookingStartMin) bookingEndMin += 24 * 60;
+	if (studioCloseMin <= studioOpenMin) studioCloseMin += 24 * 60;
+
+	// Check if booking is completely within studio hours
+	return bookingStartMin >= studioOpenMin && bookingEndMin <= studioCloseMin;
 }
