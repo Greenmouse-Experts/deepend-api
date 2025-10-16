@@ -8,9 +8,7 @@ import {
 	gte,
 	inArray,
 	like,
-	lt,
 	lte,
-	or,
 	sql,
 } from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
@@ -56,9 +54,16 @@ import {
 	moviesSnacks,
 	snacks,
 	studioAvailability,
+	studioBookings,
 	studios,
 	vrgames,
 } from "src/database/schema/services";
+
+export type StudioBookingStatus =
+	| "pending"
+	| "confirmed"
+	| "cancelled"
+	| "completed";
 
 @Injectable()
 export class AdminRepository {
@@ -1566,5 +1571,33 @@ export class AdminRepository {
 			);
 
 		return conflict.length > 0;
+	}
+
+	async getStudioBookings({
+		offset,
+		limit,
+		status,
+	}: {
+		offset: number;
+		limit: number;
+		status?: StudioBookingStatus;
+	}) {
+		const bookings =
+			await this.databaseService.db.query.studioBookings.findMany({
+				where: status ? eq(studioBookings.status, status) : undefined,
+				columns: {
+					createdAt: false,
+					updatedAt: false,
+					studioId: false,
+				},
+				limit,
+				offset,
+				orderBy: (booking) => [
+					desc(booking.bookingDate),
+					desc(booking.startTime),
+				],
+			});
+
+		return bookings;
 	}
 }
