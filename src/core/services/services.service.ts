@@ -448,16 +448,9 @@ export class ServicesService {
 				);
 
 			for (const booking of existingBookings) {
-				console.log(
-					`Checking overlap with booking: ${JSON.stringify(booking)}`,
-				);
-				console.log(`New booking data: ${JSON.stringify(bookingData)}`);
-				console.log(
-					`Booking startTime: ${booking.startTime}, endTime: ${booking.endTime}`,
-				);
-				console.log(
-					`New booking startTime: ${bookingData.startTime}, endTime: ${bookingData.endTime}`,
-				);
+				console.log(``);
+				console.log();
+				console.log();
 
 				if (
 					doIntervalsOverlap(
@@ -471,6 +464,13 @@ export class ServicesService {
 						"Studio is already booked at the selected time",
 					);
 				}
+
+				throw new BadRequestException(
+					`Checking overlap with booking: ${JSON.stringify(booking)} :
+           New booking data: ${JSON.stringify(bookingData)} : 
+           Booking startTime: ${booking.startTime}, endTime: ${booking.endTime}
+					 New booking startTime: ${bookingData.startTime}, endTime: ${bookingData.endTime},`,
+				);
 			}
 
 			return await this.servicesRepository.bookStudioSession({
