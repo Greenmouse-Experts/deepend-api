@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import * as Joi from "joi";
+import { timeToMinutes } from "src/common/helpers";
 
 class Images {
 	@ApiProperty({
@@ -1404,7 +1405,7 @@ export class CreateStudioAvailabilityDto {
 	endTime: string;
 }
 
-const timePattern = /^([0-1]\d|2[0-3]):([0-5]\d)$/;
+export const timePattern = /^([0-1]\d|2[0-3]):([0-5]\d)$/;
 
 export const CreateStudioAvailabilitySchema = Joi.object({
 	studioId: Joi.number().integer().positive().required(),
@@ -1423,29 +1424,69 @@ export const CreateStudioAvailabilitySchema = Joi.object({
 	return value;
 });
 
-function timeToMinutes(timeString: string): number {
-	const [hours, minutes] = timeString.split(":").map(Number);
-	return hours * 60 + minutes;
-}
-
 export class RemoveStudioAvailabilityDto {
 	@ApiProperty({
-		example: 1,
-		description: "ID of the studio",
-	})
-	studioId: number;
-
-	@ApiProperty({
-		example: [1, 2, 3],
+		example: ["iijjaljdfaijfd", "aidfaljfdlaj", "iosadjfjasldfj"],
 		description: "IDs of the studio availability entry to be removed",
 	})
 	availabilityIds: string[];
 }
 
 export const RemoveStudioAvailabilitySchema = Joi.object({
-	studioId: Joi.number().integer().positive().required(),
 	availabilityIds: Joi.array()
 		.items(Joi.string().trim().required())
 		.min(1)
 		.required(),
 });
+
+export class BookStudioSessionDto {
+	@ApiProperty({
+		example: 1,
+		description: "ID of the studio to be booked",
+	})
+	studioId: number;
+
+	@ApiProperty({
+		example: "2023-10-15",
+		description: "Date of the booking (YYYY-MM-DD)",
+	})
+	bookingDate: string;
+
+	@ApiProperty({
+		example: "10:00",
+		description: "Start time of the booking (HH:mm format)",
+	})
+	startTime: string;
+
+	@ApiProperty({
+		example: "12:00",
+		description: "End time of the booking (HH:mm format)",
+	})
+	endTime: string;
+}
+
+export const BookStudioSessionSchema = Joi.object({
+	studioId: Joi.number().integer().positive().required(),
+	bookingDate: Joi.date()
+		.required()
+		.min(new Date().setHours(0, 0, 0, 0))
+		.raw(),
+	startTime: Joi.string().pattern(timePattern).required(),
+	endTime: Joi.string().pattern(timePattern).required(),
+})
+	.custom((value, helpers) => {
+		const { startTime, endTime } = value;
+
+		if (startTime && endTime) {
+			if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+				return helpers.error("time.endBeforeStart");
+			}
+		}
+
+		return value;
+	})
+	.messages({
+		"date.base": "bookingDate must be a valid date",
+		"date.min": "bookingDate must be today or in the future",
+		"time.endBeforeStart": "endTime must be after startTime",
+	});
