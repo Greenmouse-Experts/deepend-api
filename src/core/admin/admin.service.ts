@@ -2085,6 +2085,15 @@ export class AdminService {
 	}
 
 	async makeStudioAvailable(id: number) {
+		const studioAvailability =
+			await this.adminRepository.getStudioAvailabilityByStudioId(id);
+
+		if (studioAvailability.length === 0) {
+			throw new BadRequestException(
+				"Cannot make studio available without availability schedule",
+			);
+		}
+
 		const result = await this.adminRepository.makeStudioAvailable(id);
 
 		if (result[0].affectedRows === 0) {
