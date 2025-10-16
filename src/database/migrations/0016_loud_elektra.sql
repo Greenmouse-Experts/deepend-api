@@ -1,1 +1,0 @@
-ALTER TABLE `studios` ADD `is_available` boolean DEFAULT false NOT NULL;
