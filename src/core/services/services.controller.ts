@@ -7,7 +7,6 @@ import {
 	Post,
 	Query,
 	UseGuards,
-	UsePipes,
 } from "@nestjs/common";
 import { ServicesService } from "./services.service";
 import { QueryJoiValidationPipe } from "src/common/pipes/query-validation.pipe";
