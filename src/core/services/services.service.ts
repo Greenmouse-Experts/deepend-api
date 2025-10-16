@@ -441,36 +441,27 @@ export class ServicesService {
 				);
 			}
 
-			if (process.env.NODE_ENV === "production")
-				throw new BadRequestException("Booking service is disabled for now.");
-
 			const existingBookings =
 				await this.servicesRepository.getBookedStudioSessionsByDate(
 					bookingData.studioId,
 					bookingData.bookingDate,
 				);
 
-			for (const booking of existingBookings) {
-				if (
-					doIntervalsOverlap(
-						booking.startTime,
-						booking.endTime,
-						bookingData.startTime,
-						bookingData.endTime,
-					)
-				) {
-					throw new NotFoundException(
-						"Studio is already booked at the selected time",
-					);
-				}
-			}
-
 			if (existingBookings.length > 0) {
-				throw new BadRequestException(
-					`Checking overlap with booking: EXISTING BOOKINGS: ${JSON.stringify(existingBookings)} :
-           New booking data: ${JSON.stringify(bookingData)} : 
-					 New booking startTime: ${bookingData.startTime}, endTime: ${bookingData.endTime},`,
-				);
+				for (const booking of existingBookings) {
+					if (
+						doIntervalsOverlap(
+							booking.startTime,
+							booking.endTime,
+							bookingData.startTime,
+							bookingData.endTime,
+						)
+					) {
+						throw new NotFoundException(
+							"Studio is already booked at the selected time",
+						);
+					}
+				}
 			}
 
 			return await this.servicesRepository.bookStudioSession({
