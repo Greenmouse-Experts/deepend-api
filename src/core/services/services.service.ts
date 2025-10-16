@@ -448,10 +448,6 @@ export class ServicesService {
 				);
 
 			for (const booking of existingBookings) {
-				console.log(``);
-				console.log();
-				console.log();
-
 				if (
 					doIntervalsOverlap(
 						booking.startTime,
@@ -464,11 +460,12 @@ export class ServicesService {
 						"Studio is already booked at the selected time",
 					);
 				}
+			}
 
+			if (existingBookings.length > 0) {
 				throw new BadRequestException(
-					`Checking overlap with booking: ${JSON.stringify(booking)} :
+					`Checking overlap with booking: EXISTING BOOKINGS: ${JSON.stringify(existingBookings)} :
            New booking data: ${JSON.stringify(bookingData)} : 
-           Booking startTime: ${booking.startTime}, endTime: ${booking.endTime}
 					 New booking startTime: ${bookingData.startTime}, endTime: ${bookingData.endTime},`,
 				);
 			}
