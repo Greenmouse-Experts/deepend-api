@@ -39,4 +39,22 @@ export class UserRepository {
 			.set(updateData)
 			.where(eq(users.id, id));
 	}
+
+	async getUserStudioBookings({
+		userId,
+		offset,
+		limit,
+		status,
+	}: { userId: string; offset: number; limit: number; status?: string }) {
+		const bookings =
+			await this.databaseService.db.query.studioBookings.findMany({
+				limit,
+				offset,
+				with: {
+					studio: true,
+				},
+			});
+
+		return bookings;
+	}
 }
