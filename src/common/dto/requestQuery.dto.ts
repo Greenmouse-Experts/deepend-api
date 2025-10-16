@@ -1,5 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import * as Joi from "joi";
+import { timeToMinutes } from "../helpers";
+import { timePattern } from "src/core/admin/dto/service.dto";
 
 export class PaginationQueryDto {
 	@ApiProperty({
@@ -114,3 +116,102 @@ export const MovieShowtimePaginationQuerySchema =
 	MoviePaginationQuerySchema.keys({
 		date: Joi.date().iso().required(),
 	});
+
+export class StudioPaginationQueryDto extends PaginationQueryDto {
+	@ApiProperty({
+		example: "yoga",
+		description: "Search term to filter studios by name or description",
+		required: false,
+	})
+	search?: string;
+}
+
+export const StudioPaginationQuerySchema = PaginationQuerySchema.keys({
+	search: Joi.string().max(100).optional(),
+});
+
+export class GetBookedStudiosSessionsQueryDto {
+	@ApiProperty({
+		example: "2023-10-01",
+		description: "Date to filter booked sessions (YYYY-MM-DD)",
+		required: true,
+	})
+	date: string;
+}
+
+export const GetBookedStudiosSessionsQuerySchema = Joi.object({
+	date: Joi.date().iso().required(),
+});
+
+export class GetBookedStudiosSessionsByRangeQueryDto {
+	@ApiProperty({
+		example: "2023-10-01",
+		description: "Start date to filter booked sessions (YYYY-MM-DD)",
+		required: true,
+	})
+	startDate: string;
+
+	@ApiProperty({
+		example: "2023-10-07",
+		description: "End date to filter booked sessions (YYYY-MM-DD)",
+		required: true,
+	})
+	endDate: string;
+}
+
+export const GetBookedStudiosSessionsByRangeQuerySchema = Joi.object({
+	startDate: Joi.date().iso().required(),
+	endDate: Joi.date().iso().required(),
+});
+
+export class TimeRangeQueryDto {
+	@ApiProperty({
+		example: "09:00",
+		description: "Start time in HH:mm format",
+		required: true,
+	})
+	startTime: string;
+
+	@ApiProperty({
+		example: "17:00",
+		description: "End time in HH:mm format",
+		required: true,
+	})
+	endTime: string;
+}
+
+export const TimeRangeQuerySchema = Joi.object({
+	startTime: Joi.string().pattern(timePattern).required(),
+	endTime: Joi.string().pattern(timePattern).required(),
+})
+	.and("startTime", "endTime")
+	.custom((value, helpers) => {
+		const { startTime, endTime } = value;
+
+		if (startTime && endTime) {
+			if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+				return helpers.error("time.endBeforeStart");
+			}
+		}
+
+		return value;
+	})
+	.messages({
+		"string.pattern.base": '"{#label}" must be in HH:mm format',
+	});
+
+export class StudioBookingPaginationQueryDto extends PaginationQueryDto {
+	@ApiProperty({
+		example: "confirmed",
+		description:
+			'Filter bookings by status ("pending", "confirmed", "cancelled", "completed")',
+		required: false,
+	})
+	status?: "pending" | "confirmed" | "cancelled" | "completed";
+}
+
+export const StudioBookingPaginationQuerySchema = PaginationQuerySchema.keys({
+	status: Joi.string()
+		.valid("pending", "confirmed", "cancelled", "completed")
+		.optional(),
+});

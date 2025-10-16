@@ -26,4 +26,20 @@ export class UserService {
 	) {
 		return await this.userRepository.updateUser(id, updateData);
 	}
+
+	async getUserStudioBookings({
+		userId,
+		page,
+		limit,
+		status,
+	}: { userId: string; page: number; limit: number; status?: string }) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		return await this.userRepository.getUserStudioBookings({
+			userId,
+			offset,
+			limit,
+			status,
+		});
+	}
 }

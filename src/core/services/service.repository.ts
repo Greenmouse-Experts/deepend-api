@@ -1,12 +1,25 @@
 import { Injectable } from "@nestjs/common";
 import { DatabaseService } from "src/database/database.service";
-import { and, asc, desc, eq, gt, gte, inArray, like, sql } from "drizzle-orm";
+import {
+	and,
+	asc,
+	between,
+	desc,
+	eq,
+	gt,
+	gte,
+	inArray,
+	like,
+	lte,
+	or,
+	sql,
+} from "drizzle-orm";
 import {
 	advertBanners,
 	cinemaMovies,
-	cinemaMoviesGenres,
 	cinemaMoviesShowtimes,
 	cinemaMoviesToGenres,
+	CreateStudioBooking,
 	equipmentCategories,
 	equipmentRentals,
 	foodAddonCategories,
@@ -15,6 +28,9 @@ import {
 	foods,
 	foodToAddonsCategories,
 	hotels,
+	studioAvailability,
+	studioBookings,
+	studios,
 	vrgames,
 	vrgamesCategories,
 } from "src/database/schema";
@@ -639,5 +655,110 @@ END`.as("addons"),
 			genres: movie.genres.map((g) => g.genre),
 			snacks: movie.snacks.map((s) => s.snack),
 		}));
+	}
+
+	async getAllStudios({
+		search,
+		offset,
+		limit,
+	}: { search?: string; offset: number; limit: number }) {
+		return await this.databaseService.db
+			.select()
+			.from(studios)
+			.where(
+				and(
+					eq(studios.isAvailable, true),
+					search ? like(studios.name, `%${search}%`) : undefined,
+				),
+			)
+			.limit(limit)
+			.offset(offset)
+			.orderBy(desc(studios.createdAt));
+	}
+
+	async getStudioById(id: number) {
+		const studio = await this.databaseService.db.query.studios.findFirst({
+			where: and(eq(studios.id, id), eq(studios.isAvailable, true)),
+		});
+		return studio;
+	}
+
+	async getStudioAvailabilityByIdAndDayofWeek(
+		studioId: number,
+		dayOfWeek: number,
+	) {
+		const availability = await this.databaseService.db
+			.select()
+			.from(studioAvailability)
+			.where(
+				and(
+					eq(studioAvailability.studioId, studioId),
+					eq(studioAvailability.dayOfWeek, dayOfWeek),
+				),
+			)
+			.limit(1);
+
+		return availability[0];
+	}
+
+	async getStudioAvailabilityByStudioId(studioId: number) {
+		const availability = await this.databaseService.db
+			.select()
+			.from(studioAvailability)
+			.where(eq(studioAvailability.studioId, studioId));
+
+		return availability;
+	}
+
+	async getBookedStudioSessionsByDate(studioId: number, date: string) {
+		const bookings = await this.databaseService.db
+			.select({
+				bookingDate: studioBookings.bookingDate,
+				startTime: studioBookings.startTime,
+				endTime: studioBookings.endTime,
+			})
+			.from(studioBookings)
+			.where(
+				and(
+					eq(studioBookings.studioId, studioId),
+					eq(sql`DATE(${studioBookings.startTime})`, sql`DATE(${date})`),
+				),
+			)
+			.orderBy(asc(studioBookings.startTime));
+
+		return bookings;
+	}
+
+	async getBookedStudioSessionsByDateRange(
+		studioId: number,
+		startDate: string,
+		endDate: string,
+	) {
+		const bookings = await this.databaseService.db
+			.select({
+				bookingDate: studioBookings.bookingDate,
+				startTime: studioBookings.startTime,
+				endTime: studioBookings.endTime,
+			})
+			.from(studioBookings)
+			.where(
+				and(
+					eq(studioBookings.studioId, studioId),
+					eq(studioBookings.status, "confirmed"),
+					between(studioBookings.bookingDate, startDate, endDate),
+				),
+			)
+			.orderBy(asc(studioBookings.bookingDate), asc(studioBookings.startTime));
+
+		return bookings;
+	}
+
+	async bookStudioSession(bookingData: CreateStudioBooking) {
+		const booking = await this.databaseService.db
+			.insert(studioBookings)
+			.values(bookingData)
+			.$returningId();
+
+		return booking[0];
 	}
 }

@@ -1,5 +1,16 @@
 import { Injectable } from "@nestjs/common";
-import { and, asc, desc, eq, gt, gte, inArray, like, sql } from "drizzle-orm";
+import {
+	and,
+	asc,
+	desc,
+	eq,
+	gt,
+	gte,
+	inArray,
+	like,
+	lte,
+	sql,
+} from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
 import {
 	advertBanners,
@@ -27,6 +38,8 @@ import {
 	CreateHotelRoom,
 	CreateMovieSnack,
 	CreateSnack,
+	CreateStudio,
+	CreateStudioAvailability,
 	CreateVRGame,
 	equipmentRentals,
 	foods,
@@ -40,8 +53,17 @@ import {
 	hotelToAmenities,
 	moviesSnacks,
 	snacks,
+	studioAvailability,
+	studioBookings,
+	studios,
 	vrgames,
 } from "src/database/schema/services";
+
+export type StudioBookingStatus =
+	| "pending"
+	| "confirmed"
+	| "cancelled"
+	| "completed";
 
 @Injectable()
 export class AdminRepository {
@@ -1443,5 +1465,139 @@ export class AdminRepository {
 			...movie,
 			genres: movie.genres.map((g) => g.genre),
 		}));
+	}
+
+	async createStudio(studioData: CreateStudio) {
+		const result = await this.databaseService.db
+			.insert(studios)
+			.values(studioData)
+			.$returningId();
+
+		return result[0];
+	}
+
+	async updateStudio(id: number, studioData: Partial<CreateStudio>) {
+		const result = await this.databaseService.db
+			.update(studios)
+			.set(studioData)
+			.where(eq(studios.id, id));
+
+		return result;
+	}
+
+	async deleteStudio(id: number) {
+		const result = await this.databaseService.db
+			.delete(studios)
+			.where(eq(studios.id, id));
+
+		return result;
+	}
+
+	async makeStudioAvailable(id: number) {
+		const result = await this.databaseService.db
+			.update(studios)
+			.set({ isAvailable: true })
+			.where(eq(studios.id, id));
+		return result;
+	}
+
+	async makeStudioUnavailable(id: number) {
+		const result = await this.databaseService.db
+			.update(studios)
+			.set({ isAvailable: false })
+			.where(eq(studios.id, id));
+
+		return result;
+	}
+
+	async getStudioById(id: number) {
+		const studio = await this.databaseService.db
+			.select()
+			.from(studios)
+			.where(eq(studios.id, id));
+
+		return studio;
+	}
+
+	async getAllStudios(offset: number, limit: number) {
+		const studiosList = await this.databaseService.db
+			.select()
+			.from(studios)
+			.limit(limit)
+			.offset(offset);
+		return studiosList;
+	}
+
+	async createStudioAvailability(availabilities: CreateStudioAvailability) {
+		const result = await this.databaseService.db
+			.insert(studioAvailability)
+			.values(availabilities)
+			.$returningId();
+
+		return result;
+	}
+
+	async removeStudioAvailability(studioId: number, availabilityIds: string[]) {
+		const result = await this.databaseService.db
+			.delete(studioAvailability)
+			.where(
+				and(
+					eq(studioAvailability.studioId, studioId),
+					inArray(studioAvailability.id, availabilityIds),
+				),
+			);
+
+		return result;
+	}
+
+	async getStudioAvailabilityByStudioId(studioId: number) {
+		const availabilities = await this.databaseService.db
+			.select()
+			.from(studioAvailability)
+			.where(eq(studioAvailability.studioId, studioId));
+
+		return availabilities;
+	}
+
+	async checkStudioAvailabilityConflict(studioId: number, dayOfWeek: number) {
+		const conflict = await this.databaseService.db
+			.select()
+			.from(studioAvailability)
+			.where(
+				and(
+					eq(studioAvailability.studioId, studioId),
+					eq(studioAvailability.dayOfWeek, dayOfWeek),
+				),
+			);
+
+		return conflict.length > 0;
+	}
+
+	async getStudioBookings({
+		offset,
+		limit,
+		status,
+	}: {
+		offset: number;
+		limit: number;
+		status?: StudioBookingStatus;
+	}) {
+		const bookings =
+			await this.databaseService.db.query.studioBookings.findMany({
+				where: status ? eq(studioBookings.status, status) : undefined,
+				columns: {
+					createdAt: false,
+					updatedAt: false,
+					studioId: false,
+				},
+				limit,
+				offset,
+				orderBy: (booking) => [
+					desc(booking.bookingDate),
+					desc(booking.startTime),
+				],
+			});
+
+		return bookings;
 	}
 }
