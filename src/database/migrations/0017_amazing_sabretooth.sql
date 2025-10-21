@@ -28,5 +28,6 @@ CREATE TABLE `vrgames_ticket_purchases` (
 	CONSTRAINT `chk_vrgames_ticket_purchases_status` CHECK(`vrgames_ticket_purchases`.`status` IN ('pending', 'completed', 'canceled'))
 );
 --> statement-breakpoint
+ALTER TABLE `vrgames_availability` MODIFY COLUMN `vrgame_id` varchar(15) NOT NULL;--> statement-breakpoint
 ALTER TABLE `vrgames_availability` ADD CONSTRAINT `fk_vrgames_availability_vrgame_id` FOREIGN KEY (`vrgame_id`) REFERENCES `vrgames`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `vrgames_ticket_purchases` ADD CONSTRAINT `fk_vrgames_ticket_purchases_vrgame_id` FOREIGN KEY (`vrgame_id`) REFERENCES `vrgames`(`id`) ON DELETE cascade ON UPDATE no action;
