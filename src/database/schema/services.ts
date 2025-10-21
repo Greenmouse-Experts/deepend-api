@@ -204,7 +204,7 @@ export const vrgamesAvailability = mysqlTable(
 		id: varchar("id", { length: ID_GENERATOR_LENGTH })
 			.$defaultFn(() => generateId())
 			.primaryKey(),
-		vrgameId: varchar("vrgame_id", { length: ID_GENERATOR_LENGTH }),
+		vrgameId: varchar("vrgame_id", { length: ID_GENERATOR_LENGTH }).notNull(),
 		dayOfWeek: smallint("day_of_week").notNull(), // 0 (Sunday) to 6 (Saturday)
 		startTime: time("start_time").notNull(),
 		endTime: time("end_time").notNull(),
@@ -217,7 +217,7 @@ export const vrgamesAvailability = mysqlTable(
 		foreignKey({
 			name: "fk_vrgames_availability_vrgame_id",
 			columns: [table.vrgameId],
-			foreignColumns: [studios.id],
+			foreignColumns: [vrgames.id],
 		}).onDelete("cascade"),
 		check(
 			"chk_vrgames_availability_time",
