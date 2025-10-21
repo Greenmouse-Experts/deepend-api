@@ -27,6 +27,17 @@ async function bootstrap() {
 	//Apply exception filter
 	app.useGlobalFilters(new CustomExceptionFilter());
 
+	app.enableCors({
+		origin: [
+			"http://localhost:3000",
+			"http://localhost:5173",
+			"https://localhost:5173",
+			"https://localhost:3000",
+		],
+		methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+		credentials: true,
+	});
+
 	//swagger configurations
 	const config = new DocumentBuilder()
 		.setTitle("DeepEnd")
