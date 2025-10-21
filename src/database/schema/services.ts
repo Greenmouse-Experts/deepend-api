@@ -31,6 +31,7 @@ import { smallint } from "drizzle-orm/mysql-core";
 
 export type CreateFood = typeof foods.$inferInsert;
 export type CreateVRGame = typeof vrgames.$inferInsert;
+export type CreateVRGameAvailability = typeof vrgamesAvailability.$inferInsert;
 export type CreateHotelAmenity = typeof hotelAmenities.$inferInsert;
 export type CreateHotel = typeof hotels.$inferInsert;
 export type CreateHotelRoom = typeof hotelRooms.$inferInsert;
@@ -45,6 +46,10 @@ export type CreateMovieSnack = typeof moviesSnacks.$inferInsert;
 export type CreateStudio = typeof studios.$inferInsert;
 export type CreateStudioAvailability = typeof studioAvailability.$inferInsert;
 export type CreateStudioBooking = typeof studioBookings.$inferInsert;
+export type CreateEquipmentRentalBooking =
+	typeof equipmentRentalsBookings.$inferInsert;
+export type CreateVRGameTicketPurchase =
+	typeof vrgamesTicketPurchases.$inferInsert;
 
 export const foods = mysqlTable("foods", {
 	id: varchar("id", { length: ID_GENERATOR_LENGTH })
@@ -192,6 +197,42 @@ export const vrgames = mysqlTable("vrgames", {
 		.$onUpdateFn(() => new Date())
 		.notNull(),
 });
+
+export const vrgamesAvailability = mysqlTable(
+	"vrgames_availability",
+	{
+		id: varchar("id", { length: ID_GENERATOR_LENGTH })
+			.$defaultFn(() => generateId())
+			.primaryKey(),
+		vrgameId: varchar("vrgame_id", { length: ID_GENERATOR_LENGTH }),
+		dayOfWeek: smallint("day_of_week").notNull(), // 0 (Sunday) to 6 (Saturday)
+		startTime: time("start_time").notNull(),
+		endTime: time("end_time").notNull(),
+		createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+		updatedAt: timestamp("updated_at", { fsp: 6 })
+			.$onUpdateFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		foreignKey({
+			name: "fk_vrgames_availability_vrgame_id",
+			columns: [table.vrgameId],
+			foreignColumns: [studios.id],
+		}).onDelete("cascade"),
+		check(
+			"chk_vrgames_availability_time",
+			sql`${table.startTime} < ${table.endTime}`,
+		),
+		unique("uk_vrgames_availability_unique").on(
+			table.vrgameId,
+			table.dayOfWeek,
+		),
+		check(
+			"chk_vrgames_availability_day_of_week",
+			sql`${table.dayOfWeek} BETWEEN 0 AND 6`,
+		),
+	],
+);
 
 export const hotels = mysqlTable("hotels", {
 	id: varchar("id", { length: ID_GENERATOR_LENGTH })
@@ -669,3 +710,109 @@ export const studioBookingsRelations = relations(studioBookings, ({ one }) => ({
 		references: [studios.id],
 	}),
 }));
+
+export const equipmentRentalsBookings = mysqlTable(
+	"equipment_rentals_bookings",
+	{
+		id: varchar("id", { length: ID_GENERATOR_LENGTH })
+			.$defaultFn(() => generateId())
+			.primaryKey(),
+		equipmentRentalId: varchar("equipment_rental_id", {
+			length: ID_GENERATOR_LENGTH,
+		}),
+		userId: varchar("user_id", { length: ID_GENERATOR_LENGTH }).notNull(),
+		rentalStartDate: date("rental_start_date", { mode: "string" }).notNull(),
+		rentalEndDate: date("rental_end_date", { mode: "string" }).notNull(),
+		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+		status: varchar("status", { length: 50 })
+			.default("pending")
+			.notNull()
+			.$type<"pending" | "confirmed" | "cancelled" | "completed">(),
+		createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+		updatedAt: timestamp("updated_at", { fsp: 6 })
+			.$onUpdateFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		foreignKey({
+			name: "fk_equipment_rentals_bookings_equipment_rental_id",
+			columns: [table.equipmentRentalId],
+			foreignColumns: [equipmentRentals.id],
+		}).onDelete("set null"),
+		check(
+			"chk_equipment_rentals_bookings_dates",
+			sql`${table.rentalStartDate} <= ${table.rentalEndDate}`,
+		),
+		check(
+			"chk_equipment_rentals_bookings_status",
+			sql`${table.status} IN ('pending', 'confirmed', 'cancelled', 'completed')`,
+		),
+		unique("uk_equipment_rentals_bookings_unique").on(
+			table.equipmentRentalId,
+			table.userId,
+			table.rentalStartDate,
+			table.rentalEndDate,
+		),
+	],
+);
+
+export const vrgamesTicketPurchases = mysqlTable(
+	"vrgames_ticket_purchases",
+	{
+		id: varchar("id", { length: ID_GENERATOR_LENGTH })
+			.$defaultFn(() => generateId())
+			.primaryKey(),
+		vrgameId: varchar("vrgame_id", { length: ID_GENERATOR_LENGTH }).notNull(),
+		userId: varchar("user_id", { length: ID_GENERATOR_LENGTH }).notNull(),
+		ticketQuantity: int("ticket_quantity").default(1).notNull(),
+		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+		status: varchar("status", { length: 50 })
+			.$type<"pending" | "completed" | "canceled">()
+			.default("pending")
+			.notNull(),
+		scheduledDate: date("scheduled_date", { mode: "string" }).notNull(),
+		scheduledTime: time("scheduled_time").notNull(),
+		purchaseDate: timestamp("purchase_date", { fsp: 6 }).defaultNow().notNull(),
+		createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+		updatedAt: timestamp("updated_at", { fsp: 6 })
+			.$onUpdateFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		foreignKey({
+			name: "fk_vrgames_ticket_purchases_vrgame_id",
+			columns: [table.vrgameId],
+			foreignColumns: [vrgames.id],
+		}).onDelete("cascade"),
+		check(
+			"chk_vrgames_ticket_purchases_status",
+			sql`${table.status} IN ('pending', 'completed', 'canceled')`,
+		),
+	],
+);
+
+// export const foodBookings = mysqlTable("food_bookings", {
+// 	id: varchar("id", { length: ID_GENERATOR_LENGTH })
+// 		.$defaultFn(() => generateId())
+// 		.primaryKey(),
+// 	userId: varchar("user_id", { length: ID_GENERATOR_LENGTH }).notNull(),
+// 	foodItems: json("food_items")
+// 		.$type<
+// 			{
+// 				foodId: string;
+// 				quantity: number;
+// 				addons?: { addonCategoryId: number; addonItemIds: number[] }[];
+// 			}[]
+// 		>()
+// 		.notNull(),
+// 	totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+// 	bookingDate: timestamp("booking_date", { fsp: 6 }).defaultNow().notNull(),
+// 	status: varchar("status", { length: 50 })
+// 		.default("pending")
+// 		.notNull()
+// 		.$type<"pending" | "preparing" | "delivered" | "cancelled">(),
+// 	createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+// 	updatedAt: timestamp("updated_at", { fsp: 6 })
+// 		.$onUpdateFn(() => new Date())
+// 		.notNull(),
+// });
