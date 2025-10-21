@@ -10,8 +10,6 @@ import {
 	gte,
 	inArray,
 	like,
-	lte,
-	or,
 	sql,
 } from "drizzle-orm";
 import {
@@ -19,9 +17,13 @@ import {
 	cinemaMovies,
 	cinemaMoviesShowtimes,
 	cinemaMoviesToGenres,
+	CreateEquipmentRentalBooking,
+	CreateEquipmentRentals,
 	CreateStudioBooking,
+	CreateVRGameTicketPurchase,
 	equipmentCategories,
 	equipmentRentals,
+	equipmentRentalsBookings,
 	foodAddonCategories,
 	foodAddonsItems,
 	foodCategories,
@@ -32,7 +34,9 @@ import {
 	studioBookings,
 	studios,
 	vrgames,
+	vrgamesAvailability,
 	vrgamesCategories,
+	vrgamesTicketPurchases,
 } from "src/database/schema";
 
 @Injectable()
@@ -256,6 +260,33 @@ END`.as("addons"),
 		return vrgamesList;
 	}
 
+	async getVrgameAvailabilityByIdAndDayofWeek(
+		vrgameId: string,
+		dayOfWeek: number,
+	) {
+		const availability = await this.databaseService.db
+			.select()
+			.from(vrgamesAvailability)
+			.where(
+				and(
+					eq(vrgamesAvailability.vrgameId, vrgameId),
+					eq(studioAvailability.dayOfWeek, dayOfWeek),
+				),
+			)
+			.limit(1);
+
+		return availability[0];
+	}
+
+	async getVrgameAvailabilityByStudioId(vrgameId: string) {
+		const availability = await this.databaseService.db
+			.select()
+			.from(vrgamesAvailability)
+			.where(eq(vrgamesAvailability.vrgameId, vrgameId));
+
+		return availability;
+	}
+
 	async getVrGameById(id: string) {
 		const vrgame = await this.databaseService.db
 			.select()
@@ -263,7 +294,7 @@ END`.as("addons"),
 			.where(and(eq(vrgames.id, id), eq(vrgames.isAvailable, true)))
 			.limit(1);
 
-		return vrgame;
+		return vrgame.pop();
 	}
 
 	async getAllHotelAmenities(offset: number, limit: number) {
@@ -761,5 +792,23 @@ END`.as("addons"),
 			.$returningId();
 
 		return booking[0];
+	}
+
+	async bookEquipmentRental(bookingData: CreateEquipmentRentalBooking) {
+		const booking = await this.databaseService.db
+			.insert(equipmentRentalsBookings)
+			.values(bookingData)
+			.$returningId();
+
+		return booking[0];
+	}
+
+	async createVrgameTicketOrder(orderData: CreateVRGameTicketPurchase) {
+		const order = await this.databaseService.db
+			.insert(vrgamesTicketPurchases)
+			.values(orderData)
+			.$returningId();
+
+		return order[0];
 	}
 }
