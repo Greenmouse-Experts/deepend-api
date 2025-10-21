@@ -1,7 +1,17 @@
 import { Injectable } from "@nestjs/common";
 import { eq } from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
-import { CreateUser, users } from "src/database/schema";
+import {
+	// AddToCartType,
+	// cartItems,
+	// carts,
+	CreateUser,
+	users,
+} from "src/database/schema";
+import {
+	EquipmentRentalBookingStatus,
+	StudioBookingStatus,
+} from "../admin/admin.repository";
 
 @Injectable()
 export class UserRepository {
@@ -45,9 +55,19 @@ export class UserRepository {
 		offset,
 		limit,
 		status,
-	}: { userId: string; offset: number; limit: number; status?: string }) {
+	}: {
+		userId: string;
+		offset: number;
+		limit: number;
+		status?: StudioBookingStatus;
+	}) {
 		const bookings =
 			await this.databaseService.db.query.studioBookings.findMany({
+				where: (table, { and }) =>
+					and(
+						eq(table.userId, userId),
+						status ? eq(table.status, status) : undefined,
+					),
 				limit,
 				offset,
 				with: {
@@ -57,4 +77,117 @@ export class UserRepository {
 
 		return bookings;
 	}
+
+	async getUserEquipmentRentalBookings({
+		userId,
+		offset,
+		limit,
+		status,
+	}: {
+		userId: string;
+		offset: number;
+		limit: number;
+		status?: EquipmentRentalBookingStatus;
+	}) {
+		const bookings =
+			await this.databaseService.db.query.equipmentRentalsBookings.findMany({
+				where: (table, { and }) =>
+					and(
+						eq(table.userId, userId),
+						status ? eq(table.status, status) : undefined,
+					),
+				limit,
+				offset,
+			});
+
+		return bookings;
+	}
+
+	async getUserVrgamesTicketPurchases({
+		userId,
+		offset,
+		limit,
+		status,
+	}: {
+		userId: string;
+		offset: number;
+		limit: number;
+		status?: "pending" | "completed" | "canceled";
+	}) {
+		const purchases =
+			await this.databaseService.db.query.vrgamesTicketPurchases.findMany({
+				where: (table, { and }) =>
+					and(
+						eq(table.userId, userId),
+						status ? eq(table.status, status) : undefined,
+					),
+				limit,
+				offset,
+			});
+
+		return purchases;
+	}
+
+	// async getUserExistingCart(userId: string) {
+	// 	const cart = await this.databaseService.db.query.carts.findFirst({
+	// 		where: (table, { and }) =>
+	// 			and(eq(table.userId, userId), eq(table.status, "active")),
+	// 		with: {
+	// 			items: {
+	// 				with: {
+	// 					addons: true,
+	// 				},
+	// 			},
+	// 		},
+	// 	});
+	//
+	// 	return cart;
+	// }
+	//
+	// async createCart(userId: string) {
+	// 	const newCart = await this.databaseService.db
+	// 		.insert(carts)
+	// 		.values({ userId, status: "active" })
+	// 		.$returningId();
+	//
+	// 	return newCart.pop();
+	// }
+	//
+	// async updateCartStatus(
+	// 	cartId: string,
+	// 	status: "active" | "checked_out" | "abandoned",
+	// ) {
+	// 	await this.databaseService.db
+	// 		.update(carts)
+	// 		.set({ status })
+	// 		.where(eq(carts.id, cartId));
+	// }
+	//
+	// async addToCart(cartItemData: AddToCartType) {
+	// 	const newItem = await this.databaseService.db
+	// 		.insert(cartItems)
+	// 		.values(cartItemData)
+	// 		.$returningId();
+	//
+	// 	return newItem;
+	// }
+	//
+	// async clearUserCart(userId: string) {
+	// 	const userCart = await this.getUserExistingCart(userId);
+	//
+	// 	if (userCart) {
+	// 		await this.databaseService.db
+	// 			.delete(cartItems)
+	// 			.where(eq(cartItems.cartId, userCart.id));
+	// 		await this.databaseService.db
+	// 			.delete(carts)
+	// 			.where(eq(carts.id, userCart.id));
+	// 	}
+	// }
+	//
+	// async removeCartItem(cartItemId: string) {
+	// 	await this.databaseService.db
+	// 		.delete(cartItems)
+	// 		.where(eq(cartItems.id, cartItemId));
+	// }
 }

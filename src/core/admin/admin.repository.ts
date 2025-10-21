@@ -1,16 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import {
-	and,
-	asc,
-	desc,
-	eq,
-	gt,
-	gte,
-	inArray,
-	like,
-	lte,
-	sql,
-} from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, like, sql } from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
 import {
 	advertBanners,
@@ -41,7 +30,9 @@ import {
 	CreateStudio,
 	CreateStudioAvailability,
 	CreateVRGame,
+	CreateVRGameAvailability,
 	equipmentRentals,
+	equipmentRentalsBookings,
 	foods,
 	FoodToAddonsCategories,
 	foodToAddonsCategories,
@@ -57,9 +48,16 @@ import {
 	studioBookings,
 	studios,
 	vrgames,
+	vrgamesAvailability,
 } from "src/database/schema/services";
 
 export type StudioBookingStatus =
+	| "pending"
+	| "confirmed"
+	| "cancelled"
+	| "completed";
+
+export type EquipmentRentalBookingStatus =
 	| "pending"
 	| "confirmed"
 	| "cancelled"
@@ -522,6 +520,51 @@ export class AdminRepository {
 			.limit(limit)
 			.offset(offset);
 		return vrgamesList;
+	}
+
+	async createVrgameAvailability(availabilities: CreateVRGameAvailability) {
+		const result = await this.databaseService.db
+			.insert(vrgamesAvailability)
+			.values(availabilities)
+			.$returningId();
+
+		return result;
+	}
+
+	async removeVrgameAvailability(vrgameId: string, availabilityIds: string[]) {
+		const result = await this.databaseService.db
+			.delete(vrgamesAvailability)
+			.where(
+				and(
+					eq(vrgamesAvailability.vrgameId, vrgameId),
+					inArray(vrgamesAvailability.id, availabilityIds),
+				),
+			);
+
+		return result;
+	}
+
+	async getVrgamesAvailabilityByVrgameId(vrgameId: string) {
+		const availabilities = await this.databaseService.db
+			.select()
+			.from(vrgamesAvailability)
+			.where(eq(vrgamesAvailability.vrgameId, vrgameId));
+
+		return availabilities;
+	}
+
+	async checkVrgameAvailabilityConflict(vrgameId: string, dayOfWeek: number) {
+		const conflict = await this.databaseService.db
+			.select()
+			.from(vrgamesAvailability)
+			.where(
+				and(
+					eq(vrgamesAvailability.vrgameId, vrgameId),
+					eq(vrgamesAvailability.dayOfWeek, dayOfWeek),
+				),
+			);
+
+		return conflict.length > 0;
 	}
 
 	async makeVrGameAvailable(id: string) {
@@ -1599,5 +1642,56 @@ export class AdminRepository {
 			});
 
 		return bookings;
+	}
+
+	async getEquipmentRentalBookings({
+		offset,
+		limit,
+		status,
+	}: {
+		offset: number;
+		limit: number;
+		status?: EquipmentRentalBookingStatus;
+	}) {
+		const bookings =
+			await this.databaseService.db.query.equipmentRentalsBookings.findMany({
+				where: status ? eq(equipmentRentalsBookings.status, status) : undefined,
+				columns: {
+					createdAt: false,
+					updatedAt: false,
+					equipmentRentalId: false,
+				},
+				limit,
+				offset,
+				orderBy: (booking) => [desc(booking.rentalStartDate)],
+			});
+
+		return bookings;
+	}
+
+	async getVrgamesTicketPurchases({
+		offset,
+		limit,
+		status,
+	}: {
+		offset: number;
+		limit: number;
+		status?: "pending" | "completed" | "canceled";
+	}) {
+		const purchases =
+			await this.databaseService.db.query.vrgamesTicketPurchases.findMany({
+				where: (ticketPurchase) =>
+					status ? eq(ticketPurchase.status, status) : undefined,
+				columns: {
+					createdAt: false,
+					updatedAt: false,
+					vrgameId: false,
+				},
+				limit,
+				offset,
+				orderBy: (purchase) => [desc(purchase.purchaseDate)],
+			});
+
+		return purchases;
 	}
 }

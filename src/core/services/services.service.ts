@@ -4,14 +4,20 @@ import {
 	NotFoundException,
 } from "@nestjs/common";
 import { ServicesRepository } from "./service.repository";
-import { BookStudioSessionDto } from "../admin/dto/service.dto";
 import {
+	BookEquipmentRentalDto,
+	BookStudioSessionDto,
+	CreateVrGameTicketOrderDto,
+} from "../admin/dto/service.dto";
+import {
+	calculateEquipmentTotalPrice,
 	calculateStudioTotalPrice,
 	doIntervalsOverlap,
 	getDayFromDate,
 	isBookingWithinStudioHours,
 } from "src/common/helpers";
 import { isDatabaseError, mysqlErrorCodes } from "src/common/mysql.error";
+import { isWithinInterval, parse } from "date-fns";
 
 @Injectable()
 export class ServicesService {
@@ -137,7 +143,7 @@ export class ServicesService {
 	async getVrGameById(id: string) {
 		const vrgames = await this.servicesRepository.getVrGameById(id);
 
-		if (vrgames.length === 0) {
+		if (vrgames === null || vrgames === undefined) {
 			throw new NotFoundException("VR game not found");
 		}
 
@@ -482,5 +488,144 @@ export class ServicesService {
 
 			throw error;
 		}
+	}
+
+	async bookEquipmentRental(
+		userId: string,
+		bookingData: BookEquipmentRentalDto,
+	) {
+		try {
+			const equipment = await this.servicesRepository.getEquipmentRentalById(
+				bookingData.equipmentRentalId,
+			);
+
+			if (!equipment) {
+				throw new NotFoundException("Equipment rental not found");
+			}
+
+			const equipmentRentalTotalPrice = calculateEquipmentTotalPrice(
+				Number(equipment.rentalPricePerDay),
+				bookingData.rentalStartDate,
+				bookingData.rentalEndDate,
+			);
+
+			return await this.servicesRepository.bookEquipmentRental({
+				...bookingData,
+				totalPrice: String(equipmentRentalTotalPrice),
+				userId,
+			});
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			)
+				throw new BadRequestException(
+					"You already have a pending booking for this equipment on the selected dates. Please complete or cancel it before making a new booking.",
+				);
+
+			throw error;
+		}
+	}
+
+	async getEquipmentRentalTotalPrice(
+		equipmentRentalId: string,
+		rentalStartDate: string,
+		rentalEndDate: string,
+	) {
+		const equipment =
+			await this.servicesRepository.getEquipmentRentalById(equipmentRentalId);
+
+		if (!equipment) {
+			throw new NotFoundException("Equipment rental not found");
+		}
+
+		const equipmentTotalPrice = calculateEquipmentTotalPrice(
+			Number(equipment.rentalPricePerDay),
+			String(rentalStartDate),
+			String(rentalEndDate),
+		);
+
+		return { totalPrice: equipmentTotalPrice };
+	}
+
+	async createVrgamesPurchaseOrder(
+		userId: string,
+		orderData: CreateVrGameTicketOrderDto,
+	) {
+		try {
+			const vrgames = await this.servicesRepository.getVrGameById(
+				orderData.vrGameId,
+			);
+
+			if (!vrgames) {
+				throw new NotFoundException("Vrgame not found");
+			}
+
+			if (vrgames.ticketQuantity < orderData.ticketQuantity) {
+				throw new BadRequestException(
+					`Only ${vrgames.ticketQuantity} tickets are available for this VR game.`,
+				);
+			}
+
+			const bookingDayOfWeek = getDayFromDate(orderData.scheduledDate);
+
+			const vrgameAvailability =
+				await this.servicesRepository.getVrgameAvailabilityByIdAndDayofWeek(
+					orderData.vrGameId,
+					bookingDayOfWeek,
+				);
+
+			if (!vrgameAvailability) {
+				throw new NotFoundException(
+					"Vrgame is not available on the selected day",
+				);
+			}
+
+			const vrgameTotalPrice =
+				Number(vrgames.ticketPrice) * Number(orderData.ticketQuantity);
+
+			if (
+				!isWithinInterval(
+					parse(`${orderData.scheduledTime}:00`, "HH:mm:ss", new Date()),
+					{
+						start: parse(vrgameAvailability.startTime, "HH:mm:ss", new Date()),
+						end: parse(vrgameAvailability.endTime, "HH:mm:ss", new Date()),
+					},
+				)
+			) {
+				throw new NotFoundException(
+					"Vrgame is not available at the selected time",
+				);
+			}
+
+			return await this.servicesRepository.createVrgameTicketOrder({
+				vrgameId: orderData.vrGameId,
+				scheduledDate: orderData.scheduledDate,
+				scheduledTime: orderData.scheduledTime,
+				totalPrice: String(vrgameTotalPrice),
+				userId,
+			});
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			)
+				throw new BadRequestException(
+					"You have a pending order for this VR game. Please complete or cancel it before making a new order.",
+				);
+
+			throw error;
+		}
+	}
+
+	async getVrgameAvailabilityByVrgameId(vrGameId: string) {
+		const availability =
+			await this.servicesRepository.getVrgameAvailabilityByVrgameId(vrGameId);
+
+		return availability;
 	}
 }

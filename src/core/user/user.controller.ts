@@ -3,13 +3,15 @@ import { ApiOperation } from "@nestjs/swagger";
 import { GetUser } from "src/common/decorators/get-user.decorator";
 import { Role } from "src/common/decorators/role/role.decorator";
 import { UserRoles } from "src/common/decorators/role/role.enum";
-import {
-	StudioBookingPaginationQueryDto,
-	StudioBookingPaginationQuerySchema,
-} from "src/common/dto/requestQuery.dto";
 import { QueryJoiValidationPipe } from "src/common/pipes/query-validation.pipe";
 import { UserService } from "./user.service";
 import { AuthGuard } from "src/common/guards/auth.guard";
+import {
+	BookingPaginationQueryDto,
+	BookingPaginationQuerySchema,
+	TicketPaginationQueryDto,
+	TicketPaginationQuerySchema,
+} from "src/common/dto/requestQuery.dto";
 
 @Controller({ path: "users", version: "1" })
 @UseGuards(AuthGuard)
@@ -17,14 +19,48 @@ import { AuthGuard } from "src/common/guards/auth.guard";
 export class UserController {
 	constructor(private readonly userService: UserService) {}
 
-	@Get("studio-bookings")
+	@Get("studios/bookings")
 	@ApiOperation({ summary: "Get user's studio bookings with pagination" })
 	async getUserStudioBookings(
 		@GetUser("id") userId: string,
-		@Query(new QueryJoiValidationPipe(StudioBookingPaginationQuerySchema))
-		{ page, limit, status }: StudioBookingPaginationQueryDto,
+		@Query(new QueryJoiValidationPipe(BookingPaginationQuerySchema))
+		{ page, limit, status }: BookingPaginationQueryDto,
 	) {
 		return await this.userService.getUserStudioBookings({
+			userId,
+			page,
+			limit,
+			status,
+		});
+	}
+
+	@Get("equipment-rentals/bookings")
+	@ApiOperation({
+		summary: "Get user's equipment rental bookings with pagination",
+	})
+	async getUserEquipmentRentalBookings(
+		@GetUser("userId") userId: string,
+		@Query(new QueryJoiValidationPipe(BookingPaginationQuerySchema))
+		{ page, limit, status }: BookingPaginationQueryDto,
+	) {
+		return await this.userService.getUserEquipmentRentalBookings({
+			userId,
+			page,
+			limit,
+			status,
+		});
+	}
+
+	@Get("vrgames/purchases")
+	@ApiOperation({
+		summary: "Get user's VR game purchases with pagination",
+	})
+	async getUserVRGamePurchases(
+		@GetUser("userId") userId: string,
+		@Query(new QueryJoiValidationPipe(TicketPaginationQuerySchema))
+		{ page, limit, status }: TicketPaginationQueryDto,
+	) {
+		return await this.userService.getUserVrgamesTicketPurchases({
 			userId,
 			page,
 			limit,

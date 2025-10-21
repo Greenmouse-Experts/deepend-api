@@ -3,7 +3,11 @@ import {
 	Injectable,
 	NotFoundException,
 } from "@nestjs/common";
-import { AdminRepository, StudioBookingStatus } from "./admin.repository";
+import {
+	AdminRepository,
+	EquipmentRentalBookingStatus,
+	StudioBookingStatus,
+} from "./admin.repository";
 import { CreateFood, CreateHotelAmenity } from "src/database/schema/services";
 import { isDatabaseError, mysqlErrorCodes } from "src/common/mysql.error";
 import {
@@ -18,6 +22,7 @@ import {
 	CreateSnacksDto,
 	CreateStudioAvailabilityDto,
 	CreateStudioDto,
+	CreateVrgameAvailabilityDto,
 	CreateVRGameDto,
 	UpdateCinemaDto,
 	UpdateCinemaHallDto,
@@ -712,6 +717,85 @@ export class AdminService {
 		}
 
 		return game[0];
+	}
+
+	async createVrgameAvailability(
+		availabilityData: CreateVrgameAvailabilityDto,
+	) {
+		try {
+			const availabilities =
+				await this.adminRepository.checkVrgameAvailabilityConflict(
+					availabilityData.vrGameId,
+					availabilityData.dayOfWeek,
+				);
+
+			if (availabilities) {
+				throw new BadRequestException(
+					"Vrgame availability for this day already exists",
+				);
+			}
+			return await this.adminRepository.createVrgameAvailability({
+				vrgameId: availabilityData.vrGameId,
+				dayOfWeek: availabilityData.dayOfWeek,
+				startTime: availabilityData.startTime,
+				endTime: availabilityData.endTime,
+			});
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("Invalid vrgame ID");
+			}
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException(
+					"Vrgame availability for this date already exists",
+				);
+			}
+
+			throw error;
+		}
+	}
+
+	async removeVrgameAvailability(vrgameId: string, ids: string[]) {
+		try {
+			const deletedAvailabilities =
+				await this.adminRepository.removeVrgameAvailability(vrgameId, ids);
+
+			if (
+				deletedAvailabilities &&
+				deletedAvailabilities[0].affectedRows === 0
+			) {
+				throw new BadRequestException(
+					"No matching vrgame availabilities found",
+				);
+			}
+
+			return { message: "Vrgame availabilities removed successfully" };
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			) {
+				throw new BadRequestException("One or more invalid Availability IDs");
+			}
+
+			throw error;
+		}
+	}
+
+	async getVrgamesAvailabilitiesByVrgameId(vrgameId: string) {
+		return await this.adminRepository.getVrgamesAvailabilityByVrgameId(
+			vrgameId,
+		);
 	}
 
 	async getAllVRGames(page: number, limit: number) {
@@ -2205,6 +2289,42 @@ export class AdminService {
 		const offset = (page - 1) * limit;
 
 		return await this.adminRepository.getStudioBookings({
+			offset,
+			limit,
+			status,
+		});
+	}
+
+	async getEquipmentRentalBookings({
+		page,
+		limit,
+		status,
+	}: {
+		page: number;
+		limit: number;
+		status?: EquipmentRentalBookingStatus;
+	}) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getEquipmentRentalBookings({
+			offset,
+			limit,
+			status,
+		});
+	}
+
+	async getVrgamesTicketPurchases({
+		page,
+		limit,
+		status,
+	}: {
+		page: number;
+		limit: number;
+		status?: "pending" | "completed" | "canceled";
+	}) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getVrgamesTicketPurchases({
 			offset,
 			limit,
 			status,
