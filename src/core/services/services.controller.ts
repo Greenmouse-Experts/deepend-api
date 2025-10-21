@@ -38,6 +38,7 @@ import {
 	BookEquipmentRentalSchema,
 	BookStudioSessionDto,
 	BookStudioSessionSchema,
+	CreateMovieTicketOrderDto,
 	CreateVrGameTicketOrderDto,
 	CreateVrGameTicketOrderSchema,
 } from "../admin/dto/service.dto";
@@ -342,5 +343,16 @@ export class ServicesController {
 		body: CreateVrGameTicketOrderDto,
 	) {
 		return await this.servicesService.createVrgamesPurchaseOrder(userId, body);
+	}
+
+	@Post("movies/book")
+	@ApiOperation({ summary: "Book movie tickets" })
+	@UseGuards(AuthGuard)
+	@Role(UserRoles.User)
+	async bookMovieTickets(
+		@GetUser("userId") userId: string,
+		@Body() body: CreateMovieTicketOrderDto,
+	) {
+		return await this.servicesService.createMovieTicketOrder(userId, body);
 	}
 }
