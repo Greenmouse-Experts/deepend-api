@@ -1249,4 +1249,17 @@ export class AdminController {
 			status,
 		});
 	}
+
+	@Get("movies/purchases")
+	@ApiOperation({ summary: "Get all movie bookings with pagination" })
+	async getAllMovieBookings(
+		@Query(new QueryJoiValidationPipe(TicketPaginationQuerySchema))
+		{ page, limit, status }: TicketPaginationQueryDto,
+	) {
+		return await this.adminService.getMovieTicketPurchases({
+			page,
+			limit,
+			status,
+		});
+	}
 }
