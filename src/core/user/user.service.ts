@@ -1,6 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { UserRepository } from "./user.repository";
 import { CreateUser } from "src/database/schema";
+import {
+	EquipmentRentalBookingStatus,
+	StudioBookingStatus,
+} from "../admin/admin.repository";
 
 @Injectable()
 export class UserService {
@@ -32,10 +36,57 @@ export class UserService {
 		page,
 		limit,
 		status,
-	}: { userId: string; page: number; limit: number; status?: string }) {
+	}: {
+		userId: string;
+		page: number;
+		limit: number;
+		status?: StudioBookingStatus;
+	}) {
 		const offset = (Number(page) - 1) * Number(limit);
 
 		return await this.userRepository.getUserStudioBookings({
+			userId,
+			offset,
+			limit,
+			status,
+		});
+	}
+
+	async getUserEquipmentRentalBookings({
+		userId,
+		page,
+		limit = 10,
+		status,
+	}: {
+		userId: string;
+		page: number;
+		limit: number;
+		status?: EquipmentRentalBookingStatus;
+	}) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		return await this.userRepository.getUserEquipmentRentalBookings({
+			userId,
+			offset,
+			limit,
+			status,
+		});
+	}
+
+	async getUserVrgamesTicketPurchases({
+		userId,
+		page,
+		limit = 10,
+		status,
+	}: {
+		userId: string;
+		page: number;
+		limit: number;
+		status?: "pending" | "completed" | "canceled";
+	}) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		return await this.userRepository.getUserVrgamesTicketPurchases({
 			userId,
 			offset,
 			limit,
