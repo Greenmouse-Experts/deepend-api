@@ -18,6 +18,8 @@ import {
 	cinemaMoviesShowtimes,
 	cinemaMoviesToGenres,
 	CreateEquipmentRentalBooking,
+	CreateMovieTicketPurchase,
+	CreateMovieTicketSnackPurchase,
 	CreateStudioBooking,
 	CreateVRGameTicketPurchase,
 	equipmentCategories,
@@ -29,6 +31,8 @@ import {
 	foods,
 	foodToAddonsCategories,
 	hotels,
+	moviesTicketPurchases,
+	moviesTicketSnacksPurchases,
 	studioAvailability,
 	studioBookings,
 	studios,
@@ -687,6 +691,22 @@ END`.as("addons"),
 		}));
 	}
 
+	async getMovieByShowtimeId(showtimeId: number) {
+		const showtime =
+			await this.databaseService.db.query.cinemaMoviesShowtimes.findFirst({
+				where: eq(cinemaMoviesShowtimes.id, showtimeId),
+			});
+
+		if (!showtime) {
+			return null;
+		}
+
+		return {
+			ticketPrice: showtime.ticketPrice,
+			availableTickets: showtime.totalSeats,
+		};
+	}
+
 	async getAllStudios({
 		search,
 		offset,
@@ -809,5 +829,35 @@ END`.as("addons"),
 			.$returningId();
 
 		return order[0];
+	}
+
+	async createMovieTicketOrder(
+		movieOrderData: CreateMovieTicketPurchase,
+		movieSnackOrderData: {
+			snackId: number;
+			quantity: number;
+		}[] = [],
+	) {
+		const movieOrder = await this.databaseService.db.transaction(async (tx) => {
+			const order = await tx
+				.insert(moviesTicketPurchases)
+				.values(movieOrderData)
+				.$returningId();
+
+			if (movieSnackOrderData.length > 0) {
+				const snacksDataWithOrderId = movieSnackOrderData.map((snack) => ({
+					...snack,
+					ticketPurchaseId: order[0].id,
+				}));
+
+				await tx
+					.insert(moviesTicketSnacksPurchases)
+					.values(snacksDataWithOrderId);
+			}
+
+			return order[0];
+		});
+
+		return movieOrder;
 	}
 }
