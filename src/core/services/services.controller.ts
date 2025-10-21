@@ -38,6 +38,8 @@ import {
 	BookEquipmentRentalSchema,
 	BookStudioSessionDto,
 	BookStudioSessionSchema,
+	CreateVrGameTicketOrderDto,
+	CreateVrGameTicketOrderSchema,
 } from "../admin/dto/service.dto";
 import { JoiValidationPipe } from "src/common/pipes/validation.pipe";
 import { GetUser } from "src/common/decorators/get-user.decorator";
@@ -322,5 +324,23 @@ export class ServicesController {
 		body: BookEquipmentRentalDto,
 	) {
 		return await this.servicesService.bookEquipmentRental(userId, body);
+	}
+
+	@Get("vrgames/:vrgameId/availability")
+	@ApiOperation({ summary: "Get VR game availability" })
+	async getVrGameAvailability(@Param("vrgameId") vrgameId: string) {
+		return await this.servicesService.getVrgameAvailabilityByVrgameId(vrgameId);
+	}
+
+	@Post("vrgames/book")
+	@ApiOperation({ summary: "Book a VR game session" })
+	@UseGuards(AuthGuard)
+	@Role(UserRoles.User)
+	async bookVrGameSession(
+		@GetUser("userId") userId: string,
+		@Body(new JoiValidationPipe(CreateVrGameTicketOrderSchema))
+		body: CreateVrGameTicketOrderDto,
+	) {
+		return await this.servicesService.createVrgamesPurchaseOrder(userId, body);
 	}
 }
