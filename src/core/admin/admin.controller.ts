@@ -15,6 +15,8 @@ import { ApiBody, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Role } from "src/common/decorators/role/role.decorator";
 import { UserRoles } from "src/common/decorators/role/role.enum";
 import {
+	BookingPaginationQueryDto,
+	BookingPaginationQuerySchema,
 	MoviePaginationQueryDto,
 	MoviePaginationQuerySchema,
 	MovieShowtimePaginationQueryDto,
@@ -23,8 +25,8 @@ import {
 	PaginationQuerySchema,
 	ServicePaginationQueryDto,
 	ServicePaginationQuerySchema,
-	StudioBookingPaginationQueryDto,
-	StudioBookingPaginationQuerySchema,
+	TicketPaginationQueryDto,
+	TicketPaginationQuerySchema,
 } from "src/common/dto/requestQuery.dto";
 import { AuthGuard } from "src/common/guards/auth.guard";
 import { QueryJoiValidationPipe } from "src/common/pipes/query-validation.pipe";
@@ -88,6 +90,8 @@ import {
 	CreateStudioAvailabilitySchema,
 	CreateStudioDto,
 	CreateStudioSchema,
+	CreateVrgameAvailabilityDto,
+	CreateVrgameAvailabilitySchema,
 	CreateVRGameDto,
 	CreateVRGameSchema,
 	MovieSnacksIdsDto,
@@ -102,6 +106,7 @@ import {
 	RemoveMovieGenresFromMovieSchema,
 	RemoveStudioAvailabilityDto,
 	RemoveStudioAvailabilitySchema,
+	RemoveVrgameAvailabilityDto,
 	UpdateAdvertBannerDto,
 	UpdateAdvertBannerSchema,
 	UpdateCinemaDto,
@@ -467,6 +472,33 @@ export class AdminController {
 		return await this.adminService.createVRGame(body);
 	}
 
+	@Post("vrgames/availability")
+	@ApiOperation({ summary: "Set vrgames availability" })
+	@ApiBody({ type: CreateVrgameAvailabilityDto })
+	@UsePipes(new JoiValidationPipe(CreateVrgameAvailabilitySchema))
+	async createVrgameAvailability(@Body() body: CreateVrgameAvailabilityDto) {
+		return await this.adminService.createVrgameAvailability(body);
+	}
+
+	@Delete("vrgames/:studioId/availability")
+	@ApiOperation({ summary: "Delete a studio availability" })
+	@UsePipes(new JoiValidationPipe(RemoveStudioAvailabilitySchema))
+	async vrgamesStudioAvailability(
+		@Param("vrgameId") vrgameId: string,
+		@Body() body: RemoveVrgameAvailabilityDto,
+	) {
+		return await this.adminService.removeVrgameAvailability(
+			vrgameId,
+			body.availabilityIds,
+		);
+	}
+
+	@Get("vrgames/:studioId/availability")
+	@ApiOperation({ summary: "Get all availability for a specific studio" })
+	async getVrgamesAvailabilityByStudioId(@Param("studioId") vrgameId: string) {
+		return await this.adminService.getVrgamesAvailabilitiesByVrgameId(vrgameId);
+	}
+
 	@Put("vrgames/:id")
 	@ApiOperation({ summary: "Update an existing VR game" })
 	@ApiBody({ type: UpdateVRGameDto })
@@ -729,6 +761,21 @@ export class AdminController {
 	@ApiOperation({ summary: "Delete an equipment rental item" })
 	async deleteEquipmentRental(@Param("id") id: string) {
 		return await this.adminService.deleteEquipmentRental(id);
+	}
+
+	@Get("equipments/bookings")
+	@ApiOperation({
+		summary: "Get all equipment rental bookings with pagination",
+	})
+	async getAllEquipmentRentalBookings(
+		@Query(new QueryJoiValidationPipe(BookingPaginationQuerySchema))
+		{ page, limit, status }: BookingPaginationQueryDto,
+	) {
+		return await this.adminService.getEquipmentRentalBookings({
+			page,
+			limit,
+			status,
+		});
 	}
 
 	@Get("equipments/:id")
@@ -1160,8 +1207,9 @@ export class AdminController {
 	@ApiOperation({ summary: "Delete a studio availability" })
 	@UsePipes(new JoiValidationPipe(RemoveStudioAvailabilitySchema))
 	async removeStudioAvailability(
-    @Param("studioId", ParseIntPipe) studioId: number,
-    @Body() body: RemoveStudioAvailabilityDto) {
+		@Param("studioId", ParseIntPipe) studioId: number,
+		@Body() body: RemoveStudioAvailabilityDto,
+	) {
 		return await this.adminService.removeStudioAvailability(
 			studioId,
 			body.availabilityIds,
@@ -1179,10 +1227,23 @@ export class AdminController {
 	@Get("studios/bookings")
 	@ApiOperation({ summary: "Get all studio bookings with pagination" })
 	async getAllStudioBookings(
-		@Query(new QueryJoiValidationPipe(StudioBookingPaginationQuerySchema))
-		{ page, limit, status }: StudioBookingPaginationQueryDto,
+		@Query(new QueryJoiValidationPipe(BookingPaginationQuerySchema))
+		{ page, limit, status }: BookingPaginationQueryDto,
 	) {
 		return await this.adminService.getStudioBookings({
+			page,
+			limit,
+			status,
+		});
+	}
+
+	@Get("vrgames/purchases")
+	@ApiOperation({ summary: "Get all VR game purchases with pagination" })
+	async getAllVRGamePurchases(
+		@Query(new QueryJoiValidationPipe(TicketPaginationQuerySchema))
+		{ page, limit, status }: TicketPaginationQueryDto,
+	) {
+		return await this.adminService.getVrgamesTicketPurchases({
 			page,
 			limit,
 			status,
