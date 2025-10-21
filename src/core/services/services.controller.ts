@@ -11,6 +11,8 @@ import {
 import { ServicesService } from "./services.service";
 import { QueryJoiValidationPipe } from "src/common/pipes/query-validation.pipe";
 import {
+	DateRangeQueryDto,
+	DateRangeQuerySchema,
 	GetBookedStudiosSessionsByRangeQueryDto,
 	GetBookedStudiosSessionsByRangeQuerySchema,
 	GetBookedStudiosSessionsQueryDto,
@@ -32,6 +34,8 @@ import {
 } from "src/common/dto/requestQuery.dto";
 import { ApiOperation } from "@nestjs/swagger";
 import {
+	BookEquipmentRentalDto,
+	BookEquipmentRentalSchema,
 	BookStudioSessionDto,
 	BookStudioSessionSchema,
 } from "../admin/dto/service.dto";
@@ -292,5 +296,31 @@ export class ServicesController {
 		body: BookStudioSessionDto,
 	) {
 		return await this.servicesService.bookStudioSession(userId, body);
+	}
+
+	@Get("equipments/:equipmentId/booking-price")
+	@ApiOperation({ summary: "Calculate total price for equipment rental" })
+	async getEquipmentRentalBookingPrice(
+		@Param("equipmentId") equipmentId: string,
+		@Query(new QueryJoiValidationPipe(DateRangeQuerySchema))
+		query: DateRangeQueryDto,
+	) {
+		return await this.servicesService.getEquipmentRentalTotalPrice(
+			equipmentId,
+			query.startDate,
+			query.endDate,
+		);
+	}
+
+	@Post("equipments/book")
+	@ApiOperation({ summary: "Book equipment rental" })
+	@UseGuards(AuthGuard)
+	@Role(UserRoles.User)
+	async bookEquipmentRental(
+		@GetUser("userId") userId: string,
+		@Body(new JoiValidationPipe(BookEquipmentRentalSchema))
+		body: BookEquipmentRentalDto,
+	) {
+		return await this.servicesService.bookEquipmentRental(userId, body);
 	}
 }
