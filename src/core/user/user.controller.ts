@@ -67,4 +67,21 @@ export class UserController {
 			status,
 		});
 	}
+
+	@Get("movies/purchases")
+	@ApiOperation({
+		summary: "Get user's movie purchases with pagination",
+	})
+	async getUserMoviePurchases(
+		@GetUser("userId") userId: string,
+		@Query(new QueryJoiValidationPipe(TicketPaginationQuerySchema))
+		{ page, limit, status }: TicketPaginationQueryDto,
+	) {
+		return await this.userService.getUserMovieTicketPurchases({
+			userId,
+			page,
+			limit,
+			status,
+		});
+	}
 }
