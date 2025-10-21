@@ -3,6 +3,7 @@ import { ID_GENERATOR_LENGTH } from "./constants";
 import crypto from "node:crypto";
 import {
 	addDays,
+	differenceInCalendarDays,
 	differenceInMinutes,
 	getDay,
 	parse,
@@ -62,6 +63,13 @@ export function getHoursBetween(startTime: string, endTime: string) {
 	return diffMinutes / 60;
 }
 
+export function getDaysBetween(startDateString: string, endDateString: string) {
+	const startDate = parseISO(new Date(startDateString).toISOString());
+	const endDate = parseISO(new Date(endDateString).toISOString());
+
+	return Math.max(1, differenceInCalendarDays(endDate, startDate));
+}
+
 export function calculateStudioTotalPrice(
 	hourlyRate: number,
 	startTime: string,
@@ -70,6 +78,18 @@ export function calculateStudioTotalPrice(
 	const hours = getHoursBetween(startTime, endTime);
 
 	const total = hourlyRate * hours;
+
+	return Math.round(total * 100) / 100;
+}
+
+export function calculateEquipmentTotalPrice(
+	dailyRate: number,
+	startDate: string,
+	endDate: string,
+): number {
+	const days = getDaysBetween(startDate, endDate);
+
+	const total = dailyRate * days;
 
 	return Math.round(total * 100) / 100;
 }
