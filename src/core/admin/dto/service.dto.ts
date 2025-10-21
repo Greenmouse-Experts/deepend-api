@@ -2,6 +2,8 @@ import { ApiProperty } from "@nestjs/swagger";
 import * as Joi from "joi";
 import { timeToMinutes } from "src/common/helpers";
 
+export const timePattern = /^([0-1]\d|2[0-3]):([0-5]\d)$/;
+
 class Images {
 	@ApiProperty({
 		example: "http://example.com/image.jpg",
@@ -386,6 +388,64 @@ export const UpdateVRGameSchema = Joi.object({
 	ageRating: Joi.number().integer().min(0).max(100).optional(),
 	ticketPrice: Joi.number().precision(2).positive().optional(),
 	ticketQuantity: Joi.number().integer().min(1).required(),
+});
+
+export class CreateVrgameAvailabilityDto {
+	@ApiProperty({
+		example: "iijjaljdfaijfd",
+		description: "ID of the VR game",
+	})
+	vrGameId: string;
+
+	@ApiProperty({
+		example: 1,
+		description: "Day of the week (0=Sunday, 1=Monday, ..., 6=Saturday)",
+	})
+	dayOfWeek: number;
+
+	@ApiProperty({
+		example: "09:00",
+		description: "Start time of availability (HH:mm format)",
+	})
+	startTime: string;
+
+	@ApiProperty({
+		example: "17:00",
+		description: "End time of availability (HH:mm format)",
+	})
+	endTime: string;
+}
+
+export const CreateVrgameAvailabilitySchema = Joi.object({
+	vrGameId: Joi.string().required(),
+	dayOfWeek: Joi.number().integer().min(0).max(6).required(),
+	startTime: Joi.string().pattern(timePattern).required(),
+	endTime: Joi.string().pattern(timePattern).required(),
+}).custom((value, helpers) => {
+	const { startTime, endTime } = value;
+
+	if (startTime && endTime) {
+		if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+			return helpers.error("time.endBeforeStart");
+		}
+	}
+
+	return value;
+});
+
+export class RemoveVrgameAvailabilityDto {
+	@ApiProperty({
+		example: ["iijjaljdfaijfd", "aidfaljfdlaj", "iosadjfjasldfj"],
+		description: "IDs of the vrgame availability entry to be removed",
+	})
+	availabilityIds: string[];
+}
+
+export const RemoveVrgameAvailabilitySchema = Joi.object({
+	availabilityIds: Joi.array()
+		.items(Joi.string().trim().required())
+		.min(1)
+		.required(),
 });
 
 export class CreateHotelAmenityDto {
@@ -1405,8 +1465,6 @@ export class CreateStudioAvailabilityDto {
 	endTime: string;
 }
 
-export const timePattern = /^([0-1]\d|2[0-3]):([0-5]\d)$/;
-
 export const CreateStudioAvailabilitySchema = Joi.object({
 	studioId: Joi.number().integer().positive().required(),
 	dayOfWeek: Joi.number().integer().min(0).max(6).required(),
@@ -1490,3 +1548,75 @@ export const BookStudioSessionSchema = Joi.object({
 		"date.min": "bookingDate must be today or in the future",
 		"time.endBeforeStart": "endTime must be after startTime",
 	});
+
+export class BookEquipmentRentalDto {
+	@ApiProperty({
+		example: "iiujiodjk",
+		description: "The ID of the equipment to be booked",
+	})
+	equipmentRentalId: string;
+
+	@ApiProperty({
+		example: "2023-10-15",
+		description: "Start date of the booking (YYYY-MM-DD)",
+	})
+	rentalStartDate: string;
+
+	@ApiProperty({
+		example: "2023-10-20",
+		description: "End date of the booking (YYYY-MM-DD)",
+	})
+	rentalEndDate: string;
+}
+
+export const BookEquipmentRentalSchema = Joi.object({
+	equipmentRentalId: Joi.string().required(),
+	rentalStartDate: Joi.date()
+		.required()
+		.min(new Date().setHours(0, 0, 0, 0))
+		.raw(),
+	rentalEndDate: Joi.date().required().min(Joi.ref("rentalStartDate")).raw(),
+}).messages({
+	"date.base": "{{#label}} must be a valid date",
+	"date.min": "{{#label}} must be today or in the future",
+	"date.greater": "endDate must be the same as or after startDate",
+});
+
+export class CreateVrGameTicketOrderDto {
+	@ApiProperty({
+		example: "iiujiodjk",
+		description: "The ID of the VR game to book tickets for",
+	})
+	vrGameId: string;
+
+	@ApiProperty({
+		example: 2,
+		description: "Number of tickets to book",
+	})
+	ticketQuantity: number;
+
+	@ApiProperty({
+		example: "2023-10-15",
+		description: "Date of the booking (YYYY-MM-DD)",
+	})
+	scheduledDate: string;
+
+	@ApiProperty({
+		example: "14:00",
+		description: "Scheduled start time for the VR game session (HH:mm format)",
+	})
+	scheduledTime: string;
+}
+
+export const CreateVrGameTicketOrderSchema = Joi.object({
+	vrGameId: Joi.string().required(),
+	ticketQuantity: Joi.number().integer().min(1).required(),
+	scheduledDate: Joi.date()
+		.required()
+		.min(new Date().setHours(0, 0, 0, 0))
+		.raw(),
+	scheduledTime: Joi.string().pattern(timePattern).required(),
+}).messages({
+	"date.base": "scheduledDate must be a valid date",
+	"date.min": "scheduledDate must be today or in the future",
+});
