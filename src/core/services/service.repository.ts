@@ -18,7 +18,6 @@ import {
 	cinemaMoviesShowtimes,
 	cinemaMoviesToGenres,
 	CreateEquipmentRentalBooking,
-	CreateEquipmentRentals,
 	CreateStudioBooking,
 	CreateVRGameTicketPurchase,
 	equipmentCategories,
@@ -270,7 +269,7 @@ END`.as("addons"),
 			.where(
 				and(
 					eq(vrgamesAvailability.vrgameId, vrgameId),
-					eq(studioAvailability.dayOfWeek, dayOfWeek),
+					eq(vrgamesAvailability.dayOfWeek, dayOfWeek),
 				),
 			)
 			.limit(1);
@@ -278,7 +277,7 @@ END`.as("addons"),
 		return availability[0];
 	}
 
-	async getVrgameAvailabilityByStudioId(vrgameId: string) {
+	async getVrgameAvailabilityByVrgameId(vrgameId: string) {
 		const availability = await this.databaseService.db
 			.select()
 			.from(vrgamesAvailability)
