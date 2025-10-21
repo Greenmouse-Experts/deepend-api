@@ -2,6 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import * as Joi from "joi";
 import { timeToMinutes } from "../helpers";
 import { timePattern } from "src/core/admin/dto/service.dto";
+import { isBefore } from "date-fns";
 
 export class PaginationQueryDto {
 	@ApiProperty({
@@ -200,7 +201,45 @@ export const TimeRangeQuerySchema = Joi.object({
 		"string.pattern.base": '"{#label}" must be in HH:mm format',
 	});
 
-export class StudioBookingPaginationQueryDto extends PaginationQueryDto {
+export class DateRangeQueryDto {
+	@ApiProperty({
+		example: "2023-10-01",
+		description: "Start date in YYYY-MM-DD format",
+		required: true,
+	})
+	startDate: string;
+
+	@ApiProperty({
+		example: "2023-10-07",
+		description: "End date in YYYY-MM-DD format",
+		required: true,
+	})
+	endDate: string;
+}
+
+export const DateRangeQuerySchema = Joi.object({
+	startDate: Joi.date().iso().required(),
+	endDate: Joi.date().iso().required(),
+})
+	.and("startDate", "endDate")
+	.custom((value, helpers) => {
+		const { startDate, endDate } = value;
+
+		if (startDate && endDate) {
+			if (isBefore(new Date(endDate), new Date(startDate))) {
+				return helpers.error("date.endBeforeStart");
+			}
+		}
+
+		return value;
+	})
+	.messages({
+		"date.format": '"{#label}" must be in YYYY-MM-DD format',
+		"date.endBeforeStart":
+			'"End date" must be greater than or equal to "Start date"',
+	});
+
+export class BookingPaginationQueryDto extends PaginationQueryDto {
 	@ApiProperty({
 		example: "confirmed",
 		description:
@@ -210,8 +249,22 @@ export class StudioBookingPaginationQueryDto extends PaginationQueryDto {
 	status?: "pending" | "confirmed" | "cancelled" | "completed";
 }
 
-export const StudioBookingPaginationQuerySchema = PaginationQuerySchema.keys({
+export const BookingPaginationQuerySchema = PaginationQuerySchema.keys({
 	status: Joi.string()
 		.valid("pending", "confirmed", "cancelled", "completed")
 		.optional(),
+});
+
+export class TicketPaginationQueryDto extends PaginationQueryDto {
+	@ApiProperty({
+		example: "completed",
+		description:
+			'Filter tickets by status ("pending", "completed", "canceled")',
+		required: false,
+	})
+	status?: "pending" | "completed" | "canceled";
+}
+
+export const TicketPaginationQuerySchema = PaginationQuerySchema.keys({
+	status: Joi.string().valid("pending", "completed", "canceled").optional(),
 });
