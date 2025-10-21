@@ -5,38 +5,10 @@ import { ResponseInterceptor } from "./common/interceptors/response.interceptor"
 import { CustomExceptionFilter } from "./common/exception-filter/exception-filter";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { requestLogger } from "./common/logger/request.logger";
-import { WinstonModule } from "nest-winston";
-import * as winston from "winston";
-import "winston-daily-rotate-file"; // Import for file rotation
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule, {
-		logger: WinstonModule.createLogger({
-			transports: [
-				new winston.transports.Console({
-					format: winston.format.combine(
-						winston.format.timestamp(),
-						winston.format.ms(),
-						winston.format.colorize(),
-						winston.format.printf(
-							(info) =>
-								`${info.timestamp} ${info.level}: ${info.message} ${info.ms}`,
-						),
-					),
-				}),
-				new winston.transports.DailyRotateFile({
-					filename: "application-%DATE%.log",
-					datePattern: "YYYY-MM-DD",
-					zippedArchive: true,
-					maxSize: "20m",
-					maxFiles: "14d",
-					format: winston.format.combine(
-						winston.format.timestamp(),
-						winston.format.json(),
-					),
-				}),
-			],
-		}),
+		logger: ["debug", "log", "warn", "error", "verbose"],
 	});
 
 	app.setGlobalPrefix("api");
