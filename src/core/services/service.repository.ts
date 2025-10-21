@@ -695,6 +695,28 @@ END`.as("addons"),
 		const showtime =
 			await this.databaseService.db.query.cinemaMoviesShowtimes.findFirst({
 				where: eq(cinemaMoviesShowtimes.id, showtimeId),
+				with: {
+					movie: {
+						with: {
+							snacks: {
+								columns: {
+									createdAt: false,
+									updatedAt: false,
+									movieId: false,
+									snackId: false,
+								},
+								with: {
+									snack: {
+										columns: {
+											createdAt: false,
+											updatedAt: false,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			});
 
 		if (!showtime) {
@@ -704,6 +726,7 @@ END`.as("addons"),
 		return {
 			ticketPrice: showtime.ticketPrice,
 			availableTickets: showtime.totalSeats,
+			snacks: showtime.movie.snacks.map((s) => s.snack),
 		};
 	}
 
