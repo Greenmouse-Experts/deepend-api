@@ -17,7 +17,7 @@ import {
 	isBookingWithinStudioHours,
 } from "src/common/helpers";
 import { isDatabaseError, mysqlErrorCodes } from "src/common/mysql.error";
-import { isWithinInterval } from "date-fns";
+import { isWithinInterval, parse } from "date-fns";
 
 @Injectable()
 export class ServicesService {
@@ -587,10 +587,13 @@ export class ServicesService {
 				Number(vrgames.ticketPrice) * Number(orderData.ticketQuantity);
 
 			if (
-				!isWithinInterval(orderData.scheduledTime, {
-					start: vrgameAvailability.startTime,
-					end: vrgameAvailability.endTime,
-				})
+				!isWithinInterval(
+					parse(`${orderData.scheduledTime}:00`, "HH:mm:ss", new Date()),
+					{
+						start: parse(vrgameAvailability.startTime, "HH:mm:ss", new Date()),
+						end: parse(vrgameAvailability.endTime, "HH:mm:ss", new Date()),
+					},
+				)
 			) {
 				throw new NotFoundException(
 					"Vrgame is not available at the selected time",
@@ -612,10 +615,17 @@ export class ServicesService {
 				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
 			)
 				throw new BadRequestException(
-					"You have a pending booking for this studio. Please complete or cancel it before making a new booking.",
+					"You have a pending order for this VR game. Please complete or cancel it before making a new order.",
 				);
 
 			throw error;
 		}
+	}
+
+	async getVrgameAvailabilityByVrgameId(vrGameId: string) {
+		const availability =
+			await this.servicesRepository.getVrgameAvailabilityByVrgameId(vrGameId);
+
+		return availability;
 	}
 }
