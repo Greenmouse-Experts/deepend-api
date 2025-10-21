@@ -734,9 +734,12 @@ export class AdminService {
 					"Vrgame availability for this day already exists",
 				);
 			}
-			return await this.adminRepository.createVrgameAvailability(
-				availabilityData,
-			);
+			return await this.adminRepository.createVrgameAvailability({
+				vrgameId: availabilityData.vrGameId,
+				dayOfWeek: availabilityData.dayOfWeek,
+				startTime: availabilityData.startTime,
+				endTime: availabilityData.endTime,
+			});
 		} catch (error) {
 			const databaseError = isDatabaseError(error);
 
@@ -789,9 +792,9 @@ export class AdminService {
 		}
 	}
 
-	async getVrgamesAvailabilitiesByVrgameId(studioId: string) {
+	async getVrgamesAvailabilitiesByVrgameId(vrgameId: string) {
 		return await this.adminRepository.getVrgamesAvailabilityByVrgameId(
-			studioId,
+			vrgameId,
 		);
 	}
 
