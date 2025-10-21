@@ -924,6 +924,19 @@ export class AdminController {
 		return await this.adminService.getSnacksByMovieId(movieId);
 	}
 
+	@Get("movies/purchases")
+	@ApiOperation({ summary: "Get all movie bookings with pagination" })
+	async getAllMovieBookings(
+		@Query(new QueryJoiValidationPipe(TicketPaginationQuerySchema))
+		{ page, limit, status }: TicketPaginationQueryDto,
+	) {
+		return await this.adminService.getMovieTicketPurchases({
+			page,
+			limit,
+			status,
+		});
+	}
+
 	@Post("cinemas")
 	@ApiOperation({ summary: "Create a new cinema" })
 	@ApiBody({ type: CreateCinemaDto })
@@ -1244,19 +1257,6 @@ export class AdminController {
 		{ page, limit, status }: BookingPaginationQueryDto,
 	) {
 		return await this.adminService.getStudioBookings({
-			page,
-			limit,
-			status,
-		});
-	}
-
-	@Get("movies/purchases")
-	@ApiOperation({ summary: "Get all movie bookings with pagination" })
-	async getAllMovieBookings(
-		@Query(new QueryJoiValidationPipe(TicketPaginationQuerySchema))
-		{ page, limit, status }: TicketPaginationQueryDto,
-	) {
-		return await this.adminService.getMovieTicketPurchases({
 			page,
 			limit,
 			status,

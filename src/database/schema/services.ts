@@ -871,7 +871,7 @@ export const moviesTicketPurchasesRelations = relations(
 			fields: [moviesTicketPurchases.showtimeId],
 			references: [cinemaMoviesShowtimes.id],
 		}),
-		snacks: many(snacks),
+		orderedSnacks: many(moviesTicketSnacksPurchases),
 	}),
 );
 

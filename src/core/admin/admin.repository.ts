@@ -1706,25 +1706,38 @@ export class AdminRepository {
 	}) {
 		const purchases =
 			await this.databaseService.db.query.moviesTicketPurchases.findMany({
-				where: (ticketPurchase) =>
-					status ? eq(ticketPurchase.status, status) : undefined,
-				columns: {
-					createdAt: false,
-					updatedAt: false,
-				},
+				where: (table) => (status ? eq(table.status, status) : undefined),
+				limit,
+				offset,
 				with: {
-					snacks: {
+					orderedSnacks: {
 						columns: {
 							createdAt: false,
 							updatedAt: false,
 						},
+						with: {
+							snack: {
+								columns: {
+									createdAt: false,
+									updatedAt: false,
+								},
+							},
+						},
 					},
 				},
-				limit,
-				offset,
-				orderBy: (purchase) => [desc(purchase.purchaseDate)],
 			});
 
-		return purchases;
+		const ticketsWithSnacks = purchases.map((purchase) => {
+			const { orderedSnacks, ...rest } = purchase;
+			return {
+				...rest,
+				orderedSnacks: orderedSnacks.map((orderedSnack) => ({
+					...orderedSnack,
+					snack: orderedSnack.snack,
+				})),
+			};
+		});
+
+		return ticketsWithSnacks;
 	}
 }

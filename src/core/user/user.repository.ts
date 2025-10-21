@@ -149,16 +149,35 @@ export class UserRepository {
 				limit,
 				offset,
 				with: {
-					snacks: {
+					orderedSnacks: {
 						columns: {
-							id: true,
 							createdAt: false,
+							updatedAt: false,
+						},
+						with: {
+							snack: {
+								columns: {
+									createdAt: false,
+									updatedAt: false,
+								},
+							},
 						},
 					},
 				},
 			});
 
-		return purchases;
+		const ticketsWithSnacks = purchases.map((purchase) => {
+			const { orderedSnacks, ...rest } = purchase;
+			return {
+				...rest,
+				orderedSnacks: orderedSnacks.map((orderedSnack) => ({
+					...orderedSnack,
+					snack: orderedSnack.snack,
+				})),
+			};
+		});
+
+		return ticketsWithSnacks;
 	}
 
 	// async getUserExistingCart(userId: string) {

@@ -651,9 +651,18 @@ export class ServicesService {
 				);
 			}
 
+			const movieSnacksTotalPrice = movieShowtime.snacks.reduce(
+				(total, snack) =>
+					total +
+					Number(snack.price) *
+						(movieTicketOrderData.snacks.find((s) => s.snackId === snack.id)
+							?.quantity || 0),
+				0,
+			);
 			const movieTotalPrice =
 				Number(movieShowtime.ticketPrice) *
-				Number(movieTicketOrderData.ticketQuantity);
+					Number(movieTicketOrderData.ticketQuantity) +
+				movieSnacksTotalPrice;
 
 			return await this.servicesRepository.createMovieTicketOrder(
 				{
