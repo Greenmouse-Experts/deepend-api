@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import * as joi from "joi";
+import { timePattern } from "src/core/admin/dto/service.dto";
 
 export class CreateUserDto {
 	@ApiProperty({
@@ -165,3 +166,95 @@ export class RefreshTokenDto {
 export const RefreshTokenSchema = joi.object({
 	userId: joi.string().required(),
 });
+
+class CartAddons {
+	@ApiProperty({
+		description: "Type of addon",
+		example: "vrgames",
+	})
+	addonType: "vrgames" | "movie" | "hotel" | "studio_session" | "food";
+
+	@ApiProperty({
+		description: "Addon ID",
+		example: "addon-uuid-1234",
+	})
+	addonId: string;
+
+	@ApiProperty({
+		description: "Quantity of the addon",
+		example: 1,
+	})
+	quantity: number;
+}
+
+export class AddToCartDto {
+	@ApiProperty({
+		description: "Type of service to add to cart",
+		example: "vrgames",
+	})
+	serviceType: "vrgames" | "movie" | "hotel" | "studio_session" | "food";
+
+	@ApiProperty({
+		description: "ID of the service to add to cart",
+		example: "service-uuid-1234",
+	})
+	serviceId: string;
+
+	@ApiProperty({
+		description: "Quantity of the service",
+		example: 2,
+	})
+	quantity: number;
+
+	@ApiProperty({
+		description: "Scheduled date for the service (if applicable)",
+		example: "2024-07-01",
+	})
+	scheduledDate?: string;
+
+	@ApiProperty({
+		description: "Scheduled start time for the service (if applicable)",
+		example: "14:00",
+	})
+	scheduledStartTime?: string;
+
+	@ApiProperty({
+		description: "Scheduled end time for the service (if applicable)",
+		example: "15:00",
+	})
+	scheduledEndTime?: string;
+
+	@ApiProperty({
+		description: "List of addons for the cart item",
+		type: [CartAddons],
+	})
+	addons?: CartAddons[];
+}
+
+export const AddToCartSchema = joi
+	.object({
+		serviceType: joi
+			.string()
+			.valid("vrgames", "movie", "hotel", "food")
+			.required(),
+		serviceId: joi.string().required(),
+		quantity: joi.number().integer().positive().required(),
+		addons: joi
+			.array()
+			.items(
+				joi.object({
+					addonType: joi
+						.string()
+						.valid("vrgames", "movie", "hotel", "food")
+						.required(),
+					addonId: joi.string().required(),
+					quantity: joi.number().integer().positive().required(),
+				}),
+			)
+			.optional(),
+	})
+	.messages({
+		"any.required": "{{#label}} is required",
+		"string.pattern.base":
+			"{{#label}} must be in the format HH:MM (24-hour format)",
+	});
