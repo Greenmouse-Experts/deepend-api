@@ -1620,3 +1620,54 @@ export const CreateVrGameTicketOrderSchema = Joi.object({
 	"date.base": "scheduledDate must be a valid date",
 	"date.min": "scheduledDate must be today or in the future",
 });
+
+class CreateMovieTicketSnacksDto {
+	@ApiProperty({
+		example: 1,
+		description: "The ID of the snack item",
+	})
+	snackId: number;
+
+	@ApiProperty({
+		example: 2,
+		description: "Quantity of the snack item",
+	})
+	quantity: number;
+}
+
+export class CreateMovieTicketOrderDto {
+	@ApiProperty({
+		example: 1,
+		description: "The ID of the movie showtime to book tickets for",
+	})
+	movieShowtimeId: number;
+
+	@ApiProperty({
+		example: 3,
+		description: "Number of tickets to book",
+	})
+	ticketQuantity: number;
+
+	@ApiProperty({
+		example: [
+			{ snackId: 1, quantity: 2 },
+			{ snackId: 3, quantity: 1 },
+		],
+		description: "Optional snacks to be included with the movie ticket order",
+		required: false,
+	})
+	snacks: CreateMovieTicketSnacksDto[];
+}
+
+export const CreateMovieTicketOrderSchema = Joi.object({
+	movieShowtimeId: Joi.number().integer().positive().required(),
+	ticketQuantity: Joi.number().integer().min(1).required(),
+	snacks: Joi.array()
+		.items(
+			Joi.object({
+				snackId: Joi.number().integer().positive().required(),
+				quantity: Joi.number().integer().min(1).required(),
+			}),
+		)
+		.required(),
+});
