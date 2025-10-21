@@ -50,6 +50,10 @@ export type CreateEquipmentRentalBooking =
 	typeof equipmentRentalsBookings.$inferInsert;
 export type CreateVRGameTicketPurchase =
 	typeof vrgamesTicketPurchases.$inferInsert;
+export type CreateMovieTicketPurchase =
+	typeof moviesTicketPurchases.$inferInsert;
+export type CreateMovieTicketSnackPurchase =
+	typeof moviesTicketSnacksPurchases.$inferInsert;
 
 export const foods = mysqlTable("foods", {
 	id: varchar("id", { length: ID_GENERATOR_LENGTH })
@@ -599,6 +603,7 @@ export const cinemaMoviesShowtimesRelations = relations(
 
 export const snacksRelations = relations(snacks, ({ many }) => ({
 	movies: many(moviesSnacks),
+	ticketPurchases: many(moviesTicketSnacksPurchases),
 }));
 
 export const moviesSnacksRelations = relations(moviesSnacks, ({ one }) => ({
@@ -789,6 +794,99 @@ export const vrgamesTicketPurchases = mysqlTable(
 			sql`${table.status} IN ('pending', 'completed', 'canceled')`,
 		),
 	],
+);
+
+export const moviesTicketPurchases = mysqlTable(
+	"movies_ticket_purchases",
+	{
+		id: varchar("id", { length: ID_GENERATOR_LENGTH })
+			.$defaultFn(() => generateId())
+			.primaryKey(),
+		showtimeId: int("showtime_id").notNull(),
+		userId: varchar("user_id", { length: ID_GENERATOR_LENGTH }).notNull(),
+		ticketQuantity: int("ticket_quantity").default(1).notNull(),
+		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+		status: varchar("status", { length: 50 })
+			.$type<"pending" | "completed" | "canceled">()
+			.default("pending")
+			.notNull(),
+		purchaseDate: timestamp("purchase_date", {
+			fsp: 6,
+			mode: "string",
+		}),
+		createdAt: timestamp("created_at", { fsp: 6, mode: "string" })
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp("updated_at", { fsp: 6 })
+			.$onUpdateFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		foreignKey({
+			name: "fk_movies_ticket_purchases_showtime_id",
+			columns: [table.showtimeId],
+			foreignColumns: [cinemaMoviesShowtimes.id],
+		}).onDelete("cascade"),
+		check(
+			"chk_movies_ticket_purchases_status",
+			sql`${table.status} IN ('pending', 'completed', 'canceled')`,
+		),
+	],
+);
+
+export const moviesTicketSnacksPurchases = mysqlTable(
+	"movies_ticket_snacks_purchases",
+	{
+		id: varchar("id", { length: ID_GENERATOR_LENGTH })
+			.$defaultFn(() => generateId())
+			.primaryKey(),
+		ticketPurchaseId: varchar("ticket_purchase_id", {
+			length: ID_GENERATOR_LENGTH,
+		}).notNull(),
+		snackId: int("snack_id").notNull(),
+		quantity: int("quantity").default(1).notNull(),
+		createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+		updatedAt: timestamp("updated_at", { fsp: 6 })
+			.$onUpdateFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		foreignKey({
+			name: "fk_movies_ticket_snacks_purchases_ticket_purchase_id",
+			columns: [table.ticketPurchaseId],
+			foreignColumns: [moviesTicketPurchases.id],
+		}).onDelete("cascade"),
+		foreignKey({
+			name: "fk_movies_ticket_snacks_purchases_snack_id",
+			columns: [table.snackId],
+			foreignColumns: [snacks.id],
+		}).onDelete("cascade"),
+	],
+);
+
+export const moviesTicketPurchasesRelations = relations(
+	moviesTicketPurchases,
+	({ one, many }) => ({
+		showtime: one(cinemaMoviesShowtimes, {
+			fields: [moviesTicketPurchases.showtimeId],
+			references: [cinemaMoviesShowtimes.id],
+		}),
+		snacks: many(snacks),
+	}),
+);
+
+export const moviesTicketSnacksPurchasesRelations = relations(
+	moviesTicketSnacksPurchases,
+	({ one }) => ({
+		ticketPurchase: one(moviesTicketPurchases, {
+			fields: [moviesTicketSnacksPurchases.ticketPurchaseId],
+			references: [moviesTicketPurchases.id],
+		}),
+		snack: one(snacks, {
+			fields: [moviesTicketSnacksPurchases.snackId],
+			references: [snacks.id],
+		}),
+	}),
 );
 
 // export const foodBookings = mysqlTable("food_bookings", {

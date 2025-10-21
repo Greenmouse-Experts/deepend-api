@@ -7,6 +7,7 @@ import { ServicesRepository } from "./service.repository";
 import {
 	BookEquipmentRentalDto,
 	BookStudioSessionDto,
+	CreateMovieTicketOrderDto,
 	CreateVrGameTicketOrderDto,
 } from "../admin/dto/service.dto";
 import {
@@ -627,5 +628,62 @@ export class ServicesService {
 			await this.servicesRepository.getVrgameAvailabilityByVrgameId(vrGameId);
 
 		return availability;
+	}
+
+	async createMovieTicketOrder(
+		userId: string,
+		movieTicketOrderData: CreateMovieTicketOrderDto,
+	) {
+		try {
+			const movieShowtime = await this.servicesRepository.getMovieByShowtimeId(
+				movieTicketOrderData.movieShowtimeId,
+			);
+
+			if (!movieShowtime) {
+				throw new NotFoundException("Movie showtime not found");
+			}
+
+			if (
+				movieShowtime.availableTickets < movieTicketOrderData.ticketQuantity
+			) {
+				throw new BadRequestException(
+					`Only ${movieShowtime.availableTickets} tickets are available for this movie.`,
+				);
+			}
+
+			const movieTotalPrice =
+				Number(movieShowtime.ticketPrice) *
+				Number(movieTicketOrderData.ticketQuantity);
+
+			return await this.servicesRepository.createMovieTicketOrder(
+				{
+					...movieTicketOrderData,
+					showtimeId: movieTicketOrderData.movieShowtimeId,
+					totalPrice: String(movieTotalPrice),
+					userId,
+				},
+				movieTicketOrderData.snacks,
+			);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			)
+				throw new BadRequestException(
+					"You have a pending order for this movie. Please complete or cancel it before making a new order.",
+				);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			)
+				throw new BadRequestException(
+					"One or more selected snacks or movies do not exist. Please review your order and try again.",
+				);
+
+			throw error;
+		}
 	}
 }

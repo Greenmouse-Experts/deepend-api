@@ -2330,4 +2330,22 @@ export class AdminService {
 			status,
 		});
 	}
+
+	async getMovieTicketPurchases({
+		page,
+		limit,
+		status,
+	}: {
+		page: number;
+		limit: number;
+		status?: "pending" | "completed" | "canceled";
+	}) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getMovieTicketPurchases({
+			offset,
+			limit,
+			status,
+		});
+	}
 }

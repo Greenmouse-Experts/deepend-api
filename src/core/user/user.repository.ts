@@ -128,6 +128,39 @@ export class UserRepository {
 		return purchases;
 	}
 
+	async getUserMovieTicketPurchases({
+		userId,
+		offset,
+		limit,
+		status,
+	}: {
+		userId: string;
+		offset: number;
+		limit: number;
+		status?: "pending" | "completed" | "canceled";
+	}) {
+		const purchases =
+			await this.databaseService.db.query.moviesTicketPurchases.findMany({
+				where: (table, { and }) =>
+					and(
+						eq(table.userId, userId),
+						status ? eq(table.status, status) : undefined,
+					),
+				limit,
+				offset,
+				with: {
+					snacks: {
+						columns: {
+							id: true,
+							createdAt: false,
+						},
+					},
+				},
+			});
+
+		return purchases;
+	}
+
 	// async getUserExistingCart(userId: string) {
 	// 	const cart = await this.databaseService.db.query.carts.findFirst({
 	// 		where: (table, { and }) =>

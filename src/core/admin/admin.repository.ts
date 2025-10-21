@@ -1694,4 +1694,37 @@ export class AdminRepository {
 
 		return purchases;
 	}
+
+	async getMovieTicketPurchases({
+		offset,
+		limit,
+		status,
+	}: {
+		offset: number;
+		limit: number;
+		status?: "pending" | "completed" | "canceled";
+	}) {
+		const purchases =
+			await this.databaseService.db.query.moviesTicketPurchases.findMany({
+				where: (ticketPurchase) =>
+					status ? eq(ticketPurchase.status, status) : undefined,
+				columns: {
+					createdAt: false,
+					updatedAt: false,
+				},
+				with: {
+					snacks: {
+						columns: {
+							createdAt: false,
+							updatedAt: false,
+						},
+					},
+				},
+				limit,
+				offset,
+				orderBy: (purchase) => [desc(purchase.purchaseDate)],
+			});
+
+		return purchases;
+	}
 }

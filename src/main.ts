@@ -33,6 +33,7 @@ async function bootstrap() {
 			"http://localhost:5173",
 			"https://localhost:5173",
 			"https://localhost:3000",
+			"https://deepend-admin.netlify.app",
 		],
 		methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
 		credentials: true,

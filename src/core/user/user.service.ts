@@ -93,4 +93,25 @@ export class UserService {
 			status,
 		});
 	}
+
+	async getUserMovieTicketPurchases({
+		userId,
+		page,
+		limit = 10,
+		status,
+	}: {
+		userId: string;
+		page: number;
+		limit: number;
+		status?: "pending" | "completed" | "canceled";
+	}) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		return await this.userRepository.getUserMovieTicketPurchases({
+			userId,
+			offset,
+			limit,
+			status,
+		});
+	}
 }
