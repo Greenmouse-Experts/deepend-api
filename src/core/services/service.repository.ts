@@ -6,10 +6,14 @@ import {
 	between,
 	desc,
 	eq,
+	getTableColumns,
 	gt,
 	gte,
 	inArray,
 	like,
+	lt,
+	lte,
+	or,
 	sql,
 } from "drizzle-orm";
 import {
@@ -18,8 +22,8 @@ import {
 	cinemaMoviesShowtimes,
 	cinemaMoviesToGenres,
 	CreateEquipmentRentalBooking,
+	CreateHotelBooking,
 	CreateMovieTicketPurchase,
-	CreateMovieTicketSnackPurchase,
 	CreateStudioBooking,
 	CreateVRGameTicketPurchase,
 	equipmentCategories,
@@ -30,6 +34,8 @@ import {
 	foodCategories,
 	foods,
 	foodToAddonsCategories,
+	hotelRooms,
+	hotelBookings,
 	hotels,
 	moviesTicketPurchases,
 	moviesTicketSnacksPurchases,
@@ -882,5 +888,57 @@ END`.as("addons"),
 		});
 
 		return movieOrder;
+	}
+
+	async createHotelBooking(createHotelBookingData: CreateHotelBooking) {
+		const booking = await this.databaseService.db
+			.insert(hotelBookings)
+			.values(createHotelBookingData)
+			.$returningId();
+
+		return booking[0];
+	}
+
+	async checkHotelRoomAvailability(
+		hotelId: string,
+		roomId: string,
+		checkInDate: string,
+		checkOutDate: string,
+	) {
+		const overlappingBookings = await this.databaseService.db
+			.select()
+			.from(hotelBookings)
+			.where(
+				and(
+					eq(hotelBookings.hotelId, hotelId),
+					eq(hotelBookings.hotelRoomId, roomId),
+					eq(hotelBookings.status, "confirmed"),
+					or(
+						and(
+							gte(hotelBookings.checkInDate, checkInDate),
+							lt(hotelBookings.checkInDate, checkOutDate),
+						),
+						and(
+							gt(hotelBookings.checkOutDate, checkInDate),
+							lte(hotelBookings.checkOutDate, checkOutDate),
+						),
+						and(
+							lte(hotelBookings.checkInDate, checkInDate),
+							gte(hotelBookings.checkOutDate, checkOutDate),
+						),
+					),
+				),
+			)
+			.leftJoin(hotelRooms, eq(hotelBookings.hotelRoomId, hotelRooms.id));
+
+		return overlappingBookings.length === 0;
+	}
+
+	async getHotelRoomById(roomId: string) {
+		const room = await this.databaseService.db.query.hotelRooms.findFirst({
+			where: eq(hotelRooms.id, roomId),
+		});
+
+		return room;
 	}
 }
