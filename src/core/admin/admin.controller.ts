@@ -27,6 +27,8 @@ import {
 	ServicePaginationQuerySchema,
 	TicketPaginationQueryDto,
 	TicketPaginationQuerySchema,
+	UserPaginationQueryDto,
+	UserPaginationQuerySchema,
 } from "src/common/dto/requestQuery.dto";
 import { AuthGuard } from "src/common/guards/auth.guard";
 import { QueryJoiValidationPipe } from "src/common/pipes/query-validation.pipe";
@@ -678,6 +680,19 @@ export class AdminController {
 		return await this.adminService.getAllHotels(+page, +limit, search);
 	}
 
+	@Get("hotels/bookings")
+	@ApiOperation({ summary: "Get all hotel bookings with pagination" })
+	async getAllHotelBookings(
+		@Query(new QueryJoiValidationPipe(BookingPaginationQuerySchema))
+		{ page, limit, status }: BookingPaginationQueryDto,
+	) {
+		return await this.adminService.getHotelBookings({
+			page,
+			limit,
+			status,
+		});
+	}
+
 	@Get("hotels/:id")
 	@ApiOperation({ summary: "Get a hotel by ID" })
 	async getHotelById(@Param("id") id: string) {
@@ -1261,5 +1276,14 @@ export class AdminController {
 			limit,
 			status,
 		});
+	}
+
+	@Get("users")
+	@ApiOperation({ summary: "Get all users with pagination" })
+	async getAllUsers(
+		@Query(new QueryJoiValidationPipe(UserPaginationQuerySchema))
+		{ page, limit, search }: UserPaginationQueryDto,
+	) {
+		return await this.adminService.getAllUsers(+page, +limit, search);
 	}
 }

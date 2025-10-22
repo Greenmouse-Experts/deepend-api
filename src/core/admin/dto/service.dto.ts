@@ -1655,6 +1655,7 @@ export class CreateMovieTicketOrderDto {
 		],
 		description: "Optional snacks to be included with the movie ticket order",
 		required: false,
+		type: [CreateMovieTicketSnacksDto],
 	})
 	snacks: CreateMovieTicketSnacksDto[];
 }
@@ -1670,4 +1671,44 @@ export const CreateMovieTicketOrderSchema = Joi.object({
 			}),
 		)
 		.required(),
+});
+
+export class BookHotelDto {
+	@ApiProperty({
+		example: "iiujiodjk",
+		description: "The ID of the hotel where the room is located",
+	})
+	hotelId: string;
+
+	@ApiProperty({
+		example: "iiujiodjk",
+		description: "The ID of the hotel room to be booked",
+	})
+	hotelRoomId: string;
+
+	@ApiProperty({
+		example: "2023-10-15",
+		description: "Check-in date for the hotel booking (YYYY-MM-DD)",
+	})
+	checkInDate: string;
+
+	@ApiProperty({
+		example: "2023-10-20",
+		description: "Check-out date for the hotel booking (YYYY-MM-DD)",
+	})
+	checkOutDate: string;
+}
+
+export const BookHotelSchema = Joi.object({
+	hotelId: Joi.string().required(),
+	hotelRoomId: Joi.string().required(),
+	checkInDate: Joi.date()
+		.required()
+		.min(new Date().setHours(0, 0, 0, 0))
+		.raw(),
+	checkOutDate: Joi.date().required().min(Joi.ref("checkInDate")).raw(),
+}).messages({
+	"date.base": "{{#label}} must be a valid date",
+	"date.min": "{{#label}} must be today or in the future",
+	"date.greater": "checkOutDate must be the same as or after checkInDate",
 });

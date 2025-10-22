@@ -268,3 +268,17 @@ export class TicketPaginationQueryDto extends PaginationQueryDto {
 export const TicketPaginationQuerySchema = PaginationQuerySchema.keys({
 	status: Joi.string().valid("pending", "completed", "canceled").optional(),
 });
+
+export class UserPaginationQueryDto extends PaginationQueryDto {
+  @ApiProperty({
+    example: "john.doe",
+    description: "Search term to filter users by username or email",
+    required: false,
+  })
+  search?: string;
+}
+
+export const UserPaginationQuerySchema = PaginationQuerySchema.keys({
+  search: Joi.string().max(100).optional(),
+});
+

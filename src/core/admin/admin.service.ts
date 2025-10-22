@@ -2348,4 +2348,28 @@ export class AdminService {
 			status,
 		});
 	}
+
+	async getHotelBookings({
+		page,
+		limit,
+		status,
+	}: {
+		page: number;
+		limit: number;
+		status?: "pending" | "confirmed" | "cancelled" | "completed";
+	}) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getHotelBookings({
+			offset,
+			limit,
+			status,
+		});
+	}
+
+	async getAllUsers(page: number, limit = 10, search?: string) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getAllUsers(offset, limit, search);
+	}
 }

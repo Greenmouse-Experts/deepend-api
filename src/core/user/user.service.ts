@@ -114,4 +114,25 @@ export class UserService {
 			status,
 		});
 	}
+
+	async getUserHotelBookings({
+		userId,
+		page,
+		limit = 10,
+		status,
+	}: {
+		userId: string;
+		page: number;
+		limit: number;
+		status?: "pending" | "confirmed" | "cancelled" | "completed";
+	}) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		return await this.userRepository.getUserHotelBookings({
+			userId,
+			offset,
+			limit,
+			status,
+		});
+	}
 }

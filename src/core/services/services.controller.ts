@@ -36,6 +36,8 @@ import { ApiOperation } from "@nestjs/swagger";
 import {
 	BookEquipmentRentalDto,
 	BookEquipmentRentalSchema,
+	BookHotelDto,
+	BookHotelSchema,
 	BookStudioSessionDto,
 	BookStudioSessionSchema,
 	CreateMovieTicketOrderDto,
@@ -354,5 +356,16 @@ export class ServicesController {
 		@Body() body: CreateMovieTicketOrderDto,
 	) {
 		return await this.servicesService.createMovieTicketOrder(userId, body);
+	}
+
+	@Post("hotels/book")
+	@ApiOperation({ summary: "Book hotel rooms" })
+	@UseGuards(AuthGuard)
+	@Role(UserRoles.User)
+	async bookHotelRooms(
+		@GetUser("userId") userId: string,
+		@Body(new JoiValidationPipe(BookHotelSchema)) body: BookHotelDto,
+	) {
+		return await this.servicesService.createHotelBooking(userId, body);
 	}
 }

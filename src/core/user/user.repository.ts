@@ -180,6 +180,32 @@ export class UserRepository {
 		return ticketsWithSnacks;
 	}
 
+	async getUserHotelBookings({
+		userId,
+		offset,
+		limit,
+		status,
+	}: {
+		userId: string;
+		offset: number;
+		limit: number;
+		status?: "pending" | "confirmed" | "cancelled" | "completed";
+	}) {
+		const bookings = await this.databaseService.db.query.hotelBookings.findMany(
+			{
+				where: (table, { and }) =>
+					and(
+						eq(table.userId, userId),
+						status ? eq(table.status, status) : undefined,
+					),
+				limit,
+				offset,
+			},
+		);
+
+		return bookings;
+	}
+
 	// async getUserExistingCart(userId: string) {
 	// 	const cart = await this.databaseService.db.query.carts.findFirst({
 	// 		where: (table, { and }) =>

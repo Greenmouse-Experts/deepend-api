@@ -6,6 +6,7 @@ import {
 import { ServicesRepository } from "./service.repository";
 import {
 	BookEquipmentRentalDto,
+	BookHotelDto,
 	BookStudioSessionDto,
 	CreateMovieTicketOrderDto,
 	CreateVrGameTicketOrderDto,
@@ -690,6 +691,61 @@ export class ServicesService {
 			)
 				throw new BadRequestException(
 					"One or more selected snacks or movies do not exist. Please review your order and try again.",
+				);
+
+			throw error;
+		}
+	}
+
+	async createHotelBooking(userId: string, BookingData: BookHotelDto) {
+		try {
+			const availability =
+				await this.servicesRepository.checkHotelRoomAvailability(
+					BookingData.hotelId,
+					BookingData.hotelRoomId,
+					BookingData.checkInDate,
+					BookingData.checkOutDate,
+				);
+
+			if (!availability) {
+				throw new NotFoundException(
+					"Hotel room not available for the selected dates.",
+				);
+			}
+
+			const hotelRoom = await this.servicesRepository.getHotelRoomById(
+				BookingData.hotelRoomId,
+			);
+
+			if (!hotelRoom) {
+				throw new NotFoundException("Hotel room not found");
+			}
+
+			const numberOfNights =
+				Math.abs(
+					new Date(BookingData.checkOutDate).getTime() -
+						new Date(BookingData.checkInDate).getTime(),
+				) /
+				(1000 * 60 * 60 * 24);
+			console.log(`Available Hotel ${JSON.stringify(availability)}`);
+
+			const totalPrice =
+				Number(hotelRoom.pricePerNight) * Number(numberOfNights);
+
+			return await this.servicesRepository.createHotelBooking({
+				...BookingData,
+				userId,
+				totalPrice: String(totalPrice),
+			});
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			)
+				throw new BadRequestException(
+					"You have a pending booking for this hotel room. Please complete or cancel it before making a new booking.",
 				);
 
 			throw error;
