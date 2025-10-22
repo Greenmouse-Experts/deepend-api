@@ -1,6 +1,18 @@
 import { Injectable } from "@nestjs/common";
-import { and, asc, desc, eq, gt, gte, inArray, like, sql } from "drizzle-orm";
+import {
+	and,
+	asc,
+	desc,
+	eq,
+	gt,
+	gte,
+	inArray,
+	like,
+	or,
+	sql,
+} from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
+import { users } from "src/database/schema";
 import {
 	advertBanners,
 	cinemaMoviesGenres,
@@ -39,6 +51,7 @@ import {
 	foodToAddonsItems,
 	FoodToAddonsItems,
 	hotelAmenities,
+	hotelBookings,
 	hotelRooms,
 	hotels,
 	hotelToAmenities,
@@ -1739,5 +1752,49 @@ export class AdminRepository {
 		});
 
 		return ticketsWithSnacks;
+	}
+
+	async getHotelBookings({
+		offset,
+		limit,
+		status,
+	}: {
+		offset: number;
+		limit: number;
+		status?: "pending" | "confirmed" | "cancelled" | "completed";
+	}) {
+		const bookings = await this.databaseService.db.query.hotelBookings.findMany(
+			{
+				where: status ? eq(hotelBookings.status, status) : undefined,
+				columns: {
+					createdAt: false,
+					updatedAt: false,
+					hotelRoomId: false,
+				},
+				limit,
+				offset,
+				orderBy: (booking) => [desc(booking.checkInDate)],
+			},
+		);
+
+		return bookings;
+	}
+
+	async getAllUsers(offset: number, limit: number, search?: string) {
+		const usersList = await this.databaseService.db
+			.select()
+			.from(users)
+			.where(
+				search
+					? or(
+							like(users.firstName, `%${search}%`),
+							like(users.lastName, `%${search}%`),
+							like(users.email, `%${search}%`),
+						)
+					: undefined,
+			)
+			.limit(limit)
+			.offset(offset);
+		return usersList;
 	}
 }
