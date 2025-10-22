@@ -84,4 +84,20 @@ export class UserController {
 			status,
 		});
 	}
+
+
+	@Get("hotels/bookings")
+	@ApiOperation({ summary: "Get user's hotel bookings with pagination" })
+	async getUserHotelBookings(
+		@GetUser("userId") userId: string,
+		@Query(new QueryJoiValidationPipe(BookingPaginationQuerySchema))
+		{ page, limit, status }: BookingPaginationQueryDto,
+	) {
+		return await this.userService.getUserHotelBookings({
+			userId,
+			page,
+			limit,
+			status,
+		});
+	}
 }
