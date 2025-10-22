@@ -54,6 +54,7 @@ export type CreateMovieTicketPurchase =
 	typeof moviesTicketPurchases.$inferInsert;
 export type CreateMovieTicketSnackPurchase =
 	typeof moviesTicketSnacksPurchases.$inferInsert;
+export type CreateHotelBooking = typeof hotelBookings.$inferInsert;
 
 export const foods = mysqlTable("foods", {
 	id: varchar("id", { length: ID_GENERATOR_LENGTH })
@@ -887,6 +888,48 @@ export const moviesTicketSnacksPurchasesRelations = relations(
 			references: [snacks.id],
 		}),
 	}),
+);
+
+export const hotelBookings = mysqlTable(
+	"hotel_bookings",
+	{
+		id: varchar("id", { length: ID_GENERATOR_LENGTH })
+			.$defaultFn(() => generateId())
+			.primaryKey(),
+		userId: varchar("user_id", { length: ID_GENERATOR_LENGTH }).notNull(),
+		hotelId: varchar("hotel_id", {
+			length: ID_GENERATOR_LENGTH,
+		}),
+		hotelRoomId: varchar("hotel_room_id", {
+			length: ID_GENERATOR_LENGTH,
+		}).notNull(),
+		checkInDate: date("check_in_date", { mode: "string" }).notNull(),
+		checkOutDate: date("check_out_date", { mode: "string" }).notNull(),
+		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+		status: varchar("status", { length: 50 })
+			.default("pending")
+			.notNull()
+			.$type<"pending" | "confirmed" | "cancelled" | "completed">(),
+		createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+		updatedAt: timestamp("updated_at", { fsp: 6 })
+			.$onUpdateFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		foreignKey({
+			name: "fk_hotel_bookings_hotel_id",
+			columns: [table.hotelId],
+			foreignColumns: [hotels.id],
+		}).onDelete("no action"),
+		check(
+			"chk_hotel_bookings_dates",
+			sql`${table.checkInDate} < ${table.checkOutDate}`,
+		),
+		check(
+			"chk_hotel_bookings_status",
+			sql`${table.status} IN ('pending', 'confirmed', 'cancelled', 'completed')`,
+		),
+	],
 );
 
 // export const foodBookings = mysqlTable("food_bookings", {
