@@ -1712,3 +1712,71 @@ export const BookHotelSchema = Joi.object({
 	"date.min": "{{#label}} must be today or in the future",
 	"date.greater": "checkOutDate must be the same as or after checkInDate",
 });
+
+export class CreateFoodOrderDto {
+	@ApiProperty({
+		example: "delivery",
+		description: "Type of delivery for the food order (pickup or delivery)",
+	})
+	deliveryType: "pickup" | "delivery";
+
+	@ApiProperty({
+		example: "456 Another St, City, Country",
+		description:
+			"Delivery address for the food order (required if deliveryType is 'delivery')",
+		required: false,
+	})
+	deliveryAddress?: string;
+
+	@ApiProperty({
+		example: "Please make it extra spicy.",
+		description: "Any special instructions for the food order",
+		required: false,
+	})
+	specialInstructions?: string;
+
+	@ApiProperty({
+		example: "iiujiodjk",
+		description: "The ID of the food item",
+	})
+	foodId: string;
+
+	@ApiProperty({
+		example: 2,
+		description: "Quantity of the food item",
+	})
+	quantity: number;
+
+	@ApiProperty({
+		example: [
+			{ addonCategoryId: 1, addonItemIds: [1, 2] },
+			{ addonCategoryId: 2, addonItemIds: [3] },
+		],
+		description: "Optional addons for the food item",
+		required: false,
+	})
+	addons?: { addonCategoryId: number; addonItemIds: number[] }[];
+}
+
+export const CreateFoodOrderSchema = Joi.object({
+	deliveryType: Joi.string().valid("pickup", "delivery").required(),
+	deliveryAddress: Joi.when("deliveryType", {
+		is: "delivery",
+		then: Joi.string().max(512).trim().required(),
+		otherwise: Joi.forbidden(),
+	}),
+	specialInstructions: Joi.string().max(1024).trim().optional(),
+	foodId: Joi.string().required(),
+	quantity: Joi.number().integer().min(1).required(),
+	addons: Joi.array()
+		.items(
+			Joi.object({
+				addonCategoryId: Joi.number().integer().positive().required(),
+				addonItemIds: Joi.array()
+					.items(Joi.number().integer().positive())
+					.min(1)
+					.required(),
+			}),
+		)
+		.optional(),
+});
