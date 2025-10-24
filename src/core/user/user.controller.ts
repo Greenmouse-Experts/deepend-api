@@ -9,6 +9,8 @@ import { AuthGuard } from "src/common/guards/auth.guard";
 import {
 	BookingPaginationQueryDto,
 	BookingPaginationQuerySchema,
+	FoodOrderPaginationQueryDto,
+	FoodOrderPaginationQuerySchema,
 	TicketPaginationQueryDto,
 	TicketPaginationQuerySchema,
 } from "src/common/dto/requestQuery.dto";
@@ -85,7 +87,6 @@ export class UserController {
 		});
 	}
 
-
 	@Get("hotels/bookings")
 	@ApiOperation({ summary: "Get user's hotel bookings with pagination" })
 	async getUserHotelBookings(
@@ -94,6 +95,21 @@ export class UserController {
 		{ page, limit, status }: BookingPaginationQueryDto,
 	) {
 		return await this.userService.getUserHotelBookings({
+			userId,
+			page,
+			limit,
+			status,
+		});
+	}
+
+	@Get("foods/orders")
+	@ApiOperation({ summary: "Get user's food orders with pagination" })
+	async getUserFoodOrders(
+		@GetUser("userId") userId: string,
+		@Query(new QueryJoiValidationPipe(FoodOrderPaginationQuerySchema))
+		{ page, limit, status }: FoodOrderPaginationQueryDto,
+	) {
+		return await this.userService.getUserFoodOrders({
 			userId,
 			page,
 			limit,
