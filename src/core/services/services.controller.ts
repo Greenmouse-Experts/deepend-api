@@ -40,6 +40,8 @@ import {
 	BookHotelSchema,
 	BookStudioSessionDto,
 	BookStudioSessionSchema,
+	CreateFoodOrderDto,
+	CreateFoodOrderSchema,
 	CreateMovieTicketOrderDto,
 	CreateVrGameTicketOrderDto,
 	CreateVrGameTicketOrderSchema,
@@ -367,5 +369,17 @@ export class ServicesController {
 		@Body(new JoiValidationPipe(BookHotelSchema)) body: BookHotelDto,
 	) {
 		return await this.servicesService.createHotelBooking(userId, body);
+	}
+
+	@Post("foods/order")
+	@ApiOperation({ summary: "Order food items" })
+	@UseGuards(AuthGuard)
+	@Role(UserRoles.User)
+	async orderFoodItems(
+		@GetUser("userId") userId: string,
+		@Body(new JoiValidationPipe(CreateFoodOrderSchema))
+		body: CreateFoodOrderDto,
+	) {
+		return await this.servicesService.createFoodOrder(userId, body);
 	}
 }
