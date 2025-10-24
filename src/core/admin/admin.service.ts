@@ -2372,4 +2372,22 @@ export class AdminService {
 
 		return await this.adminRepository.getAllUsers(offset, limit, search);
 	}
+
+	async getAllFoodOrders({
+		page,
+		limit,
+		status,
+	}: {
+		page: number;
+		limit: number;
+		status?: "pending" | "preparing" | "delivered" | "cancelled";
+	}) {
+		const offset = (page - 1) * limit;
+
+		return await this.adminRepository.getAllFoodOrders({
+			offset,
+			limit,
+			status,
+		});
+	}
 }
