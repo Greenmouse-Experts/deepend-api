@@ -135,4 +135,25 @@ export class UserService {
 			status,
 		});
 	}
+
+	async getUserFoodOrders({
+		userId,
+		page,
+		limit = 10,
+		status,
+	}: {
+		userId: string;
+		page: number;
+		limit: number;
+		status?: "pending" | "preparing" | "delivered" | "cancelled";
+	}) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		return await this.userRepository.getUserFoodOrders({
+			userId,
+			offset,
+			limit,
+			status,
+		});
+	}
 }
