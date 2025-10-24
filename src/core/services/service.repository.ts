@@ -46,6 +46,10 @@ import {
 	vrgamesAvailability,
 	vrgamesCategories,
 	vrgamesTicketPurchases,
+	CreateFoodOrder,
+	foodOrders,
+	CreateFoodOrderAddon,
+	foodOrderAddons,
 } from "src/database/schema";
 
 @Injectable()
@@ -940,5 +944,37 @@ END`.as("addons"),
 		});
 
 		return room;
+	}
+
+	async createFoodOrder(
+		foodOrderData: CreateFoodOrder,
+		foodOrderAddonData: {
+			addonCategoryId: number;
+			addonItemIds: number[];
+		}[] = [],
+	) {
+		const foodOrder = await this.databaseService.db.transaction(async (tx) => {
+			const order = await tx
+				.insert(foodOrders)
+				.values(foodOrderData)
+				.$returningId();
+
+			if (foodOrderAddonData.length > 0) {
+				const addonsDataWithOrderId: CreateFoodOrderAddon[] =
+					foodOrderAddonData.flatMap((addon) =>
+						addon.addonItemIds.map((itemId) => ({
+							foodOrderId: order[0].id,
+							addonCategoryId: addon.addonCategoryId,
+							addonItemId: itemId,
+						})),
+					);
+
+				await tx.insert(foodOrderAddons).values(addonsDataWithOrderId);
+			}
+
+			return order[0];
+		});
+
+		return foodOrder;
 	}
 }
