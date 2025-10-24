@@ -55,6 +55,8 @@ export type CreateMovieTicketPurchase =
 export type CreateMovieTicketSnackPurchase =
 	typeof moviesTicketSnacksPurchases.$inferInsert;
 export type CreateHotelBooking = typeof hotelBookings.$inferInsert;
+export type CreateFoodOrder = typeof foodOrders.$inferInsert;
+export type CreateFoodOrderAddon = typeof foodOrderAddons.$inferInsert;
 
 export const foods = mysqlTable("foods", {
 	id: varchar("id", { length: ID_GENERATOR_LENGTH })
@@ -930,6 +932,109 @@ export const hotelBookings = mysqlTable(
 			sql`${table.status} IN ('pending', 'confirmed', 'cancelled', 'completed')`,
 		),
 	],
+);
+
+export const foodOrders = mysqlTable(
+	"food_orders",
+	{
+		id: varchar("id", { length: ID_GENERATOR_LENGTH })
+			.$defaultFn(() => generateId())
+			.primaryKey(),
+		userId: varchar("user_id", { length: ID_GENERATOR_LENGTH }).notNull(),
+		foodId: varchar("food_id", { length: ID_GENERATOR_LENGTH }).notNull(),
+		quantity: int("quantity").default(1).notNull(),
+		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+		orderDate: timestamp("order_date", { fsp: 6 }),
+		deliveryType: varchar("delivery_type", { length: 50 })
+			.$type<"pickup" | "delivery">()
+			.notNull(),
+		deliveryAddress: varchar("delivery_address", { length: 512 }),
+		specialInstructions: varchar("special_instructions", { length: 1024 }),
+		status: varchar("status", { length: 50 })
+			.default("pending")
+			.notNull()
+			.$type<"pending" | "preparing" | "delivered" | "cancelled">(),
+		createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+		updatedAt: timestamp("updated_at", { fsp: 6 })
+			.$onUpdateFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		foreignKey({
+			name: "fk_food_orders_food_id",
+			columns: [table.foodId],
+			foreignColumns: [foods.id],
+		}).onDelete("cascade"),
+		check(
+			"chk_food_orders_delivery_type",
+			sql`${table.deliveryType} IN ('pickup', 'delivery')`,
+		),
+		check(
+			"chk_food_orders_status",
+			sql`${table.status} IN ('pending', 'preparing', 'delivered', 'cancelled')`,
+		),
+	],
+);
+
+export const foodOrderAddons = mysqlTable(
+	"food_order_addons",
+	{
+		id: varchar("id", { length: ID_GENERATOR_LENGTH })
+			.$defaultFn(() => generateId())
+			.primaryKey(),
+		foodOrderId: varchar("food_order_id", {
+			length: ID_GENERATOR_LENGTH,
+		}).notNull(),
+		addonCategoryId: int("addon_category_id").notNull(),
+		addonItemId: int("addon_item_id").notNull(),
+		createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+		updatedAt: timestamp("updated_at", { fsp: 6 })
+			.$onUpdateFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		foreignKey({
+			name: "fk_food_order_addons_food_order_id",
+			columns: [table.foodOrderId],
+			foreignColumns: [foodOrders.id],
+		}).onDelete("cascade"),
+		foreignKey({
+			name: "fk_food_order_addons_addon_category_id",
+			columns: [table.addonCategoryId],
+			foreignColumns: [foodAddonCategories.id],
+		}).onDelete("cascade"),
+		foreignKey({
+			name: "fk_food_order_addons_addon_item_id",
+			columns: [table.addonItemId],
+			foreignColumns: [foodAddonsItems.id],
+		}).onDelete("cascade"),
+	],
+);
+
+export const foodOrdersRelations = relations(foodOrders, ({ one, many }) => ({
+	food: one(foods, {
+		fields: [foodOrders.foodId],
+		references: [foods.id],
+	}),
+	foodAddons: many(foodOrderAddons),
+}));
+
+export const foodOrderAddonsRelations = relations(
+	foodOrderAddons,
+	({ one }) => ({
+		foodOrder: one(foodOrders, {
+			fields: [foodOrderAddons.foodOrderId],
+			references: [foodOrders.id],
+		}),
+		addonCategory: one(foodAddonCategories, {
+			fields: [foodOrderAddons.addonCategoryId],
+			references: [foodAddonCategories.id],
+		}),
+		addonItem: one(foodAddonsItems, {
+			fields: [foodOrderAddons.addonItemId],
+			references: [foodAddonsItems.id],
+		}),
+	}),
 );
 
 // export const foodBookings = mysqlTable("food_bookings", {
