@@ -8,6 +8,7 @@ import {
 	BookEquipmentRentalDto,
 	BookHotelDto,
 	BookStudioSessionDto,
+	CreateFoodOrderDto,
 	CreateMovieTicketOrderDto,
 	CreateVrGameTicketOrderDto,
 } from "../admin/dto/service.dto";
@@ -746,6 +747,84 @@ export class ServicesService {
 			)
 				throw new BadRequestException(
 					"You have a pending booking for this hotel room. Please complete or cancel it before making a new booking.",
+				);
+
+			throw error;
+		}
+	}
+
+	async createFoodOrder(userId: string, foodData: CreateFoodOrderDto) {
+		try {
+			const foods = await this.servicesRepository.getFoodById(foodData.foodId);
+
+			if (!foods) {
+				throw new NotFoundException("Food item not found");
+			}
+
+			// @ts-ignore
+			if (foods.quantity < foodData.quantity) {
+				throw new BadRequestException(
+					`Only ${foods.quantity} units are available for this food item.`,
+				);
+			}
+
+			let foodPrice = Number(foods.price) * Number(foodData.quantity);
+
+			if (foodData.addons && foodData.addons.length > 0) {
+				const foodAddOnsPrice = foodData.addons.reduce((total, addon) => {
+					// collect all matching add-on items for the given category and item IDs
+					const matchingAddOn = (foods.addons || [])
+						.flatMap((a) => a.items)
+						.filter(
+							(item) =>
+								item.categoryId === addon.addonCategoryId &&
+								addon.addonItemIds.includes(item.id),
+						);
+
+					if (matchingAddOn.length !== addon.addonItemIds.length) {
+						throw new BadRequestException(
+							`One or more selected add-ons do not exist for this food item.`,
+						);
+					}
+
+					const sumAddOnPrice = matchingAddOn.reduce(
+						(sum, item) => sum + Number(item.price || 0),
+						0,
+					);
+
+					return total + sumAddOnPrice;
+				}, 0);
+
+				if (foodAddOnsPrice === 0) {
+					throw new BadRequestException(
+						`One or more selected add-ons do not exist for this food item.`,
+					);
+				}
+
+				foodPrice += foodAddOnsPrice;
+			}
+
+			return await this.servicesRepository.createFoodOrder(
+				{
+					foodId: foodData.foodId,
+					userId,
+					quantity: foodData.quantity,
+					totalPrice: String(foodPrice),
+					deliveryType: foodData.deliveryType,
+					deliveryAddress: foodData.deliveryAddress,
+					specialInstructions: foodData.specialInstructions,
+				},
+				foodData.addons,
+			);
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.FOREIGN_KEY_VIOLATION
+			)
+				throw new BadRequestException(
+					"One or more selected food items do not exist. Please review your order and try again.",
 				);
 
 			throw error;
