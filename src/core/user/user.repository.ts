@@ -1,11 +1,12 @@
 import { Injectable } from "@nestjs/common";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
 import {
 	// AddToCartType,
 	// cartItems,
 	// carts,
 	CreateUser,
+	foodOrders,
 	users,
 } from "src/database/schema";
 import {
@@ -204,6 +205,66 @@ export class UserRepository {
 		);
 
 		return bookings;
+	}
+
+	async getUserFoodOrders({
+		userId,
+		offset,
+		limit,
+		status,
+	}: {
+		userId: string;
+		offset: number;
+		limit: number;
+		status?: "pending" | "preparing" | "delivered" | "cancelled";
+	}) {
+		const orders = await this.databaseService.db.query.foodOrders.findMany({
+			where: (table, { and }) =>
+				and(
+					eq(table.userId, userId),
+					status ? eq(table.status, status) : undefined,
+				),
+			limit,
+			offset,
+			with: {
+				food: {
+					columns: {
+						createdAt: false,
+						updatedAt: false,
+					},
+				},
+				foodAddons: {
+					columns: {
+						id: false,
+						foodOrderId: false,
+						addonCategoryId: false,
+						addonItemId: false,
+						createdAt: false,
+						updatedAt: false,
+					},
+					with: {
+						addonItem: {
+							columns: {
+								createdAt: false,
+								updatedAt: false,
+							},
+						},
+					},
+				},
+			},
+		});
+
+		const ordersWithDetails = orders.map((order) => {
+			const { foodAddons, ...rest } = order;
+			return {
+				...rest,
+				foodAddons: foodAddons.map((foodAddon) => ({
+					...foodAddon.addonItem,
+				})),
+			};
+		});
+
+		return ordersWithDetails;
 	}
 
 	// async getUserExistingCart(userId: string) {

@@ -270,15 +270,30 @@ export const TicketPaginationQuerySchema = PaginationQuerySchema.keys({
 });
 
 export class UserPaginationQueryDto extends PaginationQueryDto {
-  @ApiProperty({
-    example: "john.doe",
-    description: "Search term to filter users by username or email",
-    required: false,
-  })
-  search?: string;
+	@ApiProperty({
+		example: "john.doe",
+		description: "Search term to filter users by username or email",
+		required: false,
+	})
+	search?: string;
 }
 
 export const UserPaginationQuerySchema = PaginationQuerySchema.keys({
-  search: Joi.string().max(100).optional(),
+	search: Joi.string().max(100).optional(),
 });
 
+export class FoodOrderPaginationQueryDto extends PaginationQueryDto {
+	@ApiProperty({
+		example: "completed",
+		description:
+			'Filter food orders by status ("pending", "preparing", "delivered", "cancelled")',
+		required: false,
+	})
+	status?: "pending" | "preparing" | "delivered" | "cancelled";
+}
+
+export const FoodOrderPaginationQuerySchema = PaginationQuerySchema.keys({
+	status: Joi.string()
+		.valid("pending", "preparing", "delivered", "cancelled")
+		.optional(),
+});

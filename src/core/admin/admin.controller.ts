@@ -17,6 +17,8 @@ import { UserRoles } from "src/common/decorators/role/role.enum";
 import {
 	BookingPaginationQueryDto,
 	BookingPaginationQuerySchema,
+	FoodOrderPaginationQueryDto,
+	FoodOrderPaginationQuerySchema,
 	MoviePaginationQueryDto,
 	MoviePaginationQuerySchema,
 	MovieShowtimePaginationQueryDto,
@@ -173,6 +175,19 @@ export class AdminController {
 		{ page, limit }: PaginationQueryDto,
 	) {
 		return await this.adminService.getAllFoodCategories(+page, +limit);
+	}
+
+	@Get("foods/orders")
+	@ApiOperation({ summary: "Get all food orders with pagination" })
+	async getAllFoodOrders(
+		@Query(new QueryJoiValidationPipe(FoodOrderPaginationQuerySchema))
+		{ page, limit, status }: FoodOrderPaginationQueryDto,
+	) {
+		return await this.adminService.getAllFoodOrders({
+			page,
+			limit,
+			status,
+		});
 	}
 
 	@Get("foods/:id")
