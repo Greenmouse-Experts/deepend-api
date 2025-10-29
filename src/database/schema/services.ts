@@ -68,7 +68,10 @@ export const foods = mysqlTable("foods", {
 	categoryId: int("category_id")
 		.notNull()
 		.references(() => foodCategories.id),
-	imageUrls: json("image_urls").$type<object[]>().default([]).notNull(),
+	imageUrls: json("image_urls")
+		.$type<{ url: string; path: string }[]>()
+		.default([])
+		.notNull(),
 	quantity: int("quantity").default(1).notNull(),
 	isAvailable: boolean("is_available").default(false).notNull(),
 	createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
