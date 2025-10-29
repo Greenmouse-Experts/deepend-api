@@ -4,9 +4,10 @@ import { ServicesController } from "./services.controller";
 import { ServicesRepository } from "./service.repository";
 import { DatabaseModule } from "src/database/database.module";
 import { JwtService } from "../jwt/jwt.service";
+import { UserModule } from "../user/user.module";
 
 @Module({
-	imports: [DatabaseModule],
+	imports: [DatabaseModule, UserModule],
 	controllers: [ServicesController],
 	providers: [ServicesService, ServicesRepository, JwtService],
 })
