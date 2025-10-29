@@ -6,7 +6,6 @@ import {
 	between,
 	desc,
 	eq,
-	getTableColumns,
 	gt,
 	gte,
 	inArray,
@@ -51,6 +50,7 @@ import {
 	CreateFoodOrderAddon,
 	foodOrderAddons,
 } from "src/database/schema";
+import { unionAll } from "drizzle-orm/mysql-core";
 
 @Injectable()
 export class ServicesRepository {

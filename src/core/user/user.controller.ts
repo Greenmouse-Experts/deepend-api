@@ -116,4 +116,10 @@ export class UserController {
 			status,
 		});
 	}
+
+	@Get("cart")
+	@ApiOperation({ summary: "Get user's current cart" })
+	async getUserCart(@GetUser("userId") userId: string) {
+		return await this.userService.getUserCart(userId);
+	}
 }
