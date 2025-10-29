@@ -1,5 +1,7 @@
 import {
 	BadRequestException,
+	forwardRef,
+	Inject,
 	Injectable,
 	NotFoundException,
 } from "@nestjs/common";
@@ -21,10 +23,15 @@ import {
 } from "src/common/helpers";
 import { isDatabaseError, mysqlErrorCodes } from "src/common/mysql.error";
 import { isWithinInterval, parse } from "date-fns";
+import { UserRepository } from "../user/user.repository";
 
 @Injectable()
 export class ServicesService {
-	constructor(private readonly servicesRepository: ServicesRepository) {}
+	constructor(
+		private readonly servicesRepository: ServicesRepository,
+		@Inject(forwardRef(() => UserRepository))
+		private readonly userService: UserRepository,
+	) {}
 
 	async getFoodCategories(page: number, limit: number) {
 		const offset = (page - 1) * limit;
@@ -493,6 +500,85 @@ export class ServicesService {
 		}
 	}
 
+	async validateStudioSessionAndGetTotals(bookingId: string, userId: string) {
+		const booking = await this.userService.getUserStudioBookingById(
+			bookingId,
+			userId,
+		);
+
+		if (!booking) {
+			throw new NotFoundException("Studio booking not found");
+		}
+
+		const studio = await this.servicesRepository.getStudioById(
+			booking.studioId,
+		);
+
+		if (!studio) {
+			throw new NotFoundException("Studio not found");
+		}
+
+		const studioAvailability =
+			await this.servicesRepository.getStudioAvailabilityByIdAndDayofWeek(
+				booking.studioId,
+				getDayFromDate(booking.bookingDate),
+			);
+
+		if (!studioAvailability) {
+			throw new NotFoundException(
+				`Studio booking ${studio.name} on ${booking.bookingDate} is not available on the selected day`,
+			);
+		}
+
+		if (
+			!isBookingWithinStudioHours(
+				booking.startTime,
+				booking.endTime,
+				studioAvailability.startTime,
+				studioAvailability.endTime,
+			)
+		) {
+			throw new NotFoundException(
+				"Studio is not available at the selected time",
+			);
+		}
+
+		const studioTotalPrice = calculateStudioTotalPrice(
+			Number(studio.hourlyRate),
+			booking.startTime,
+			booking.endTime,
+		);
+
+		return { totalPrice: studioTotalPrice };
+	}
+
+	async getStudioSessionTotalPriceById(bookingId: string, userId: string) {
+		const booking = await this.userService.getUserStudioBookingById(
+			bookingId,
+			userId,
+		);
+
+		if (!booking) {
+			throw new NotFoundException("Studio booking not found");
+		}
+
+		const studio = await this.servicesRepository.getStudioById(
+			booking.studioId,
+		);
+
+		if (!studio) {
+			throw new NotFoundException("Studio not found");
+		}
+
+		const studioTotalPrice = calculateStudioTotalPrice(
+			Number(studio.hourlyRate),
+			booking.startTime,
+			booking.endTime,
+		);
+
+		return { totalPrice: studioTotalPrice };
+	}
+
 	async bookEquipmentRental(
 		userId: string,
 		bookingData: BookEquipmentRentalDto,
@@ -532,25 +618,80 @@ export class ServicesService {
 		}
 	}
 
-	async getEquipmentRentalTotalPrice(
-		equipmentRentalId: string,
-		rentalStartDate: string,
-		rentalEndDate: string,
-	) {
-		const equipment =
-			await this.servicesRepository.getEquipmentRentalById(equipmentRentalId);
+	async validateEquipmentRentalAndGetTotals(bookingId: string, userId: string) {
+		const booking = await this.userService.getUserEquipmentRentalBookingById(
+			bookingId,
+			userId,
+		);
+
+		if (!booking) {
+			throw new NotFoundException("Equipment rental booking not found");
+		}
+
+		const equipment = await this.servicesRepository.getEquipmentRentalById(
+			booking.equipmentRentalId as string,
+		);
 
 		if (!equipment) {
 			throw new NotFoundException("Equipment rental not found");
 		}
 
-		const equipmentTotalPrice = calculateEquipmentTotalPrice(
+		const equipmentRentalTotalPrice = calculateEquipmentTotalPrice(
 			Number(equipment.rentalPricePerDay),
-			String(rentalStartDate),
-			String(rentalEndDate),
+			booking.rentalStartDate,
+			booking.rentalEndDate,
 		);
 
-		return { totalPrice: equipmentTotalPrice };
+		return { totalPrice: equipmentRentalTotalPrice };
+	}
+
+  async getEquipmentRentalTotalPrice(
+    equipmentRentalId: string,
+    rentalStartDate: string,
+    rentalEndDate: string,
+  ) {
+    const equipment = await this.servicesRepository.getEquipmentRentalById(
+      equipmentRentalId,
+    );
+
+    if (!equipment) {
+      throw new NotFoundException("Equipment rental not found");
+    }
+
+    const equipmentRentalTotalPrice = calculateEquipmentTotalPrice(
+      Number(equipment.rentalPricePerDay),
+      rentalStartDate,
+      rentalEndDate,
+    );
+
+    return { totalPrice: equipmentRentalTotalPrice };
+  }
+
+	async getEquipmentRentalTotalPriceById(bookingId: string, userId: string) {
+		const booking = await this.userService.getUserEquipmentRentalBookingById(
+			bookingId,
+			userId,
+		);
+
+		if (!booking) {
+			throw new NotFoundException("Equipment rental booking not found");
+		}
+
+		const equipment = await this.servicesRepository.getEquipmentRentalById(
+			booking.equipmentRentalId as string,
+		);
+
+		if (!equipment) {
+			throw new NotFoundException("Equipment rental not found");
+		}
+
+		const equipmentRentalTotalPrice = calculateEquipmentTotalPrice(
+			Number(equipment.rentalPricePerDay),
+			booking.rentalStartDate,
+			booking.rentalEndDate,
+		);
+
+		return { totalPrice: equipmentRentalTotalPrice };
 	}
 
 	async createVrgamesPurchaseOrder(
@@ -623,6 +764,95 @@ export class ServicesService {
 
 			throw error;
 		}
+	}
+
+	async validateVrgameTicketAndGetTotals(orderId: string, userId: string) {
+		const order = await this.userService.getUserVrgamesTicketPurchaseById(
+			orderId,
+			userId,
+		);
+
+		if (!order) {
+			throw new NotFoundException("VR game ticket order not found");
+		}
+
+		const vrgame = await this.servicesRepository.getVrGameById(
+			order.vrgameId as string,
+		);
+
+		if (!vrgame) {
+			throw new NotFoundException("VR game not found");
+		}
+
+		const bookingDayOfWeek = getDayFromDate(order.scheduledDate);
+
+		const vrgameAvailability =
+			await this.servicesRepository.getVrgameAvailabilityByIdAndDayofWeek(
+				order.vrgameId as string,
+				bookingDayOfWeek,
+			);
+
+		if (!vrgameAvailability) {
+			throw new NotFoundException(
+				`VR game ${vrgame.name} on ${order.scheduledDate} is not available on the selected day`,
+			);
+		}
+
+		if (
+			!isWithinInterval(
+				parse(`${order.scheduledTime}:00`, "HH:mm:ss", new Date()),
+				{
+					start: parse(vrgameAvailability.startTime, "HH:mm:ss", new Date()),
+					end: parse(vrgameAvailability.endTime, "HH:mm:ss", new Date()),
+				},
+			)
+		) {
+			throw new NotFoundException(
+				"VR game is not available at the selected time",
+			);
+		}
+
+		const vrgameTotalPrice =
+			Number(vrgame.ticketPrice) * Number(order.ticketQuantity);
+
+		return { totalPrice: vrgameTotalPrice };
+	}
+
+	async getVrgameTotalPrice(vrGameId: string, ticketQuantity: number) {
+		const vrgame = await this.servicesRepository.getVrGameById(vrGameId);
+
+		if (!vrgame) {
+			throw new NotFoundException("VR game not found");
+		}
+
+		const vrgameTotalPrice =
+			Number(vrgame.ticketPrice) * Number(ticketQuantity);
+
+		return { totalPrice: vrgameTotalPrice };
+	}
+
+	async getVrgameSessionTotalPriceById(orderId: string, userId: string) {
+		const order = await this.userService.getUserVrgamesTicketPurchaseById(
+			orderId,
+			userId,
+		);
+
+		if (!order) {
+			throw new NotFoundException("VR game ticket order not found");
+		}
+
+		const vrgame = await this.servicesRepository.getVrGameById(
+			order.vrgameId as string,
+		);
+
+		if (!vrgame) {
+			throw new NotFoundException("VR game not found");
+		}
+
+		const vrgameTotalPrice =
+			Number(vrgame.ticketPrice) * Number(order.ticketQuantity);
+
+		return { totalPrice: vrgameTotalPrice };
 	}
 
 	async getVrgameAvailabilityByVrgameId(vrGameId: string) {
@@ -698,6 +928,77 @@ export class ServicesService {
 		}
 	}
 
+	async validateMovieTicketOrderAndGetTotals(orderId: string, userId: string) {
+		const order = await this.userService.getUserMovieTicketPurchaseById(
+			orderId,
+			userId,
+		);
+
+		if (!order) {
+			throw new NotFoundException("Movie ticket order not found");
+		}
+
+		const movieShowtime = await this.servicesRepository.getMovieByShowtimeId(
+			order.showtimeId,
+		);
+
+		if (!movieShowtime) {
+			throw new NotFoundException("Movie showtime not found");
+		}
+
+		if (movieShowtime.availableTickets < order.ticketQuantity) {
+			throw new BadRequestException(
+				`Only ${movieShowtime.availableTickets} tickets are available for this movie.`,
+			);
+		}
+
+		const movieSnacksTotalPrice = movieShowtime.snacks.reduce(
+			(total, snack) =>
+				total +
+				Number(snack.price) *
+					(order.orderedSnacks.find((s) => s.snackId === snack.id)?.quantity ||
+						0),
+			0,
+		);
+		const movieTotalPrice =
+			Number(movieShowtime.ticketPrice) * Number(order.ticketQuantity) +
+			movieSnacksTotalPrice;
+
+		return { totalPrice: movieTotalPrice };
+	}
+
+	async getMovieShowtimeTotalPriceById(orderId: string, userId: string) {
+		const order = await this.userService.getUserMovieTicketPurchaseById(
+			orderId,
+			userId,
+		);
+
+		if (!order) {
+			throw new NotFoundException("Movie ticket order not found");
+		}
+
+		const movieShowtime = await this.servicesRepository.getMovieByShowtimeId(
+			order.showtimeId,
+		);
+
+		if (!movieShowtime) {
+			throw new NotFoundException("Movie showtime not found");
+		}
+
+		const movieSnacksTotalPrice = movieShowtime.snacks.reduce(
+			(total, snack) =>
+				total +
+				Number(snack.price) *
+					(order.orderedSnacks.find((s) => s.snackId === snack.id)?.quantity ||
+						0),
+			0,
+		);
+		const movieTotalPrice =
+			Number(movieShowtime.ticketPrice) * Number(order.ticketQuantity) +
+			movieSnacksTotalPrice;
+
+		return { totalPrice: movieTotalPrice };
+	}
 	async createHotelBooking(userId: string, BookingData: BookHotelDto) {
 		try {
 			const availability =
@@ -751,6 +1052,80 @@ export class ServicesService {
 
 			throw error;
 		}
+	}
+
+	async validateHotelBookingAndGetTotals(bookingId: string, userId: string) {
+		const booking = await this.userService.getUserHotelBookingById(
+			bookingId,
+			userId,
+		);
+
+		if (!booking) {
+			throw new NotFoundException("Hotel booking not found");
+		}
+
+		const availability =
+			await this.servicesRepository.checkHotelRoomAvailability(
+				booking.hotelId as string,
+				booking.hotelRoomId as string,
+				booking.checkInDate,
+				booking.checkOutDate,
+			);
+
+		if (!availability) {
+			throw new NotFoundException(
+				"Hotel room not available for the selected dates.",
+			);
+		}
+
+		const hotelRoom = await this.servicesRepository.getHotelRoomById(
+			booking.hotelRoomId as string,
+		);
+
+		if (!hotelRoom) {
+			throw new NotFoundException("Hotel room not found");
+		}
+
+		const numberOfNights =
+			Math.abs(
+				new Date(booking.checkOutDate).getTime() -
+					new Date(booking.checkInDate).getTime(),
+			) /
+			(1000 * 60 * 60 * 24);
+
+		const totalPrice = Number(hotelRoom.pricePerNight) * Number(numberOfNights);
+
+		return { totalPrice };
+	}
+
+	async getHotelBookingTotalPriceById(bookingId: string, userId: string) {
+		const booking = await this.userService.getUserHotelBookingById(
+			bookingId,
+			userId,
+		);
+
+		if (!booking) {
+			throw new NotFoundException("Hotel booking not found");
+		}
+
+		const hotelRoom = await this.servicesRepository.getHotelRoomById(
+			booking.hotelRoomId as string,
+		);
+
+		if (!hotelRoom) {
+			throw new NotFoundException("Hotel room not found");
+		}
+
+		const numberOfNights =
+			Math.abs(
+				new Date(booking.checkOutDate).getTime() -
+					new Date(booking.checkInDate).getTime(),
+			) /
+			(1000 * 60 * 60 * 24);
+
+		const totalPrice = Number(hotelRoom.pricePerNight) * Number(numberOfNights);
+
+		return { totalPrice };
 	}
 
 	async createFoodOrder(userId: string, foodData: CreateFoodOrderDto) {
@@ -829,5 +1204,107 @@ export class ServicesService {
 
 			throw error;
 		}
+	}
+
+	async validateFoodOrderAndGetTotals(orderId: string, userId: string) {
+		const order = await this.userService.getUserFoodOrderById(orderId, userId);
+
+		if (!order) {
+			throw new NotFoundException("Food order not found");
+		}
+
+		const foodItem = await this.servicesRepository.getFoodById(order.foodId);
+
+		if (!foodItem) {
+			throw new NotFoundException("Food item not found");
+		}
+
+		let foodPrice = Number(foodItem.price) * Number(order.quantity);
+
+		if (order.foodAddons && order.foodAddons.length > 0) {
+			const foodAddOnsPrice = order.foodAddons.reduce((total, addon) => {
+				// collect all matching add-on items for the given category and item IDs
+				const matchingAddOn = (foodItem.addons || [])
+					.flatMap((a) => a.items)
+					.filter(
+						(item) =>
+							item.categoryId === addon.categoryId && addon.id === item.id,
+					);
+
+				if (matchingAddOn.length > 0) {
+					throw new BadRequestException(
+						`One or more selected add-ons do not exist for this food item.`,
+					);
+				}
+
+				const sumAddOnPrice = matchingAddOn.reduce(
+					(sum, item) => sum + Number(item.price || 0),
+					0,
+				);
+
+				return total + sumAddOnPrice;
+			}, 0);
+
+			if (foodAddOnsPrice === 0) {
+				throw new BadRequestException(
+					`One or more selected add-ons do not exist for this food item.`,
+				);
+			}
+
+			foodPrice += foodAddOnsPrice;
+		}
+
+		return { totalPrice: foodPrice };
+	}
+
+	async getFoodOrderTotalPriceById(orderId: string, userId: string) {
+		const order = await this.userService.getUserFoodOrderById(orderId, userId);
+
+		if (!order) {
+			throw new NotFoundException("Food order not found");
+		}
+
+		const foodItem = await this.servicesRepository.getFoodById(order.foodId);
+
+		if (!foodItem) {
+			throw new NotFoundException("Food item not found");
+		}
+
+		let foodPrice = Number(foodItem.price) * Number(order.quantity);
+
+		if (order.foodAddons && order.foodAddons.length > 0) {
+			const foodAddOnsPrice = order.foodAddons.reduce((total, addon) => {
+				// collect all matching add-on items for the given category and item IDs
+				const matchingAddOn = (foodItem.addons || [])
+					.flatMap((a) => a.items)
+					.filter(
+						(item) =>
+							item.categoryId === addon.categoryId && addon.id === item.id,
+					);
+
+				if (matchingAddOn.length > 0) {
+					throw new BadRequestException(
+						`One or more selected add-ons do not exist for this food item.`,
+					);
+				}
+
+				const sumAddOnPrice = matchingAddOn.reduce(
+					(sum, item) => sum + Number(item.price || 0),
+					0,
+				);
+
+				return total + sumAddOnPrice;
+			}, 0);
+
+			if (foodAddOnsPrice === 0) {
+				throw new BadRequestException(
+					`One or more selected add-ons do not exist for this food item.`,
+				);
+			}
+
+			foodPrice += foodAddOnsPrice;
+		}
+
+		return { totalPrice: foodPrice };
 	}
 }
