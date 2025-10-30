@@ -854,6 +854,33 @@ END`.as("addons"),
 		return booking[0];
 	}
 
+	async updateEquipmentRentalBooking({
+		bookingId,
+		userId,
+		quantity,
+		totalPrice,
+	}: {
+		bookingId: string;
+		userId: string;
+		quantity: number;
+		totalPrice: string;
+	}) {
+		const updatedBooking = await this.databaseService.db
+			.update(equipmentRentalsBookings)
+			.set({
+				quantity,
+				totalPrice,
+			})
+			.where(
+				and(
+					eq(equipmentRentalsBookings.id, bookingId),
+					eq(equipmentRentalsBookings.userId, userId),
+				),
+			);
+
+		return updatedBooking[0];
+	}
+
 	async createVrgameTicketOrder(orderData: CreateVRGameTicketPurchase) {
 		const order = await this.databaseService.db
 			.insert(vrgamesTicketPurchases)
