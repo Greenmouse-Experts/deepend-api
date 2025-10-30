@@ -68,7 +68,10 @@ export const foods = mysqlTable("foods", {
 	categoryId: int("category_id")
 		.notNull()
 		.references(() => foodCategories.id),
-	imageUrls: json("image_urls").$type<object[]>().default([]).notNull(),
+	imageUrls: json("image_urls")
+		.$type<{ url: string; path: string }[]>()
+		.default([])
+		.notNull(),
 	quantity: int("quantity").default(1).notNull(),
 	isAvailable: boolean("is_available").default(false).notNull(),
 	createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
@@ -764,6 +767,16 @@ export const equipmentRentalsBookings = mysqlTable(
 	],
 );
 
+export const equipmentRentalsBookingsRelations = relations(
+  equipmentRentalsBookings,
+  ({ one }) => ({
+    equipmentRental: one(equipmentRentals, {
+      fields: [equipmentRentalsBookings.equipmentRentalId],
+      references: [equipmentRentals.id],
+    }),
+  }),
+);
+
 export const vrgamesTicketPurchases = mysqlTable(
 	"vrgames_ticket_purchases",
 	{
@@ -797,6 +810,16 @@ export const vrgamesTicketPurchases = mysqlTable(
 			sql`${table.status} IN ('pending', 'completed', 'canceled')`,
 		),
 	],
+);
+
+export const vrgamesTicketPurchasesRelations = relations(
+	vrgamesTicketPurchases,
+	({ one }) => ({
+		vrgame: one(vrgames, {
+			fields: [vrgamesTicketPurchases.vrgameId],
+			references: [vrgames.id],
+		}),
+	}),
 );
 
 export const moviesTicketPurchases = mysqlTable(
@@ -933,6 +956,17 @@ export const hotelBookings = mysqlTable(
 		),
 	],
 );
+
+export const hotelBookingsRelations = relations(hotelBookings, ({ one }) => ({
+	hotel: one(hotels, {
+		fields: [hotelBookings.hotelId],
+		references: [hotels.id],
+	}),
+	hotelRoom: one(hotelRooms, {
+		fields: [hotelBookings.hotelRoomId],
+		references: [hotelRooms.id],
+	}),
+}));
 
 export const foodOrders = mysqlTable(
 	"food_orders",

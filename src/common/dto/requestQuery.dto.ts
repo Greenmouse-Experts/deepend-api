@@ -297,3 +297,39 @@ export const FoodOrderPaginationQuerySchema = PaginationQuerySchema.keys({
 		.valid("pending", "preparing", "delivered", "cancelled")
 		.optional(),
 });
+
+export class ItemTypeQueryDto {
+	@ApiProperty({
+		example: "food",
+		description: 'Type of item ("food", "movie", "vrgame")',
+		required: true,
+	})
+	itemType: "food" | "movie" | "vrgame" | "studio" | "equipment" | "hotel";
+}
+
+export const ItemTypeQuerySchema = Joi.object({
+	itemType: Joi.string()
+		.valid("food", "movie", "vrgame", "studio", "equipment", "hotel")
+		.required(),
+});
+
+export class UpdateCartItemQuantityBodyDto {
+	@ApiProperty({
+		example: 3,
+		description: "New quantity for the cart item",
+		required: true,
+	})
+	quantity: number;
+
+	@ApiProperty({
+		example: "food",
+		description: 'Type of item ("food", "movie", "vrgame")',
+		required: true,
+	})
+	itemType: "food" | "movie" | "vrgame";
+}
+
+export const UpdateCartItemQuantityBodySchema = Joi.object({
+	quantity: Joi.number().integer().min(1).required(),
+	itemType: Joi.string().valid("food", "movie", "vrgame").required(),
+});

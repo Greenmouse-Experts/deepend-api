@@ -6,7 +6,6 @@ import {
 	between,
 	desc,
 	eq,
-	getTableColumns,
 	gt,
 	gte,
 	inArray,
@@ -864,6 +863,33 @@ END`.as("addons"),
 		return order[0];
 	}
 
+	async updateVrgameTicketOrder({
+		userId,
+		orderId,
+		ticketQuantity,
+		totalPrice,
+	}: {
+		orderId: string;
+		userId: string;
+		ticketQuantity: number;
+		totalPrice: string;
+	}) {
+		const updatedOrder = await this.databaseService.db
+			.update(vrgamesTicketPurchases)
+			.set({
+				ticketQuantity,
+				totalPrice,
+			})
+			.where(
+				and(
+					eq(vrgamesTicketPurchases.id, orderId),
+					eq(vrgamesTicketPurchases.userId, userId),
+				),
+			);
+
+		return updatedOrder[0];
+	}
+
 	async createMovieTicketOrder(
 		movieOrderData: CreateMovieTicketPurchase,
 		movieSnackOrderData: {
@@ -892,6 +918,33 @@ END`.as("addons"),
 		});
 
 		return movieOrder;
+	}
+
+	async updateMovieTicketOrder({
+		userId,
+		orderId,
+		ticketQuantity,
+		totalPrice,
+	}: {
+		orderId: string;
+		userId: string;
+		ticketQuantity: number;
+		totalPrice: string;
+	}) {
+		const updatedOrder = await this.databaseService.db
+			.update(moviesTicketPurchases)
+			.set({
+				ticketQuantity,
+				totalPrice,
+			})
+			.where(
+				and(
+					eq(moviesTicketPurchases.id, orderId),
+					eq(moviesTicketPurchases.userId, userId),
+				),
+			);
+
+		return updatedOrder[0];
 	}
 
 	async createHotelBooking(createHotelBookingData: CreateHotelBooking) {
@@ -976,5 +1029,27 @@ END`.as("addons"),
 		});
 
 		return foodOrder;
+	}
+
+	async updateFoodOrder({
+		userId,
+		orderId,
+		quantity,
+		totalPrice,
+	}: {
+		orderId: string;
+		userId: string;
+		quantity: number;
+		totalPrice: string;
+	}) {
+		const updatedOrder = await this.databaseService.db
+			.update(foodOrders)
+			.set({
+				quantity,
+				totalPrice,
+			})
+			.where(and(eq(foodOrders.id, orderId), eq(foodOrders.userId, userId)));
+
+		return updatedOrder[0];
 	}
 }
