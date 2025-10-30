@@ -1567,6 +1567,12 @@ export class BookEquipmentRentalDto {
 		description: "End date of the booking (YYYY-MM-DD)",
 	})
 	rentalEndDate: string;
+
+	@ApiProperty({
+		example: 2,
+		description: "Quantity of the equipment to be booked",
+	})
+	quantity: number;
 }
 
 export const BookEquipmentRentalSchema = Joi.object({
@@ -1576,6 +1582,7 @@ export const BookEquipmentRentalSchema = Joi.object({
 		.min(new Date().setHours(0, 0, 0, 0))
 		.raw(),
 	rentalEndDate: Joi.date().required().min(Joi.ref("rentalStartDate")).raw(),
+	quantity: Joi.number().integer().min(1).required(),
 }).messages({
 	"date.base": "{{#label}} must be a valid date",
 	"date.min": "{{#label}} must be today or in the future",
