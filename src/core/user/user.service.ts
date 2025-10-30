@@ -295,7 +295,7 @@ export class UserService {
 	}: {
 		userId: string;
 		itemId: string;
-		itemType: "vrgame" | "movie" | "food";
+		itemType: "vrgame" | "movie" | "food" | "equipment";
 		quantity: number;
 	}) {
 		const result = await this.servicesService.updateUserCartItemQuantity({
