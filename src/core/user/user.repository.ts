@@ -100,18 +100,23 @@ export class UserRepository {
 				with: {
 					studio: true,
 				},
+				columns: {
+					totalPrice: false,
+					createdAt: false,
+					updatedAt: false,
+				},
 			});
 
 		return booking;
 	}
 
 	async deleteUserStudioBookingById(bookingId: string, userId: string) {
-		await this.databaseService.db
-			.delete(equipmentRentalsBookings)
+		return await this.databaseService.db
+			.delete(studioBookings)
 			.where(
 				and(
-					eq(equipmentRentalsBookings.id, bookingId),
-					eq(equipmentRentalsBookings.userId, userId),
+					eq(studioBookings.id, bookingId),
+					eq(studioBookings.userId, userId),
 				),
 			);
 	}
@@ -146,6 +151,20 @@ export class UserRepository {
 			await this.databaseService.db.query.equipmentRentalsBookings.findFirst({
 				where: (table, { and }) =>
 					and(eq(table.id, bookingId), eq(table.userId, userId)),
+				columns: {
+					totalPrice: false,
+					createdAt: false,
+					updatedAt: false,
+				},
+				with: {
+					equipmentRental: {
+						columns: {
+							createdAt: false,
+							updatedAt: false,
+							isAvailable: false,
+						},
+					},
+				},
 			});
 
 		return booking;
@@ -155,7 +174,7 @@ export class UserRepository {
 		bookingId: string,
 		userId: string,
 	) {
-		await this.databaseService.db
+		return await this.databaseService.db
 			.delete(equipmentRentalsBookings)
 			.where(
 				and(
@@ -195,6 +214,19 @@ export class UserRepository {
 			await this.databaseService.db.query.vrgamesTicketPurchases.findFirst({
 				where: (table, { and }) =>
 					and(eq(table.id, purchaseId), eq(table.userId, userId)),
+				columns: {
+					totalPrice: false,
+					createdAt: false,
+					updatedAt: false,
+				},
+				with: {
+					vrgame: {
+						columns: {
+							createdAt: false,
+							updatedAt: false,
+						},
+					},
+				},
 			});
 
 		return purchase;
@@ -204,7 +236,7 @@ export class UserRepository {
 		purchaseId: string,
 		userId: string,
 	) {
-		await this.databaseService.db
+		return await this.databaseService.db
 			.delete(vrgamesTicketPurchases)
 			.where(
 				and(
@@ -271,7 +303,33 @@ export class UserRepository {
 			await this.databaseService.db.query.moviesTicketPurchases.findFirst({
 				where: (table, { and }) =>
 					and(eq(table.id, purchaseId), eq(table.userId, userId)),
+				columns: {
+					totalPrice: false,
+					createdAt: false,
+					updatedAt: false,
+				},
 				with: {
+					showtime: {
+						columns: {
+							movieId: false,
+							cinemaHallId: false,
+							showDate: false,
+							showtime: false,
+							totalSeats: false,
+							ticketPrice: false,
+							isAvailable: false,
+							createdAt: false,
+							updatedAt: false,
+						},
+						with: {
+							movie: {
+								columns: {
+									createdAt: false,
+									updatedAt: false,
+								},
+							},
+						},
+					},
 					orderedSnacks: {
 						columns: {
 							createdAt: false,
@@ -305,7 +363,7 @@ export class UserRepository {
 	}
 
 	async deleteUserMovieTicketPurchaseById(purchaseId: string, userId: string) {
-		await this.databaseService.db
+		return await this.databaseService.db
 			.delete(moviesTicketPurchases)
 			.where(
 				and(
@@ -346,6 +404,29 @@ export class UserRepository {
 			{
 				where: (table, { and }) =>
 					and(eq(table.id, bookingId), eq(table.userId, userId)),
+				columns: {
+					totalPrice: false,
+					createdAt: false,
+					updatedAt: false,
+				},
+				with: {
+					hotel: {
+						columns: {
+							createdAt: false,
+							updatedAt: false,
+							coordinates: false,
+							isAvailable: false,
+						},
+					},
+					hotelRoom: {
+						columns: {
+							hotelId: false,
+							isAvailable: false,
+							createdAt: false,
+							updatedAt: false,
+						},
+					},
+				},
 			},
 		);
 
@@ -353,13 +434,10 @@ export class UserRepository {
 	}
 
 	async deleteUserHotelBookingById(bookingId: string, userId: string) {
-		await this.databaseService.db
+		return await this.databaseService.db
 			.delete(hotelBookings)
 			.where(
-				and(
-					eq(equipmentRentalsBookings.id, bookingId),
-					eq(equipmentRentalsBookings.userId, userId),
-				),
+				and(eq(hotelBookings.id, bookingId), eq(hotelBookings.userId, userId)),
 			);
 	}
 
@@ -427,6 +505,11 @@ export class UserRepository {
 		const order = await this.databaseService.db.query.foodOrders.findFirst({
 			where: (table, { and }) =>
 				and(eq(table.id, orderId), eq(table.userId, userId)),
+			columns: {
+				totalPrice: false,
+				createdAt: false,
+				updatedAt: false,
+			},
 			with: {
 				food: {
 					columns: {
