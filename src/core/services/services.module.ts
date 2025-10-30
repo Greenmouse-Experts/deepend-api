@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { ServicesService } from "./services.service";
 import { ServicesController } from "./services.controller";
 import { ServicesRepository } from "./service.repository";
@@ -7,8 +7,9 @@ import { JwtService } from "../jwt/jwt.service";
 import { UserModule } from "../user/user.module";
 
 @Module({
-	imports: [DatabaseModule, UserModule],
+	imports: [forwardRef(() => UserModule), DatabaseModule],
 	controllers: [ServicesController],
 	providers: [ServicesService, ServicesRepository, JwtService],
+	exports: [ServicesService, ServicesRepository],
 })
 export class ServicesModule {}
