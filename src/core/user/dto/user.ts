@@ -1,6 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
 import * as joi from "joi";
-import { timePattern } from "src/core/admin/dto/service.dto";
 
 export class CreateUserDto {
 	@ApiProperty({
