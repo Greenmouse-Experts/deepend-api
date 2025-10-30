@@ -594,11 +594,18 @@ export class ServicesService {
 				throw new NotFoundException("Equipment rental not found");
 			}
 
-			const equipmentRentalTotalPrice = calculateEquipmentTotalPrice(
-				Number(equipment.rentalPricePerDay),
-				bookingData.rentalStartDate,
-				bookingData.rentalEndDate,
-			);
+			if (equipment.quantityAvailable < bookingData.quantity) {
+				throw new BadRequestException(
+					`Only ${equipment.quantityAvailable} units are available for this equipment rental.`,
+				);
+			}
+
+			const equipmentRentalTotalPrice =
+				calculateEquipmentTotalPrice(
+					Number(equipment.rentalPricePerDay),
+					bookingData.rentalStartDate,
+					bookingData.rentalEndDate,
+				) * Number(bookingData.quantity);
 
 			return await this.servicesRepository.bookEquipmentRental({
 				...bookingData,
@@ -638,11 +645,18 @@ export class ServicesService {
 			throw new NotFoundException("Equipment rental not found");
 		}
 
-		const equipmentRentalTotalPrice = calculateEquipmentTotalPrice(
-			Number(equipment.rentalPricePerDay),
-			booking.rentalStartDate,
-			booking.rentalEndDate,
-		);
+		if (equipment.quantityAvailable < booking.quantity) {
+			throw new BadRequestException(
+				`Only ${equipment.quantityAvailable} units are available for this equipment rental.`,
+			);
+		}
+
+		const equipmentRentalTotalPrice =
+			calculateEquipmentTotalPrice(
+				Number(equipment.rentalPricePerDay),
+				booking.rentalStartDate,
+				booking.rentalEndDate,
+			) * Number(booking.quantity);
 
 		return { totalPrice: equipmentRentalTotalPrice };
 	}
@@ -651,6 +665,7 @@ export class ServicesService {
 		equipmentRentalId: string,
 		rentalStartDate: string,
 		rentalEndDate: string,
+		quantity: number,
 	) {
 		const equipment =
 			await this.servicesRepository.getEquipmentRentalById(equipmentRentalId);
@@ -659,11 +674,12 @@ export class ServicesService {
 			throw new NotFoundException("Equipment rental not found");
 		}
 
-		const equipmentRentalTotalPrice = calculateEquipmentTotalPrice(
-			Number(equipment.rentalPricePerDay),
-			rentalStartDate,
-			rentalEndDate,
-		);
+		const equipmentRentalTotalPrice =
+			calculateEquipmentTotalPrice(
+				Number(equipment.rentalPricePerDay),
+				rentalStartDate,
+				rentalEndDate,
+			) * Number(quantity);
 
 		return { totalPrice: equipmentRentalTotalPrice };
 	}
@@ -686,11 +702,12 @@ export class ServicesService {
 			throw new NotFoundException("Equipment rental not found");
 		}
 
-		const equipmentRentalTotalPrice = calculateEquipmentTotalPrice(
-			Number(equipment.rentalPricePerDay),
-			booking.rentalStartDate,
-			booking.rentalEndDate,
-		);
+		const equipmentRentalTotalPrice =
+			calculateEquipmentTotalPrice(
+				Number(equipment.rentalPricePerDay),
+				booking.rentalStartDate,
+				booking.rentalEndDate,
+			) * Number(booking.quantity);
 
 		return { totalPrice: equipmentRentalTotalPrice };
 	}
@@ -1498,6 +1515,45 @@ export class ServicesService {
 					quantity,
 					totalPrice: String(foodPrice),
 				});
+			case "equipment":
+				const equipmentOrder =
+					await this.userService.getUserEquipmentRentalBookingById(
+						cartItemId,
+						userId,
+					);
+
+				if (!equipmentOrder) {
+					throw new NotFoundException("Equipment rental booking not found");
+				}
+
+				const equipment = await this.servicesRepository.getEquipmentRentalById(
+					equipmentOrder.equipmentRentalId as string,
+				);
+
+				if (!equipment) {
+					throw new NotFoundException("Equipment rental not found");
+				}
+
+				if (equipment.quantityAvailable < quantity) {
+					throw new BadRequestException(
+						`Only ${equipment.quantityAvailable} units are available for this equipment rental.`,
+					);
+				}
+
+				const equipmentRentalTotalPrice =
+					calculateEquipmentTotalPrice(
+						Number(equipment.rentalPricePerDay),
+						equipmentOrder.rentalStartDate,
+						equipmentOrder.rentalEndDate,
+					) * Number(quantity);
+
+				return await this.servicesRepository.updateEquipmentRentalBooking({
+					bookingId: cartItemId,
+					userId,
+					quantity,
+					totalPrice: String(equipmentRentalTotalPrice),
+				});
+
 			default:
 				throw new BadRequestException("Invalid cart item type");
 		}
