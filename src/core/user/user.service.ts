@@ -245,7 +245,7 @@ export class UserService {
 		return cartItems;
 	}
 
-	async getCartItemDetails({
+	async getUserCartItemDetails({
 		userId,
 		itemId,
 		itemType,
@@ -287,7 +287,36 @@ export class UserService {
 		}
 	}
 
-	async removeCartItem({
+	async updateUserCartItemQuantity({
+		userId,
+		itemId,
+		itemType,
+		quantity,
+	}: {
+		userId: string;
+		itemId: string;
+		itemType: "vrgame" | "movie" | "food";
+		quantity: number;
+	}) {
+		const result = await this.servicesService.updateUserCartItemQuantity({
+			userId,
+			cartItemId: itemId,
+			cartItemType: itemType,
+			quantity,
+		});
+
+		if (result.affectedRows === 0) {
+			throw new BadRequestException(
+				"Cart item not found or quantity unchanged",
+			);
+		}
+
+		return {
+			message: "Cart item quantity updated successfully",
+		};
+	}
+
+	async removeUserCartItem({
 		userId,
 		itemId,
 		itemType,
@@ -296,37 +325,82 @@ export class UserService {
 		itemId: string;
 		itemType: "studio" | "equipment" | "vrgame" | "movie" | "hotel" | "food";
 	}) {
+		let result;
 		switch (itemType) {
 			case "studio":
-				return await this.userRepository.deleteUserStudioBookingById(
+				[result] = await this.userRepository.deleteUserStudioBookingById(
 					itemId,
 					userId,
 				);
+
+				if (result.affectedRows === 0) {
+					throw new BadRequestException("Studio booking not found in cart");
+				}
+
+				return result;
 			case "equipment":
-				return await this.userRepository.deleteUserEquipmentRentalBookingById(
-					itemId,
-					userId,
-				);
+				[result] =
+					await this.userRepository.deleteUserEquipmentRentalBookingById(
+						itemId,
+						userId,
+					);
+
+				if (result.affectedRows === 0) {
+					throw new BadRequestException(
+						"Equipment rental booking not found in cart",
+					);
+				}
+
+				return result;
 			case "vrgame":
-				return await this.userRepository.deleteUserVrgamesTicketPurchaseById(
-					itemId,
-					userId,
-				);
+				[result] =
+					await this.userRepository.deleteUserVrgamesTicketPurchaseById(
+						itemId,
+						userId,
+					);
+
+				if (result.affectedRows === 0) {
+					throw new BadRequestException(
+						"VR game ticket purchase not found in cart",
+					);
+				}
+
+				return result;
 			case "movie":
-				return await this.userRepository.deleteUserMovieTicketPurchaseById(
+				[result] = await this.userRepository.deleteUserMovieTicketPurchaseById(
 					itemId,
 					userId,
 				);
+
+				if (result.affectedRows === 0) {
+					throw new BadRequestException(
+						"Movie ticket purchase not found in cart",
+					);
+				}
+
+				return result;
 			case "hotel":
-				return await this.userRepository.deleteUserHotelBookingById(
+				[result] = await this.userRepository.deleteUserHotelBookingById(
 					itemId,
 					userId,
 				);
+
+				if (result.affectedRows === 0) {
+					throw new BadRequestException("Hotel booking not found in cart");
+				}
+
+				return result;
 			case "food":
-				return await this.userRepository.deleteUserFoodOrderById(
+				[result] = await this.userRepository.deleteUserFoodOrderById(
 					itemId,
 					userId,
 				);
+
+				if (result.affectedRows === 0) {
+					throw new BadRequestException("Food order not found in cart");
+				}
+
+				return result;
 			default:
 				throw new BadRequestException("Invalid item type");
 		}
@@ -334,5 +408,41 @@ export class UserService {
 
 	async clearUserCart(userId: string) {
 		return await this.userRepository.clearUserCart(userId);
+	}
+
+	async getUserStudioBookingById(bookingId: string, userId: string) {
+		return await this.userRepository.getUserStudioBookingById(
+			bookingId,
+			userId,
+		);
+	}
+
+	async getUserEquipmentRentalBookingById(bookingId: string, userId: string) {
+		return await this.userRepository.getUserEquipmentRentalBookingById(
+			bookingId,
+			userId,
+		);
+	}
+
+	async getUserVrgamesTicketPurchaseById(purchaseId: string, userId: string) {
+		return await this.userRepository.getUserVrgamesTicketPurchaseById(
+			purchaseId,
+			userId,
+		);
+	}
+
+	async getUserMovieTicketPurchaseById(purchaseId: string, userId: string) {
+		return await this.userRepository.getUserMovieTicketPurchaseById(
+			purchaseId,
+			userId,
+		);
+	}
+
+	async getUserHotelBookingById(bookingId: string, userId: string) {
+		return await this.userRepository.getUserHotelBookingById(bookingId, userId);
+	}
+
+	async getUserFoodOrderById(orderId: string, userId: string) {
+		return await this.userRepository.getUserFoodOrderById(orderId, userId);
 	}
 }
