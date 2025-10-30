@@ -239,6 +239,20 @@ export const DateRangeQuerySchema = Joi.object({
 			'"End date" must be greater than or equal to "Start date"',
 	});
 
+export class CalculateEquipmentRentalPriceQueryDto extends DateRangeQueryDto {
+	@ApiProperty({
+		example: 2,
+		description: "Quantity of equipment to rent",
+		required: true,
+	})
+	quantity: number;
+}
+
+export const CalculateEquipmentRentalPriceQuerySchema =
+	DateRangeQuerySchema.keys({
+		quantity: Joi.number().integer().min(1).required(),
+	});
+
 export class BookingPaginationQueryDto extends PaginationQueryDto {
 	@ApiProperty({
 		example: "confirmed",
@@ -323,13 +337,15 @@ export class UpdateCartItemQuantityBodyDto {
 
 	@ApiProperty({
 		example: "food",
-		description: 'Type of item ("food", "movie", "vrgame")',
+		description: 'Type of item ("food", "movie", "vrgame", "equipment")',
 		required: true,
 	})
-	itemType: "food" | "movie" | "vrgame";
+	itemType: "food" | "movie" | "vrgame" | "equipment";
 }
 
 export const UpdateCartItemQuantityBodySchema = Joi.object({
 	quantity: Joi.number().integer().min(1).required(),
-	itemType: Joi.string().valid("food", "movie", "vrgame").required(),
+	itemType: Joi.string()
+		.valid("food", "movie", "vrgame", "equipment")
+		.required(),
 });

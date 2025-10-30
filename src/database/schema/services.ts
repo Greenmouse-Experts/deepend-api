@@ -734,6 +734,7 @@ export const equipmentRentalsBookings = mysqlTable(
 		userId: varchar("user_id", { length: ID_GENERATOR_LENGTH }).notNull(),
 		rentalStartDate: date("rental_start_date", { mode: "string" }).notNull(),
 		rentalEndDate: date("rental_end_date", { mode: "string" }).notNull(),
+		quantity: int("quantity").default(1).notNull(),
 		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
 		status: varchar("status", { length: 50 })
 			.default("pending")
@@ -768,13 +769,13 @@ export const equipmentRentalsBookings = mysqlTable(
 );
 
 export const equipmentRentalsBookingsRelations = relations(
-  equipmentRentalsBookings,
-  ({ one }) => ({
-    equipmentRental: one(equipmentRentals, {
-      fields: [equipmentRentalsBookings.equipmentRentalId],
-      references: [equipmentRentals.id],
-    }),
-  }),
+	equipmentRentalsBookings,
+	({ one }) => ({
+		equipmentRental: one(equipmentRentals, {
+			fields: [equipmentRentalsBookings.equipmentRentalId],
+			references: [equipmentRentals.id],
+		}),
+	}),
 );
 
 export const vrgamesTicketPurchases = mysqlTable(

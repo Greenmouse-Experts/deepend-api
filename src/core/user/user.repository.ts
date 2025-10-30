@@ -633,7 +633,7 @@ export class UserRepository {
 				name: equipmentRentals.name,
 				picture: sql<string>`coalesce(json_unquote(json_extract(${equipmentRentals.imageUrls}, '$[0].url')), '')`,
 				totalPrice: equipmentRentalsBookings.totalPrice,
-				quantity: sql<number>`1`,
+				quantity: equipmentRentalsBookings.quantity,
 				cartItemId: equipmentRentalsBookings.id,
 				cartItemType: sql<string>`'equipment'`,
 			})

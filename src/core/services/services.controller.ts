@@ -11,6 +11,8 @@ import {
 import { ServicesService } from "./services.service";
 import { QueryJoiValidationPipe } from "src/common/pipes/query-validation.pipe";
 import {
+	CalculateEquipmentRentalPriceQueryDto,
+	CalculateEquipmentRentalPriceQuerySchema,
 	DateRangeQueryDto,
 	DateRangeQuerySchema,
 	GetBookedStudiosSessionsByRangeQueryDto,
@@ -309,13 +311,14 @@ export class ServicesController {
 	@ApiOperation({ summary: "Calculate total price for equipment rental" })
 	async getEquipmentRentalBookingPrice(
 		@Param("equipmentId") equipmentId: string,
-		@Query(new QueryJoiValidationPipe(DateRangeQuerySchema))
-		query: DateRangeQueryDto,
+		@Query(new QueryJoiValidationPipe(CalculateEquipmentRentalPriceQuerySchema))
+		query: CalculateEquipmentRentalPriceQueryDto,
 	) {
 		return await this.servicesService.getEquipmentRentalTotalPrice(
 			equipmentId,
 			query.startDate,
 			query.endDate,
+			query.quantity,
 		);
 	}
 

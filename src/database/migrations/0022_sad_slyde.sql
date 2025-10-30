@@ -1,0 +1,1 @@
+ALTER TABLE `equipment_rentals_bookings` ADD `quantity` int DEFAULT 1 NOT NULL;
