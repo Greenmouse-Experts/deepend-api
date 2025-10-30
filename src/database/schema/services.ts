@@ -767,6 +767,16 @@ export const equipmentRentalsBookings = mysqlTable(
 	],
 );
 
+export const equipmentRentalsBookingsRelations = relations(
+  equipmentRentalsBookings,
+  ({ one }) => ({
+    equipmentRental: one(equipmentRentals, {
+      fields: [equipmentRentalsBookings.equipmentRentalId],
+      references: [equipmentRentals.id],
+    }),
+  }),
+);
+
 export const vrgamesTicketPurchases = mysqlTable(
 	"vrgames_ticket_purchases",
 	{
@@ -800,6 +810,16 @@ export const vrgamesTicketPurchases = mysqlTable(
 			sql`${table.status} IN ('pending', 'completed', 'canceled')`,
 		),
 	],
+);
+
+export const vrgamesTicketPurchasesRelations = relations(
+	vrgamesTicketPurchases,
+	({ one }) => ({
+		vrgame: one(vrgames, {
+			fields: [vrgamesTicketPurchases.vrgameId],
+			references: [vrgames.id],
+		}),
+	}),
 );
 
 export const moviesTicketPurchases = mysqlTable(
@@ -936,6 +956,17 @@ export const hotelBookings = mysqlTable(
 		),
 	],
 );
+
+export const hotelBookingsRelations = relations(hotelBookings, ({ one }) => ({
+	hotel: one(hotels, {
+		fields: [hotelBookings.hotelId],
+		references: [hotels.id],
+	}),
+	hotelRoom: one(hotelRooms, {
+		fields: [hotelBookings.hotelRoomId],
+		references: [hotelRooms.id],
+	}),
+}));
 
 export const foodOrders = mysqlTable(
 	"food_orders",
