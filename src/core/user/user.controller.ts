@@ -1,4 +1,14 @@
-import { Controller, Get, Query, UseGuards } from "@nestjs/common";
+import {
+	Body,
+	Controller,
+	Delete,
+	Get,
+	HttpCode,
+	Param,
+	Patch,
+	Query,
+	UseGuards,
+} from "@nestjs/common";
 import { ApiOperation } from "@nestjs/swagger";
 import { GetUser } from "src/common/decorators/get-user.decorator";
 import { Role } from "src/common/decorators/role/role.decorator";
@@ -11,9 +21,14 @@ import {
 	BookingPaginationQuerySchema,
 	FoodOrderPaginationQueryDto,
 	FoodOrderPaginationQuerySchema,
+	ItemTypeQueryDto,
+	ItemTypeQuerySchema,
 	TicketPaginationQueryDto,
 	TicketPaginationQuerySchema,
+	UpdateCartItemQuantityBodyDto,
+	UpdateCartItemQuantityBodySchema,
 } from "src/common/dto/requestQuery.dto";
+import { JoiValidationPipe } from "src/common/pipes/validation.pipe";
 
 @Controller({ path: "users", version: "1" })
 @UseGuards(AuthGuard)
@@ -121,5 +136,58 @@ export class UserController {
 	@ApiOperation({ summary: "Get user's current cart" })
 	async getUserCart(@GetUser("userId") userId: string) {
 		return await this.userService.getUserCart(userId);
+	}
+
+	@Get("cart/item/:itemId")
+	@ApiOperation({ summary: "Get details of specific item in user's cart" })
+	async getUserCartItem(
+		@GetUser("userId") userId: string,
+		@Param("itemId") itemId: string,
+		@Query(new QueryJoiValidationPipe(ItemTypeQuerySchema))
+		query: ItemTypeQueryDto,
+	) {
+		return await this.userService.getUserCartItemDetails({
+			userId,
+			itemId,
+			itemType: query.itemType,
+		});
+	}
+
+	@Patch("cart/item/:itemId/quantity")
+	@ApiOperation({ summary: "Update quantity of specific item in user's cart" })
+	async updateUserCartItemQuantity(
+		@GetUser("userId") userId: string,
+		@Param("itemId") itemId: string,
+		@Body(new JoiValidationPipe(UpdateCartItemQuantityBodySchema))
+		body: UpdateCartItemQuantityBodyDto,
+	) {
+		return await this.userService.updateUserCartItemQuantity({
+			userId,
+			itemId,
+			itemType: body.itemType,
+			quantity: body.quantity,
+		});
+	}
+
+	@Delete("cart")
+	@ApiOperation({ summary: "Clear user's current cart" })
+	async clearUserCart(@GetUser("userId") userId: string) {
+		return await this.userService.clearUserCart(userId);
+	}
+
+	@Delete("cart/item/:itemId")
+	@ApiOperation({ summary: "Remove specific item from user's cart" })
+	@HttpCode(204)
+	async removeItemFromUserCart(
+		@GetUser("userId") userId: string,
+		@Param("itemId") itemId: string,
+		@Query(new QueryJoiValidationPipe(ItemTypeQuerySchema))
+		query: ItemTypeQueryDto,
+	) {
+		return await this.userService.removeUserCartItem({
+			userId,
+			itemId,
+			itemType: query.itemType,
+		});
 	}
 }
