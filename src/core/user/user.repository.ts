@@ -6,13 +6,7 @@ import {
 	// cartItems,
 	// carts,
 	CreateUser,
-	foodOrders,
-	studioBookings,
-	equipmentRentalsBookings,
 	users,
-	vrgamesTicketPurchases,
-	moviesTicketPurchases,
-	hotelBookings,
 	studios,
 	vrgames,
 	foods,
@@ -20,6 +14,12 @@ import {
 	equipmentRentals,
 	cinemaMoviesShowtimes,
 	cinemaMovies,
+	vrgamesTicketCart,
+	studioSessionCart,
+	foodCart,
+	hotelCart,
+	equipmentRentalsCart,
+	moviesTicketCart,
 } from "src/database/schema";
 import {
 	EquipmentRentalBookingStatus,
@@ -76,7 +76,7 @@ export class UserRepository {
 		status?: StudioBookingStatus;
 	}) {
 		const bookings =
-			await this.databaseService.db.query.studioBookings.findMany({
+			await this.databaseService.db.query.studioSessionCart.findMany({
 				where: (table, { and }) =>
 					and(
 						eq(table.userId, userId),
@@ -94,7 +94,7 @@ export class UserRepository {
 
 	async getUserStudioBookingById(bookingId: string, userId: string) {
 		const booking =
-			await this.databaseService.db.query.studioBookings.findFirst({
+			await this.databaseService.db.query.studioSessionCart.findFirst({
 				where: (table, { and }) =>
 					and(eq(table.id, bookingId), eq(table.userId, userId)),
 				with: {
@@ -112,11 +112,11 @@ export class UserRepository {
 
 	async deleteUserStudioBookingById(bookingId: string, userId: string) {
 		return await this.databaseService.db
-			.delete(studioBookings)
+			.delete(studioSessionCart)
 			.where(
 				and(
-					eq(studioBookings.id, bookingId),
-					eq(studioBookings.userId, userId),
+					eq(studioSessionCart.id, bookingId),
+					eq(studioSessionCart.userId, userId),
 				),
 			);
 	}
@@ -133,7 +133,7 @@ export class UserRepository {
 		status?: EquipmentRentalBookingStatus;
 	}) {
 		const bookings =
-			await this.databaseService.db.query.equipmentRentalsBookings.findMany({
+			await this.databaseService.db.query.equipmentRentalsCart.findMany({
 				where: (table, { and }) =>
 					and(
 						eq(table.userId, userId),
@@ -148,7 +148,7 @@ export class UserRepository {
 
 	async getUserEquipmentRentalBookingById(bookingId: string, userId: string) {
 		const booking =
-			await this.databaseService.db.query.equipmentRentalsBookings.findFirst({
+			await this.databaseService.db.query.equipmentRentalsCart.findFirst({
 				where: (table, { and }) =>
 					and(eq(table.id, bookingId), eq(table.userId, userId)),
 				columns: {
@@ -175,11 +175,11 @@ export class UserRepository {
 		userId: string,
 	) {
 		return await this.databaseService.db
-			.delete(equipmentRentalsBookings)
+			.delete(equipmentRentalsCart)
 			.where(
 				and(
-					eq(equipmentRentalsBookings.id, bookingId),
-					eq(equipmentRentalsBookings.userId, userId),
+					eq(equipmentRentalsCart.id, bookingId),
+					eq(equipmentRentalsCart.userId, userId),
 				),
 			);
 	}
@@ -196,7 +196,7 @@ export class UserRepository {
 		status?: "pending" | "completed" | "canceled";
 	}) {
 		const purchases =
-			await this.databaseService.db.query.vrgamesTicketPurchases.findMany({
+			await this.databaseService.db.query.vrgamesTicketCart.findMany({
 				where: (table, { and }) =>
 					and(
 						eq(table.userId, userId),
@@ -211,7 +211,7 @@ export class UserRepository {
 
 	async getUserVrgamesTicketPurchaseById(purchaseId: string, userId: string) {
 		const purchase =
-			await this.databaseService.db.query.vrgamesTicketPurchases.findFirst({
+			await this.databaseService.db.query.vrgamesTicketCart.findFirst({
 				where: (table, { and }) =>
 					and(eq(table.id, purchaseId), eq(table.userId, userId)),
 				columns: {
@@ -237,11 +237,11 @@ export class UserRepository {
 		userId: string,
 	) {
 		return await this.databaseService.db
-			.delete(vrgamesTicketPurchases)
+			.delete(vrgamesTicketCart)
 			.where(
 				and(
-					eq(vrgamesTicketPurchases.id, purchaseId),
-					eq(vrgamesTicketPurchases.userId, userId),
+					eq(vrgamesTicketCart.id, purchaseId),
+					eq(vrgamesTicketCart.userId, userId),
 				),
 			);
 	}
@@ -258,7 +258,7 @@ export class UserRepository {
 		status?: "pending" | "completed" | "canceled";
 	}) {
 		const purchases =
-			await this.databaseService.db.query.moviesTicketPurchases.findMany({
+			await this.databaseService.db.query.moviesTicketCart.findMany({
 				where: (table, { and }) =>
 					and(
 						eq(table.userId, userId),
@@ -300,7 +300,7 @@ export class UserRepository {
 
 	async getUserMovieTicketPurchaseById(purchaseId: string, userId: string) {
 		const purchase =
-			await this.databaseService.db.query.moviesTicketPurchases.findFirst({
+			await this.databaseService.db.query.moviesTicketCart.findFirst({
 				where: (table, { and }) =>
 					and(eq(table.id, purchaseId), eq(table.userId, userId)),
 				columns: {
@@ -364,11 +364,11 @@ export class UserRepository {
 
 	async deleteUserMovieTicketPurchaseById(purchaseId: string, userId: string) {
 		return await this.databaseService.db
-			.delete(moviesTicketPurchases)
+			.delete(moviesTicketCart)
 			.where(
 				and(
-					eq(moviesTicketPurchases.id, purchaseId),
-					eq(moviesTicketPurchases.userId, userId),
+					eq(moviesTicketCart.id, purchaseId),
+					eq(moviesTicketCart.userId, userId),
 				),
 			);
 	}
@@ -384,61 +384,55 @@ export class UserRepository {
 		limit: number;
 		status?: "pending" | "confirmed" | "cancelled" | "completed";
 	}) {
-		const bookings = await this.databaseService.db.query.hotelBookings.findMany(
-			{
-				where: (table, { and }) =>
-					and(
-						eq(table.userId, userId),
-						status ? eq(table.status, status) : undefined,
-					),
-				limit,
-				offset,
-			},
-		);
+		const bookings = await this.databaseService.db.query.hotelCart.findMany({
+			where: (table, { and }) =>
+				and(
+					eq(table.userId, userId),
+					status ? eq(table.status, status) : undefined,
+				),
+			limit,
+			offset,
+		});
 
 		return bookings;
 	}
 
 	async getUserHotelBookingById(bookingId: string, userId: string) {
-		const booking = await this.databaseService.db.query.hotelBookings.findFirst(
-			{
-				where: (table, { and }) =>
-					and(eq(table.id, bookingId), eq(table.userId, userId)),
-				columns: {
-					totalPrice: false,
-					createdAt: false,
-					updatedAt: false,
-				},
-				with: {
-					hotel: {
-						columns: {
-							createdAt: false,
-							updatedAt: false,
-							coordinates: false,
-							isAvailable: false,
-						},
+		const booking = await this.databaseService.db.query.hotelCart.findFirst({
+			where: (table, { and }) =>
+				and(eq(table.id, bookingId), eq(table.userId, userId)),
+			columns: {
+				totalPrice: false,
+				createdAt: false,
+				updatedAt: false,
+			},
+			with: {
+				hotel: {
+					columns: {
+						createdAt: false,
+						updatedAt: false,
+						coordinates: false,
+						isAvailable: false,
 					},
-					hotelRoom: {
-						columns: {
-							hotelId: false,
-							isAvailable: false,
-							createdAt: false,
-							updatedAt: false,
-						},
+				},
+				hotelRoom: {
+					columns: {
+						hotelId: false,
+						isAvailable: false,
+						createdAt: false,
+						updatedAt: false,
 					},
 				},
 			},
-		);
+		});
 
 		return booking;
 	}
 
 	async deleteUserHotelBookingById(bookingId: string, userId: string) {
 		return await this.databaseService.db
-			.delete(hotelBookings)
-			.where(
-				and(eq(hotelBookings.id, bookingId), eq(hotelBookings.userId, userId)),
-			);
+			.delete(hotelCart)
+			.where(and(eq(hotelCart.id, bookingId), eq(hotelCart.userId, userId)));
 	}
 
 	async getUserFoodOrders({
@@ -452,7 +446,7 @@ export class UserRepository {
 		limit: number;
 		status?: "pending" | "preparing" | "delivered" | "cancelled";
 	}) {
-		const orders = await this.databaseService.db.query.foodOrders.findMany({
+		const orders = await this.databaseService.db.query.foodCart.findMany({
 			where: (table, { and }) =>
 				and(
 					eq(table.userId, userId),
@@ -470,7 +464,7 @@ export class UserRepository {
 				foodAddons: {
 					columns: {
 						id: false,
-						foodOrderId: false,
+						foodCartId: false,
 						addonCategoryId: false,
 						addonItemId: false,
 						createdAt: false,
@@ -502,7 +496,7 @@ export class UserRepository {
 	}
 
 	async getUserFoodOrderById(orderId: string, userId: string) {
-		const order = await this.databaseService.db.query.foodOrders.findFirst({
+		const order = await this.databaseService.db.query.foodCart.findFirst({
 			where: (table, { and }) =>
 				and(eq(table.id, orderId), eq(table.userId, userId)),
 			columns: {
@@ -520,7 +514,7 @@ export class UserRepository {
 				foodAddons: {
 					columns: {
 						id: false,
-						foodOrderId: false,
+						foodCartId: false,
 						addonCategoryId: false,
 						addonItemId: false,
 						createdAt: false,
@@ -554,8 +548,8 @@ export class UserRepository {
 
 	async deleteUserFoodOrderById(orderId: string, userId: string) {
 		return await this.databaseService.db
-			.delete(foodOrders)
-			.where(and(eq(foodOrders.id, orderId), eq(foodOrders.userId, userId)));
+			.delete(foodCart)
+			.where(and(eq(foodCart.id, orderId), eq(foodCart.userId, userId)));
 	}
 
 	async getUserCartContents(userId: string) {
@@ -563,17 +557,17 @@ export class UserRepository {
 			.select({
 				name: studios.name,
 				picture: sql<string>`''`,
-				totalPrice: studioBookings.totalPrice,
+				totalPrice: studioSessionCart.totalPrice,
 				quantity: sql<number>`1`,
-				cartItemId: studioBookings.id,
+				cartItemId: studioSessionCart.id,
 				cartItemType: sql<string>`'studio'`,
 			})
-			.from(studioBookings)
-			.leftJoin(studios, eq(studioBookings.studioId, studios.id))
+			.from(studioSessionCart)
+			.leftJoin(studios, eq(studioSessionCart.studioId, studios.id))
 			.where(
 				and(
-					eq(studioBookings.userId, userId),
-					eq(studioBookings.status, "pending"),
+					eq(studioSessionCart.userId, userId),
+					eq(studioSessionCart.status, "pending"),
 				),
 			);
 
@@ -581,17 +575,17 @@ export class UserRepository {
 			.select({
 				name: vrgames.name,
 				picture: sql<string>`COALESCE(JSON_UNQUOTE(JSON_EXTRACT(${vrgames.imageUrls}, '$[0].url')), '')`,
-				totalPrice: vrgamesTicketPurchases.totalPrice,
-				quantity: vrgamesTicketPurchases.ticketQuantity,
-				cartItemId: vrgamesTicketPurchases.id,
+				totalPrice: vrgamesTicketCart.totalPrice,
+				quantity: vrgamesTicketCart.ticketQuantity,
+				cartItemId: vrgamesTicketCart.id,
 				cartItemType: sql<string>`'vrgame'`,
 			})
-			.from(vrgamesTicketPurchases)
-			.leftJoin(vrgames, eq(vrgamesTicketPurchases.vrgameId, vrgames.id))
+			.from(vrgamesTicketCart)
+			.leftJoin(vrgames, eq(vrgamesTicketCart.vrgameId, vrgames.id))
 			.where(
 				and(
-					eq(vrgamesTicketPurchases.userId, userId),
-					eq(vrgamesTicketPurchases.status, "pending"),
+					eq(vrgamesTicketCart.userId, userId),
+					eq(vrgamesTicketCart.status, "pending"),
 				),
 			);
 
@@ -599,53 +593,48 @@ export class UserRepository {
 			.select({
 				name: foods.name,
 				picture: sql<string>`COALESCE(JSON_UNQUOTE(JSON_EXTRACT(${foods.imageUrls}, '$[0].url')), '')`,
-				totalPrice: foodOrders.totalPrice,
-				quantity: foodOrders.quantity,
-				cartItemId: foodOrders.id,
+				totalPrice: foodCart.totalPrice,
+				quantity: foodCart.quantity,
+				cartItemId: foodCart.id,
 				cartItemType: sql<string>`'food'`,
 			})
-			.from(foodOrders)
-			.leftJoin(foods, eq(foodOrders.foodId, foods.id))
-			.where(
-				and(eq(foodOrders.userId, userId), eq(foodOrders.status, "pending")),
-			);
+			.from(foodCart)
+			.leftJoin(foods, eq(foodCart.foodId, foods.id))
+			.where(and(eq(foodCart.userId, userId), eq(foodCart.status, "pending")));
 
 		const hotelCartItem = this.databaseService.db
 			.select({
 				name: hotelRooms.name,
 				picture: sql<string>`COALESCE(JSON_UNQUOTE(JSON_EXTRACT(${hotelRooms.imageUrls}, '$[0].url')), '')`,
-				totalPrice: hotelBookings.totalPrice,
+				totalPrice: hotelCart.totalPrice,
 				quantity: sql<number>`1`,
-				cartItemId: hotelBookings.id,
+				cartItemId: hotelCart.id,
 				cartItemType: sql<string>`'hotel'`,
 			})
-			.from(hotelBookings)
-			.leftJoin(hotelRooms, eq(hotelBookings.hotelRoomId, hotelRooms.id))
+			.from(hotelCart)
+			.leftJoin(hotelRooms, eq(hotelCart.hotelRoomId, hotelRooms.id))
 			.where(
-				and(
-					eq(hotelBookings.userId, userId),
-					eq(hotelBookings.status, "pending"),
-				),
+				and(eq(hotelCart.userId, userId), eq(hotelCart.status, "pending")),
 			);
 
 		const equipmentCartItem = this.databaseService.db
 			.select({
 				name: equipmentRentals.name,
 				picture: sql<string>`coalesce(json_unquote(json_extract(${equipmentRentals.imageUrls}, '$[0].url')), '')`,
-				totalPrice: equipmentRentalsBookings.totalPrice,
-				quantity: equipmentRentalsBookings.quantity,
-				cartItemId: equipmentRentalsBookings.id,
+				totalPrice: equipmentRentalsCart.totalPrice,
+				quantity: equipmentRentalsCart.quantity,
+				cartItemId: equipmentRentalsCart.id,
 				cartItemType: sql<string>`'equipment'`,
 			})
-			.from(equipmentRentalsBookings)
+			.from(equipmentRentalsCart)
 			.leftJoin(
 				equipmentRentals,
-				eq(equipmentRentalsBookings.equipmentRentalId, equipmentRentals.id),
+				eq(equipmentRentalsCart.equipmentRentalId, equipmentRentals.id),
 			)
 			.where(
 				and(
-					eq(equipmentRentalsBookings.userId, userId),
-					eq(equipmentRentalsBookings.status, "pending"),
+					eq(equipmentRentalsCart.userId, userId),
+					eq(equipmentRentalsCart.status, "pending"),
 				),
 			);
 
@@ -653,15 +642,15 @@ export class UserRepository {
 			.select({
 				name: cinemaMovies.title,
 				picture: sql<string>`${cinemaMovies.posterUrl}`,
-				totalPrice: moviesTicketPurchases.totalPrice,
-				quantity: moviesTicketPurchases.ticketQuantity,
-				cartItemId: moviesTicketPurchases.id,
+				totalPrice: moviesTicketCart.totalPrice,
+				quantity: moviesTicketCart.ticketQuantity,
+				cartItemId: moviesTicketCart.id,
 				cartItemType: sql<string>`'movie'`,
 			})
-			.from(moviesTicketPurchases)
+			.from(moviesTicketCart)
 			.leftJoin(
 				cinemaMoviesShowtimes,
-				eq(moviesTicketPurchases.showtimeId, cinemaMoviesShowtimes.id),
+				eq(moviesTicketCart.showtimeId, cinemaMoviesShowtimes.id),
 			)
 			.leftJoin(
 				cinemaMovies,
@@ -669,8 +658,8 @@ export class UserRepository {
 			)
 			.where(
 				and(
-					eq(moviesTicketPurchases.userId, userId),
-					eq(moviesTicketPurchases.status, "pending"),
+					eq(moviesTicketCart.userId, userId),
+					eq(moviesTicketCart.status, "pending"),
 				),
 			);
 
@@ -689,53 +678,50 @@ export class UserRepository {
 	async clearUserCart(userId: string) {
 		await this.databaseService.db.transaction(async (tx) => {
 			await tx
-				.delete(studioBookings)
+				.delete(studioSessionCart)
 				.where(
 					and(
-						eq(studioBookings.userId, userId),
-						eq(studioBookings.status, "pending"),
+						eq(studioSessionCart.userId, userId),
+						eq(studioSessionCart.status, "pending"),
 					),
 				);
 
 			await tx
-				.delete(vrgamesTicketPurchases)
+				.delete(vrgamesTicketCart)
 				.where(
 					and(
-						eq(vrgamesTicketPurchases.userId, userId),
-						eq(vrgamesTicketPurchases.status, "pending"),
+						eq(vrgamesTicketCart.userId, userId),
+						eq(vrgamesTicketCart.status, "pending"),
 					),
 				);
 
 			await tx
-				.delete(foodOrders)
+				.delete(foodCart)
 				.where(
-					and(eq(foodOrders.userId, userId), eq(foodOrders.status, "pending")),
+					and(eq(foodCart.userId, userId), eq(foodCart.status, "pending")),
 				);
 
 			await tx
-				.delete(hotelBookings)
+				.delete(hotelCart)
+				.where(
+					and(eq(hotelCart.userId, userId), eq(hotelCart.status, "pending")),
+				);
+
+			await tx
+				.delete(equipmentRentalsCart)
 				.where(
 					and(
-						eq(hotelBookings.userId, userId),
-						eq(hotelBookings.status, "pending"),
+						eq(equipmentRentalsCart.userId, userId),
+						eq(equipmentRentalsCart.status, "pending"),
 					),
 				);
 
 			await tx
-				.delete(equipmentRentalsBookings)
+				.delete(moviesTicketCart)
 				.where(
 					and(
-						eq(equipmentRentalsBookings.userId, userId),
-						eq(equipmentRentalsBookings.status, "pending"),
-					),
-				);
-
-			await tx
-				.delete(moviesTicketPurchases)
-				.where(
-					and(
-						eq(moviesTicketPurchases.userId, userId),
-						eq(moviesTicketPurchases.status, "pending"),
+						eq(moviesTicketCart.userId, userId),
+						eq(moviesTicketCart.status, "pending"),
 					),
 				);
 		});
