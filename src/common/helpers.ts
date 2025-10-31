@@ -9,6 +9,13 @@ import {
 	parse,
 	parseISO,
 } from "date-fns";
+import { MySqlTransaction } from "drizzle-orm/mysql-core";
+import {
+	MySql2PreparedQueryHKT,
+	MySql2QueryResultHKT,
+} from "drizzle-orm/mysql2";
+import { ExtractTablesWithRelations } from "drizzle-orm";
+import * as databaseSchema from "../database/schema";
 
 export const generateId = init({
 	length: ID_GENERATOR_LENGTH,
@@ -136,3 +143,10 @@ export function isBookingWithinStudioHours(
 	// Check if booking is completely within studio hours
 	return bookingStartMin >= studioOpenMin && bookingEndMin <= studioCloseMin;
 }
+
+export type MysqlTransaction = MySqlTransaction<
+	MySql2QueryResultHKT,
+	MySql2PreparedQueryHKT,
+	typeof databaseSchema,
+	ExtractTablesWithRelations<typeof databaseSchema>
+>;
