@@ -20,36 +20,55 @@ import {
 	cinemaMovies,
 	cinemaMoviesShowtimes,
 	cinemaMoviesToGenres,
-	CreateEquipmentRentalBooking,
-	CreateHotelBooking,
-	CreateMovieTicketPurchase,
-	CreateStudioBooking,
-	CreateVRGameTicketPurchase,
+	CreateEquipmentRentalCart,
+	CreateFoodCart,
+	CreateFoodCartAddon,
+	CreateHotelCart,
+	CreateMovieTicketCart,
+	CreateStudioSessionCart,
+	CreateVRGameTicketCart,
 	equipmentCategories,
 	equipmentRentals,
-	equipmentRentalsBookings,
+	equipmentRentalsCart,
 	foodAddonCategories,
 	foodAddonsItems,
+	foodCart,
+	foodCartAddons,
 	foodCategories,
 	foods,
 	foodToAddonsCategories,
+	hotelCart,
 	hotelRooms,
-	hotelBookings,
 	hotels,
-	moviesTicketPurchases,
-	moviesTicketSnacksPurchases,
+	moviesTicketCart,
+	moviesTicketSnacksCart,
 	studioAvailability,
-	studioBookings,
 	studios,
+	studioSessionCart,
 	vrgames,
 	vrgamesAvailability,
 	vrgamesCategories,
-	vrgamesTicketPurchases,
-	CreateFoodOrder,
-	foodOrders,
-	CreateFoodOrderAddon,
-	foodOrderAddons,
+	vrgamesTicketCart,
 } from "src/database/schema";
+import {
+	CreateEquipmentRentalBooking,
+	CreateFoodOrder,
+	CreateHotelBooking,
+	CreateMovieTicketPurchase,
+	CreateOrder,
+	CreateStudioSessionBooking,
+	CreateVRGameTicketPurchase,
+	equipmentRentalBookings,
+	foodOrders,
+	hotelBookings,
+	movieTicketPurchases,
+	Orders,
+	studioSessionBookings,
+	vrgameTicketPurchases,
+} from "src/database/schema/payment";
+import { MySqlTransaction } from "drizzle-orm/mysql-core";
+import { MySql2QueryResultHKT } from "drizzle-orm/mysql2";
+import { MysqlTransaction } from "src/common/helpers";
 
 @Injectable()
 export class ServicesRepository {
@@ -795,19 +814,19 @@ END`.as("addons"),
 	async getBookedStudioSessionsByDate(studioId: number, date: string) {
 		const bookings = await this.databaseService.db
 			.select({
-				bookingDate: studioBookings.bookingDate,
-				startTime: studioBookings.startTime,
-				endTime: studioBookings.endTime,
+				bookingDate: studioSessionCart.bookingDate,
+				startTime: studioSessionCart.startTime,
+				endTime: studioSessionCart.endTime,
 			})
-			.from(studioBookings)
+			.from(studioSessionCart)
 			.where(
 				and(
-					eq(studioBookings.studioId, studioId),
-					eq(studioBookings.status, "pending"),
-					eq(sql`DATE(${studioBookings.bookingDate})`, sql`DATE(${date})`),
+					eq(studioSessionCart.studioId, studioId),
+					eq(studioSessionCart.status, "pending"),
+					eq(sql`DATE(${studioSessionCart.bookingDate})`, sql`DATE(${date})`),
 				),
 			)
-			.orderBy(asc(studioBookings.startTime));
+			.orderBy(asc(studioSessionCart.startTime));
 
 		return bookings;
 	}
@@ -819,35 +838,38 @@ END`.as("addons"),
 	) {
 		const bookings = await this.databaseService.db
 			.select({
-				bookingDate: studioBookings.bookingDate,
-				startTime: studioBookings.startTime,
-				endTime: studioBookings.endTime,
+				bookingDate: studioSessionCart.bookingDate,
+				startTime: studioSessionCart.startTime,
+				endTime: studioSessionCart.endTime,
 			})
-			.from(studioBookings)
+			.from(studioSessionCart)
 			.where(
 				and(
-					eq(studioBookings.studioId, studioId),
-					eq(studioBookings.status, "pending"),
-					between(studioBookings.bookingDate, startDate, endDate),
+					eq(studioSessionCart.studioId, studioId),
+					eq(studioSessionCart.status, "pending"),
+					between(studioSessionCart.bookingDate, startDate, endDate),
 				),
 			)
-			.orderBy(asc(studioBookings.bookingDate), asc(studioBookings.startTime));
+			.orderBy(
+				asc(studioSessionCart.bookingDate),
+				asc(studioSessionCart.startTime),
+			);
 
 		return bookings;
 	}
 
-	async bookStudioSession(bookingData: CreateStudioBooking) {
+	async bookStudioSession(bookingData: CreateStudioSessionCart) {
 		const booking = await this.databaseService.db
-			.insert(studioBookings)
+			.insert(studioSessionCart)
 			.values(bookingData)
 			.$returningId();
 
 		return booking[0];
 	}
 
-	async bookEquipmentRental(bookingData: CreateEquipmentRentalBooking) {
+	async bookEquipmentRental(bookingData: CreateEquipmentRentalCart) {
 		const booking = await this.databaseService.db
-			.insert(equipmentRentalsBookings)
+			.insert(equipmentRentalsCart)
 			.values(bookingData)
 			.$returningId();
 
@@ -866,24 +888,24 @@ END`.as("addons"),
 		totalPrice: string;
 	}) {
 		const updatedBooking = await this.databaseService.db
-			.update(equipmentRentalsBookings)
+			.update(equipmentRentalsCart)
 			.set({
 				quantity,
 				totalPrice,
 			})
 			.where(
 				and(
-					eq(equipmentRentalsBookings.id, bookingId),
-					eq(equipmentRentalsBookings.userId, userId),
+					eq(equipmentRentalsCart.id, bookingId),
+					eq(equipmentRentalsCart.userId, userId),
 				),
 			);
 
 		return updatedBooking[0];
 	}
 
-	async createVrgameTicketOrder(orderData: CreateVRGameTicketPurchase) {
+	async createVrgameTicketOrder(orderData: CreateVRGameTicketCart) {
 		const order = await this.databaseService.db
-			.insert(vrgamesTicketPurchases)
+			.insert(vrgamesTicketCart)
 			.values(orderData)
 			.$returningId();
 
@@ -902,15 +924,15 @@ END`.as("addons"),
 		totalPrice: string;
 	}) {
 		const updatedOrder = await this.databaseService.db
-			.update(vrgamesTicketPurchases)
+			.update(vrgamesTicketCart)
 			.set({
 				ticketQuantity,
 				totalPrice,
 			})
 			.where(
 				and(
-					eq(vrgamesTicketPurchases.id, orderId),
-					eq(vrgamesTicketPurchases.userId, userId),
+					eq(vrgamesTicketCart.id, orderId),
+					eq(vrgamesTicketCart.userId, userId),
 				),
 			);
 
@@ -918,7 +940,7 @@ END`.as("addons"),
 	}
 
 	async createMovieTicketOrder(
-		movieOrderData: CreateMovieTicketPurchase,
+		movieOrderData: CreateMovieTicketCart,
 		movieSnackOrderData: {
 			snackId: number;
 			quantity: number;
@@ -926,19 +948,17 @@ END`.as("addons"),
 	) {
 		const movieOrder = await this.databaseService.db.transaction(async (tx) => {
 			const order = await tx
-				.insert(moviesTicketPurchases)
+				.insert(moviesTicketCart)
 				.values(movieOrderData)
 				.$returningId();
 
 			if (movieSnackOrderData.length > 0) {
 				const snacksDataWithOrderId = movieSnackOrderData.map((snack) => ({
 					...snack,
-					ticketPurchaseId: order[0].id,
+					ticketCartId: order[0].id,
 				}));
 
-				await tx
-					.insert(moviesTicketSnacksPurchases)
-					.values(snacksDataWithOrderId);
+				await tx.insert(moviesTicketSnacksCart).values(snacksDataWithOrderId);
 			}
 
 			return order[0];
@@ -959,24 +979,24 @@ END`.as("addons"),
 		totalPrice: string;
 	}) {
 		const updatedOrder = await this.databaseService.db
-			.update(moviesTicketPurchases)
+			.update(moviesTicketCart)
 			.set({
 				ticketQuantity,
 				totalPrice,
 			})
 			.where(
 				and(
-					eq(moviesTicketPurchases.id, orderId),
-					eq(moviesTicketPurchases.userId, userId),
+					eq(moviesTicketCart.id, orderId),
+					eq(moviesTicketCart.userId, userId),
 				),
 			);
 
 		return updatedOrder[0];
 	}
 
-	async createHotelBooking(createHotelBookingData: CreateHotelBooking) {
+	async createHotelBooking(createHotelBookingData: CreateHotelCart) {
 		const booking = await this.databaseService.db
-			.insert(hotelBookings)
+			.insert(hotelCart)
 			.values(createHotelBookingData)
 			.$returningId();
 
@@ -991,29 +1011,29 @@ END`.as("addons"),
 	) {
 		const overlappingBookings = await this.databaseService.db
 			.select()
-			.from(hotelBookings)
+			.from(hotelCart)
 			.where(
 				and(
-					eq(hotelBookings.hotelId, hotelId),
-					eq(hotelBookings.hotelRoomId, roomId),
-					eq(hotelBookings.status, "confirmed"),
+					eq(hotelCart.hotelId, hotelId),
+					eq(hotelCart.hotelRoomId, roomId),
+					eq(hotelCart.status, "confirmed"),
 					or(
 						and(
-							gte(hotelBookings.checkInDate, checkInDate),
-							lt(hotelBookings.checkInDate, checkOutDate),
+							gte(hotelCart.checkInDate, checkInDate),
+							lt(hotelCart.checkInDate, checkOutDate),
 						),
 						and(
-							gt(hotelBookings.checkOutDate, checkInDate),
-							lte(hotelBookings.checkOutDate, checkOutDate),
+							gt(hotelCart.checkOutDate, checkInDate),
+							lte(hotelCart.checkOutDate, checkOutDate),
 						),
 						and(
-							lte(hotelBookings.checkInDate, checkInDate),
-							gte(hotelBookings.checkOutDate, checkOutDate),
+							lte(hotelCart.checkInDate, checkInDate),
+							gte(hotelCart.checkOutDate, checkOutDate),
 						),
 					),
 				),
 			)
-			.leftJoin(hotelRooms, eq(hotelBookings.hotelRoomId, hotelRooms.id));
+			.leftJoin(hotelRooms, eq(hotelCart.hotelRoomId, hotelRooms.id));
 
 		return overlappingBookings.length === 0;
 	}
@@ -1027,7 +1047,7 @@ END`.as("addons"),
 	}
 
 	async createFoodOrder(
-		foodOrderData: CreateFoodOrder,
+		foodOrderData: CreateFoodCart,
 		foodOrderAddonData: {
 			addonCategoryId: number;
 			addonItemIds: number[];
@@ -1035,21 +1055,21 @@ END`.as("addons"),
 	) {
 		const foodOrder = await this.databaseService.db.transaction(async (tx) => {
 			const order = await tx
-				.insert(foodOrders)
+				.insert(foodCart)
 				.values(foodOrderData)
 				.$returningId();
 
 			if (foodOrderAddonData.length > 0) {
-				const addonsDataWithOrderId: CreateFoodOrderAddon[] =
+				const addonsDataWithOrderId: CreateFoodCartAddon[] =
 					foodOrderAddonData.flatMap((addon) =>
 						addon.addonItemIds.map((itemId) => ({
-							foodOrderId: order[0].id,
+							foodCartId: order[0].id,
 							addonCategoryId: addon.addonCategoryId,
 							addonItemId: itemId,
 						})),
 					);
 
-				await tx.insert(foodOrderAddons).values(addonsDataWithOrderId);
+				await tx.insert(foodCartAddons).values(addonsDataWithOrderId);
 			}
 
 			return order[0];
@@ -1070,13 +1090,94 @@ END`.as("addons"),
 		totalPrice: string;
 	}) {
 		const updatedOrder = await this.databaseService.db
-			.update(foodOrders)
+			.update(foodCart)
 			.set({
 				quantity,
 				totalPrice,
 			})
-			.where(and(eq(foodOrders.id, orderId), eq(foodOrders.userId, userId)));
+			.where(and(eq(foodCart.id, orderId), eq(foodCart.userId, userId)));
 
 		return updatedOrder[0];
+	}
+
+	async createOrder(orderData: CreateOrder, transaction: MysqlTransaction) {
+		const order = await transaction
+			.insert(Orders)
+			.values(orderData)
+			.$returningId();
+
+		return order[0];
+	}
+
+	async createHotelBookingsBulk(
+		bookingsData: CreateHotelBooking[],
+		transaction: MysqlTransaction,
+	) {
+		const bookings = await transaction
+			.insert(hotelBookings)
+			.values(bookingsData)
+			.$returningId();
+
+		return bookings;
+	}
+
+	async createFoodOrdersBulk(
+		ordersData: CreateFoodOrder[],
+		transaction: MysqlTransaction,
+	) {
+		const orders = await transaction
+			.insert(foodOrders)
+			.values(ordersData)
+			.$returningId();
+
+		return orders;
+	}
+
+	async createMovieTicketPurchaseRecord(
+		purchaseData: CreateMovieTicketPurchase[],
+		transaction: MysqlTransaction,
+	) {
+		const purchases = await transaction
+			.insert(movieTicketPurchases)
+			.values(purchaseData)
+			.$returningId();
+
+		return purchases;
+	}
+
+	async createVrgameTicketPurchaseRecord(
+		purchaseData: CreateVRGameTicketPurchase[],
+		transaction: MysqlTransaction,
+	) {
+		const purchases = await transaction
+			.insert(vrgameTicketPurchases)
+			.values(purchaseData)
+			.$returningId();
+
+		return purchases;
+	}
+
+	async createEquipmentRentalBookingRecord(
+		bookingData: CreateEquipmentRentalBooking[],
+		transaction: MysqlTransaction,
+	) {
+		const purchases = await transaction
+			.insert(equipmentRentalBookings)
+			.values(bookingData)
+			.$returningId();
+
+		return purchases;
+	}
+
+	async createStudioSessionBookingRecord(
+		bookingData: CreateStudioSessionBooking[],
+		transaction: MysqlTransaction,
+	) {
+		const bookings = await transaction
+			.insert(studioSessionBookings)
+			.values(bookingData)
+			.$returningId();
+
+		return bookings;
 	}
 }
