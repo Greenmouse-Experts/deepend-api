@@ -44,21 +44,18 @@ import {
 	CreateVRGame,
 	CreateVRGameAvailability,
 	equipmentRentals,
-	equipmentRentalsBookings,
 	foods,
 	FoodToAddonsCategories,
 	foodToAddonsCategories,
 	foodToAddonsItems,
 	FoodToAddonsItems,
 	hotelAmenities,
-	hotelBookings,
 	hotelRooms,
 	hotels,
 	hotelToAmenities,
 	moviesSnacks,
 	snacks,
 	studioAvailability,
-	studioBookings,
 	studios,
 	vrgames,
 	vrgamesAvailability,
@@ -1638,23 +1635,24 @@ export class AdminRepository {
 		limit: number;
 		status?: StudioBookingStatus;
 	}) {
-		const bookings =
-			await this.databaseService.db.query.studioBookings.findMany({
-				where: status ? eq(studioBookings.status, status) : undefined,
-				columns: {
-					createdAt: false,
-					updatedAt: false,
-					studioId: false,
-				},
-				limit,
-				offset,
-				orderBy: (booking) => [
-					desc(booking.bookingDate),
-					desc(booking.startTime),
-				],
-			});
+		// const bookings =
+		// 	await this.databaseService.db.query.studioBookings.findMany({
+		// 		where: status ? eq(studioSessionBookings.status, status) : undefined,
+		// 		columns: {
+		// 			createdAt: false,
+		// 			updatedAt: false,
+		// 			studioId: false,
+		// 		},
+		// 		limit,
+		// 		offset,
+		// 		orderBy: (booking) => [
+		// 			desc(booking.bookingDate),
+		// 			desc(booking.startTime),
+		// 		],
+		// 	});
 
-		return bookings;
+		// return bookings;
+		return [];
 	}
 
 	async getEquipmentRentalBookings({
@@ -1666,20 +1664,21 @@ export class AdminRepository {
 		limit: number;
 		status?: EquipmentRentalBookingStatus;
 	}) {
-		const bookings =
-			await this.databaseService.db.query.equipmentRentalsBookings.findMany({
-				where: status ? eq(equipmentRentalsBookings.status, status) : undefined,
-				columns: {
-					createdAt: false,
-					updatedAt: false,
-					equipmentRentalId: false,
-				},
-				limit,
-				offset,
-				orderBy: (booking) => [desc(booking.rentalStartDate)],
-			});
+		// const bookings =
+		// 	await this.databaseService.db.query.equipmentRentalsBookings.findMany({
+		// 		where: status ? eq(equipmentRentalsBookings.status, status) : undefined,
+		// 		columns: {
+		// 			createdAt: false,
+		// 			updatedAt: false,
+		// 			equipmentRentalId: false,
+		// 		},
+		// 		limit,
+		// 		offset,
+		// 		orderBy: (booking) => [desc(booking.rentalStartDate)],
+		// 	});
 
-		return bookings;
+		// return bookings;
+		return [];
 	}
 
 	async getVrgamesTicketPurchases({
@@ -1691,21 +1690,21 @@ export class AdminRepository {
 		limit: number;
 		status?: "pending" | "completed" | "canceled";
 	}) {
-		const purchases =
-			await this.databaseService.db.query.vrgamesTicketPurchases.findMany({
-				where: (ticketPurchase) =>
-					status ? eq(ticketPurchase.status, status) : undefined,
-				columns: {
-					createdAt: false,
-					updatedAt: false,
-					vrgameId: false,
-				},
-				limit,
-				offset,
-				orderBy: (purchase) => [desc(purchase.purchaseDate)],
-			});
-
-		return purchases;
+		// const purchases =
+		// 	await this.databaseService.db.query.vrgamesTicketPurchases.findMany({
+		// 		where: (ticketPurchase) =>
+		// 			status ? eq(ticketPurchase.status, status) : undefined,
+		// 		columns: {
+		// 			createdAt: false,
+		// 			updatedAt: false,
+		// 			vrgameId: false,
+		// 		},
+		// 		limit,
+		// 		offset,
+		// 		orderBy: (purchase) => [desc(purchase.purchaseDate)],
+		// 	});
+		// return purchases;
+		return [];
 	}
 
 	async getMovieTicketPurchases({
@@ -1717,41 +1716,42 @@ export class AdminRepository {
 		limit: number;
 		status?: "pending" | "completed" | "canceled";
 	}) {
-		const purchases =
-			await this.databaseService.db.query.moviesTicketPurchases.findMany({
-				where: (table) => (status ? eq(table.status, status) : undefined),
-				limit,
-				offset,
-				with: {
-					orderedSnacks: {
-						columns: {
-							createdAt: false,
-							updatedAt: false,
-						},
-						with: {
-							snack: {
-								columns: {
-									createdAt: false,
-									updatedAt: false,
-								},
-							},
-						},
-					},
-				},
-			});
+		// const purchases =
+		// 	await this.databaseService.db.query.moviesTicketPurchases.findMany({
+		// 		where: (table) => (status ? eq(table.status, status) : undefined),
+		// 		limit,
+		// 		offset,
+		// 		with: {
+		// 			orderedSnacks: {
+		// 				columns: {
+		// 					createdAt: false,
+		// 					updatedAt: false,
+		// 				},
+		// 				with: {
+		// 					snack: {
+		// 						columns: {
+		// 							createdAt: false,
+		// 							updatedAt: false,
+		// 						},
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 	});
+		//
+		// const ticketsWithSnacks = purchases.map((purchase) => {
+		// 	const { orderedSnacks, ...rest } = purchase;
+		// 	return {
+		// 		...rest,
+		// 		orderedSnacks: orderedSnacks.map((orderedSnack) => ({
+		// 			...orderedSnack,
+		// 			snack: orderedSnack.snack,
+		// 		})),
+		// 	};
+		// });
 
-		const ticketsWithSnacks = purchases.map((purchase) => {
-			const { orderedSnacks, ...rest } = purchase;
-			return {
-				...rest,
-				orderedSnacks: orderedSnacks.map((orderedSnack) => ({
-					...orderedSnack,
-					snack: orderedSnack.snack,
-				})),
-			};
-		});
-
-		return ticketsWithSnacks;
+		// return ticketsWithSnacks;
+		return [];
 	}
 
 	async getHotelBookings({
@@ -1763,21 +1763,23 @@ export class AdminRepository {
 		limit: number;
 		status?: "pending" | "confirmed" | "cancelled" | "completed";
 	}) {
-		const bookings = await this.databaseService.db.query.hotelBookings.findMany(
-			{
-				where: status ? eq(hotelBookings.status, status) : undefined,
-				columns: {
-					createdAt: false,
-					updatedAt: false,
-					hotelRoomId: false,
-				},
-				limit,
-				offset,
-				orderBy: (booking) => [desc(booking.checkInDate)],
-			},
-		);
+		// const bookings = await this.databaseService.db.query.hotelBookings.findMany(
+		// 	{
+		// 		where: status ? eq(hotelBookings.status, status) : undefined,
+		// 		columns: {
+		// 			createdAt: false,
+		// 			updatedAt: false,
+		// 			hotelRoomId: false,
+		// 		},
+		// 		limit,
+		// 		offset,
+		// 		orderBy: (booking) => [desc(booking.checkInDate)],
+		// 	},
+		// );
+		//
+		// return bookings;
 
-		return bookings;
+		return [];
 	}
 
 	async getAllUsers(offset: number, limit: number, search?: string) {
@@ -1807,48 +1809,49 @@ export class AdminRepository {
 		limit: number;
 		status?: "pending" | "preparing" | "delivered" | "cancelled";
 	}) {
-		const orders = await this.databaseService.db.query.foodOrders.findMany({
-			where: (table) => (status ? eq(table.status, status) : undefined),
-			limit,
-			offset,
-			with: {
-				food: {
-					columns: {
-						createdAt: false,
-						updatedAt: false,
-					},
-				},
-				foodAddons: {
-					columns: {
-						id: false,
-						foodOrderId: false,
-						addonCategoryId: false,
-						addonItemId: false,
-						createdAt: false,
-						updatedAt: false,
-					},
-					with: {
-						addonItem: {
-							columns: {
-								createdAt: false,
-								updatedAt: false,
-							},
-						},
-					},
-				},
-			},
-		});
-
-		const ordersWithDetails = orders.map((order) => {
-			const { foodAddons, ...rest } = order;
-			return {
-				...rest,
-				foodAddons: foodAddons.map((foodAddon) => ({
-					...foodAddon.addonItem,
-				})),
-			};
-		});
-
-		return ordersWithDetails;
+		// const orders = await this.databaseService.db.query.foodOrders.findMany({
+		// 	where: (table) => (status ? eq(table.status, status) : undefined),
+		// 	limit,
+		// 	offset,
+		// 	with: {
+		// 		food: {
+		// 			columns: {
+		// 				createdAt: false,
+		// 				updatedAt: false,
+		// 			},
+		// 		},
+		// 		foodAddons: {
+		// 			columns: {
+		// 				id: false,
+		// 				foodOrderId: false,
+		// 				addonCategoryId: false,
+		// 				addonItemId: false,
+		// 				createdAt: false,
+		// 				updatedAt: false,
+		// 			},
+		// 			with: {
+		// 				addonItem: {
+		// 					columns: {
+		// 						createdAt: false,
+		// 						updatedAt: false,
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// });
+		//
+		// const ordersWithDetails = orders.map((order) => {
+		// 	const { foodAddons, ...rest } = order;
+		// 	return {
+		// 		...rest,
+		// 		foodAddons: foodAddons.map((foodAddon) => ({
+		// 			...foodAddon.addonItem,
+		// 		})),
+		// 	};
+		// });
+		//
+		// return ordersWithDetails;
+		return [];
 	}
 }
