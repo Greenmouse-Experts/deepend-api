@@ -45,18 +45,16 @@ export type CreateSnack = typeof snacks.$inferInsert;
 export type CreateMovieSnack = typeof moviesSnacks.$inferInsert;
 export type CreateStudio = typeof studios.$inferInsert;
 export type CreateStudioAvailability = typeof studioAvailability.$inferInsert;
-export type CreateStudioBooking = typeof studioBookings.$inferInsert;
-export type CreateEquipmentRentalBooking =
-	typeof equipmentRentalsBookings.$inferInsert;
-export type CreateVRGameTicketPurchase =
-	typeof vrgamesTicketPurchases.$inferInsert;
-export type CreateMovieTicketPurchase =
-	typeof moviesTicketPurchases.$inferInsert;
-export type CreateMovieTicketSnackPurchase =
-	typeof moviesTicketSnacksPurchases.$inferInsert;
-export type CreateHotelBooking = typeof hotelBookings.$inferInsert;
-export type CreateFoodOrder = typeof foodOrders.$inferInsert;
-export type CreateFoodOrderAddon = typeof foodOrderAddons.$inferInsert;
+export type CreateStudioSessionCart = typeof studioSessionCart.$inferInsert;
+export type CreateEquipmentRentalCart =
+	typeof equipmentRentalsCart.$inferInsert;
+export type CreateVRGameTicketCart = typeof vrgamesTicketCart.$inferInsert;
+export type CreateMovieTicketCart = typeof moviesTicketCart.$inferInsert;
+export type CreateMovieTicketSnackCart =
+	typeof moviesTicketSnacksCart.$inferInsert;
+export type CreateHotelCart = typeof hotelCart.$inferInsert;
+export type CreateFoodCart = typeof foodCart.$inferInsert;
+export type CreateFoodCartAddon = typeof foodCartAddons.$inferInsert;
 
 export const foods = mysqlTable("foods", {
 	id: varchar("id", { length: ID_GENERATOR_LENGTH })
@@ -609,7 +607,7 @@ export const cinemaMoviesShowtimesRelations = relations(
 
 export const snacksRelations = relations(snacks, ({ many }) => ({
 	movies: many(moviesSnacks),
-	ticketPurchases: many(moviesTicketSnacksPurchases),
+	ticketPurchases: many(moviesTicketSnacksCart),
 }));
 
 export const moviesSnacksRelations = relations(moviesSnacks, ({ one }) => ({
@@ -670,8 +668,8 @@ export const studioAvailability = mysqlTable(
 	],
 );
 
-export const studioBookings = mysqlTable(
-	"studio_bookings",
+export const studioSessionCart = mysqlTable(
+	"studio_session_cart",
 	{
 		id: varchar("id", { length: ID_GENERATOR_LENGTH })
 			.$defaultFn(() => generateId())
@@ -695,16 +693,16 @@ export const studioBookings = mysqlTable(
 	},
 	(table) => [
 		foreignKey({
-			name: "fk_studio_bookings_studio_id",
+			name: "fk_studio_session_cart_studio_id",
 			columns: [table.studioId],
 			foreignColumns: [studios.id],
 		}).onDelete("cascade"),
 		check(
-			"chk_studio_bookings_time",
+			"chk_studio_session_cart_time",
 			sql`${table.startTime} < ${table.endTime}`,
 		),
 		check(
-			"chk_studio_bookings_status",
+			"chk_studio_session_cart_status",
 			sql`${table.status} IN ('pending', 'confirmed', 'cancelled', 'completed')`,
 		),
 	],
@@ -712,18 +710,21 @@ export const studioBookings = mysqlTable(
 
 export const studiosRelations = relations(studios, ({ many }) => ({
 	availability: many(studioAvailability),
-	bookings: many(studioBookings),
+	carts: many(studioSessionCart),
 }));
 
-export const studioBookingsRelations = relations(studioBookings, ({ one }) => ({
-	studio: one(studios, {
-		fields: [studioBookings.studioId],
-		references: [studios.id],
+export const studioSessionCartRelations = relations(
+	studioSessionCart,
+	({ one }) => ({
+		studio: one(studios, {
+			fields: [studioSessionCart.studioId],
+			references: [studios.id],
+		}),
 	}),
-}));
+);
 
-export const equipmentRentalsBookings = mysqlTable(
-	"equipment_rentals_bookings",
+export const equipmentRentalsCart = mysqlTable(
+	"equipment_rentals_cart",
 	{
 		id: varchar("id", { length: ID_GENERATOR_LENGTH })
 			.$defaultFn(() => generateId())
@@ -747,19 +748,19 @@ export const equipmentRentalsBookings = mysqlTable(
 	},
 	(table) => [
 		foreignKey({
-			name: "fk_equipment_rentals_bookings_equipment_rental_id",
+			name: "fk_equipment_rentals_cart_equipment_rental_id",
 			columns: [table.equipmentRentalId],
 			foreignColumns: [equipmentRentals.id],
 		}).onDelete("set null"),
 		check(
-			"chk_equipment_rentals_bookings_dates",
+			"chk_equipment_rentals_cart_dates",
 			sql`${table.rentalStartDate} <= ${table.rentalEndDate}`,
 		),
 		check(
-			"chk_equipment_rentals_bookings_status",
+			"chk_equipment_rentals_cart_status",
 			sql`${table.status} IN ('pending', 'confirmed', 'cancelled', 'completed')`,
 		),
-		unique("uk_equipment_rentals_bookings_unique").on(
+		unique("uk_equipment_rentals_cart_unique").on(
 			table.equipmentRentalId,
 			table.userId,
 			table.rentalStartDate,
@@ -768,18 +769,18 @@ export const equipmentRentalsBookings = mysqlTable(
 	],
 );
 
-export const equipmentRentalsBookingsRelations = relations(
-	equipmentRentalsBookings,
+export const equipmentRentalsCartRelations = relations(
+	equipmentRentalsCart,
 	({ one }) => ({
 		equipmentRental: one(equipmentRentals, {
-			fields: [equipmentRentalsBookings.equipmentRentalId],
+			fields: [equipmentRentalsCart.equipmentRentalId],
 			references: [equipmentRentals.id],
 		}),
 	}),
 );
 
-export const vrgamesTicketPurchases = mysqlTable(
-	"vrgames_ticket_purchases",
+export const vrgamesTicketCart = mysqlTable(
+	"vrgames_ticket_cart",
 	{
 		id: varchar("id", { length: ID_GENERATOR_LENGTH })
 			.$defaultFn(() => generateId())
@@ -802,29 +803,29 @@ export const vrgamesTicketPurchases = mysqlTable(
 	},
 	(table) => [
 		foreignKey({
-			name: "fk_vrgames_ticket_purchases_vrgame_id",
+			name: "fk_vrgames_ticket_cart_vrgame_id",
 			columns: [table.vrgameId],
 			foreignColumns: [vrgames.id],
 		}).onDelete("cascade"),
 		check(
-			"chk_vrgames_ticket_purchases_status",
+			"chk_vrgames_ticket_cart_status",
 			sql`${table.status} IN ('pending', 'completed', 'canceled')`,
 		),
 	],
 );
 
-export const vrgamesTicketPurchasesRelations = relations(
-	vrgamesTicketPurchases,
+export const vrgamesTicketCartRelations = relations(
+	vrgamesTicketCart,
 	({ one }) => ({
 		vrgame: one(vrgames, {
-			fields: [vrgamesTicketPurchases.vrgameId],
+			fields: [vrgamesTicketCart.vrgameId],
 			references: [vrgames.id],
 		}),
 	}),
 );
 
-export const moviesTicketPurchases = mysqlTable(
-	"movies_ticket_purchases",
+export const moviesTicketCart = mysqlTable(
+	"movies_ticket_cart",
 	{
 		id: varchar("id", { length: ID_GENERATOR_LENGTH })
 			.$defaultFn(() => generateId())
@@ -850,24 +851,24 @@ export const moviesTicketPurchases = mysqlTable(
 	},
 	(table) => [
 		foreignKey({
-			name: "fk_movies_ticket_purchases_showtime_id",
+			name: "fk_movies_ticket_cart_showtime_id",
 			columns: [table.showtimeId],
 			foreignColumns: [cinemaMoviesShowtimes.id],
 		}).onDelete("cascade"),
 		check(
-			"chk_movies_ticket_purchases_status",
+			"chk_movies_ticket_cart_status",
 			sql`${table.status} IN ('pending', 'completed', 'canceled')`,
 		),
 	],
 );
 
-export const moviesTicketSnacksPurchases = mysqlTable(
-	"movies_ticket_snacks_purchases",
+export const moviesTicketSnacksCart = mysqlTable(
+	"movies_ticket_snacks_cart",
 	{
 		id: varchar("id", { length: ID_GENERATOR_LENGTH })
 			.$defaultFn(() => generateId())
 			.primaryKey(),
-		ticketPurchaseId: varchar("ticket_purchase_id", {
+		ticketCartId: varchar("ticket_cart_id", {
 			length: ID_GENERATOR_LENGTH,
 		}).notNull(),
 		snackId: int("snack_id").notNull(),
@@ -879,45 +880,45 @@ export const moviesTicketSnacksPurchases = mysqlTable(
 	},
 	(table) => [
 		foreignKey({
-			name: "fk_movies_ticket_snacks_purchases_ticket_purchase_id",
-			columns: [table.ticketPurchaseId],
-			foreignColumns: [moviesTicketPurchases.id],
+			name: "fk_movies_ticket_snacks_cart_ticket_cart_id",
+			columns: [table.ticketCartId],
+			foreignColumns: [moviesTicketCart.id],
 		}).onDelete("cascade"),
 		foreignKey({
-			name: "fk_movies_ticket_snacks_purchases_snack_id",
+			name: "fk_movies_ticket_snacks_cart_snack_id",
 			columns: [table.snackId],
 			foreignColumns: [snacks.id],
 		}).onDelete("cascade"),
 	],
 );
 
-export const moviesTicketPurchasesRelations = relations(
-	moviesTicketPurchases,
+export const moviesTicketCartRelations = relations(
+	moviesTicketCart,
 	({ one, many }) => ({
 		showtime: one(cinemaMoviesShowtimes, {
-			fields: [moviesTicketPurchases.showtimeId],
+			fields: [moviesTicketCart.showtimeId],
 			references: [cinemaMoviesShowtimes.id],
 		}),
-		orderedSnacks: many(moviesTicketSnacksPurchases),
+		orderedSnacks: many(moviesTicketSnacksCart),
 	}),
 );
 
-export const moviesTicketSnacksPurchasesRelations = relations(
-	moviesTicketSnacksPurchases,
+export const moviesTicketSnacksCartRelations = relations(
+	moviesTicketSnacksCart,
 	({ one }) => ({
-		ticketPurchase: one(moviesTicketPurchases, {
-			fields: [moviesTicketSnacksPurchases.ticketPurchaseId],
-			references: [moviesTicketPurchases.id],
+		ticketCart: one(moviesTicketCart, {
+			fields: [moviesTicketSnacksCart.ticketCartId],
+			references: [moviesTicketCart.id],
 		}),
 		snack: one(snacks, {
-			fields: [moviesTicketSnacksPurchases.snackId],
+			fields: [moviesTicketSnacksCart.snackId],
 			references: [snacks.id],
 		}),
 	}),
 );
 
-export const hotelBookings = mysqlTable(
-	"hotel_bookings",
+export const hotelCart = mysqlTable(
+	"hotel_cart",
 	{
 		id: varchar("id", { length: ID_GENERATOR_LENGTH })
 			.$defaultFn(() => generateId())
@@ -943,34 +944,34 @@ export const hotelBookings = mysqlTable(
 	},
 	(table) => [
 		foreignKey({
-			name: "fk_hotel_bookings_hotel_id",
+			name: "fk_hotel_cart_hotel_id",
 			columns: [table.hotelId],
 			foreignColumns: [hotels.id],
 		}).onDelete("no action"),
 		check(
-			"chk_hotel_bookings_dates",
+			"chk_hotel_cart_dates",
 			sql`${table.checkInDate} < ${table.checkOutDate}`,
 		),
 		check(
-			"chk_hotel_bookings_status",
+			"chk_hotel_cart_status",
 			sql`${table.status} IN ('pending', 'confirmed', 'cancelled', 'completed')`,
 		),
 	],
 );
 
-export const hotelBookingsRelations = relations(hotelBookings, ({ one }) => ({
+export const hotelCartRelations = relations(hotelCart, ({ one }) => ({
 	hotel: one(hotels, {
-		fields: [hotelBookings.hotelId],
+		fields: [hotelCart.hotelId],
 		references: [hotels.id],
 	}),
 	hotelRoom: one(hotelRooms, {
-		fields: [hotelBookings.hotelRoomId],
+		fields: [hotelCart.hotelRoomId],
 		references: [hotelRooms.id],
 	}),
 }));
 
-export const foodOrders = mysqlTable(
-	"food_orders",
+export const foodCart = mysqlTable(
+	"food_cart",
 	{
 		id: varchar("id", { length: ID_GENERATOR_LENGTH })
 			.$defaultFn(() => generateId())
@@ -996,28 +997,28 @@ export const foodOrders = mysqlTable(
 	},
 	(table) => [
 		foreignKey({
-			name: "fk_food_orders_food_id",
+			name: "fk_food_cart_food_id",
 			columns: [table.foodId],
 			foreignColumns: [foods.id],
 		}).onDelete("cascade"),
 		check(
-			"chk_food_orders_delivery_type",
+			"chk_food_cart_delivery_type",
 			sql`${table.deliveryType} IN ('pickup', 'delivery')`,
 		),
 		check(
-			"chk_food_orders_status",
+			"chk_food_cart_status",
 			sql`${table.status} IN ('pending', 'preparing', 'delivered', 'cancelled')`,
 		),
 	],
 );
 
-export const foodOrderAddons = mysqlTable(
-	"food_order_addons",
+export const foodCartAddons = mysqlTable(
+	"food_cart_addons",
 	{
 		id: varchar("id", { length: ID_GENERATOR_LENGTH })
 			.$defaultFn(() => generateId())
 			.primaryKey(),
-		foodOrderId: varchar("food_order_id", {
+		foodCartId: varchar("food_cart_id", {
 			length: ID_GENERATOR_LENGTH,
 		}).notNull(),
 		addonCategoryId: int("addon_category_id").notNull(),
@@ -1029,48 +1030,45 @@ export const foodOrderAddons = mysqlTable(
 	},
 	(table) => [
 		foreignKey({
-			name: "fk_food_order_addons_food_order_id",
-			columns: [table.foodOrderId],
-			foreignColumns: [foodOrders.id],
+			name: "fk_food_cart_addons_food_cart_id",
+			columns: [table.foodCartId],
+			foreignColumns: [foodCart.id],
 		}).onDelete("cascade"),
 		foreignKey({
-			name: "fk_food_order_addons_addon_category_id",
+			name: "fk_food_cart_addons_addon_category_id",
 			columns: [table.addonCategoryId],
 			foreignColumns: [foodAddonCategories.id],
 		}).onDelete("cascade"),
 		foreignKey({
-			name: "fk_food_order_addons_addon_item_id",
+			name: "fk_food_cart_addons_addon_item_id",
 			columns: [table.addonItemId],
 			foreignColumns: [foodAddonsItems.id],
 		}).onDelete("cascade"),
 	],
 );
 
-export const foodOrdersRelations = relations(foodOrders, ({ one, many }) => ({
+export const foodCartRelations = relations(foodCart, ({ one, many }) => ({
 	food: one(foods, {
-		fields: [foodOrders.foodId],
+		fields: [foodCart.foodId],
 		references: [foods.id],
 	}),
-	foodAddons: many(foodOrderAddons),
+	foodAddons: many(foodCartAddons),
 }));
 
-export const foodOrderAddonsRelations = relations(
-	foodOrderAddons,
-	({ one }) => ({
-		foodOrder: one(foodOrders, {
-			fields: [foodOrderAddons.foodOrderId],
-			references: [foodOrders.id],
-		}),
-		addonCategory: one(foodAddonCategories, {
-			fields: [foodOrderAddons.addonCategoryId],
-			references: [foodAddonCategories.id],
-		}),
-		addonItem: one(foodAddonsItems, {
-			fields: [foodOrderAddons.addonItemId],
-			references: [foodAddonsItems.id],
-		}),
+export const foodCartAddonsRelations = relations(foodCartAddons, ({ one }) => ({
+	foodCart: one(foodCart, {
+		fields: [foodCartAddons.foodCartId],
+		references: [foodCart.id],
 	}),
-);
+	addonCategory: one(foodAddonCategories, {
+		fields: [foodCartAddons.addonCategoryId],
+		references: [foodAddonCategories.id],
+	}),
+	addonItem: one(foodAddonsItems, {
+		fields: [foodCartAddons.addonItemId],
+		references: [foodAddonsItems.id],
+	}),
+}));
 
 // export const foodBookings = mysqlTable("food_bookings", {
 // 	id: varchar("id", { length: ID_GENERATOR_LENGTH })
