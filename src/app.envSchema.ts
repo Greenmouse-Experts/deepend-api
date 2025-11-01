@@ -20,7 +20,8 @@ export const envSchema = joi.object({
 	SMTP_PORT: joi.number().required(),
 	DEEPEND_MAIL_FROM: joi.string().email().required(),
 	REDIS_QUEUE_URL: joi.string().required(),
-	PAYMENT_SECRET_KEY: joi.string().required(),
+	PAYSTACK_SECRET_KEY: joi.string().required(),
 	RECEIPT_BARCODE_SECRET_KEY: joi.string().required(),
 	TICKET_QR_CODE_SECRET_KEY: joi.string().required(),
+	BULL_BOARD_ADMIN_PASSWORD: joi.string().required(),
 });
