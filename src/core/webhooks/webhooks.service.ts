@@ -7,21 +7,18 @@ import {
 } from "src/common/constants";
 import * as crypto from "node:crypto";
 
-const secret = process.env.PAYSTACK_SECRET_KEY || "";
-
 @Injectable()
 export class WebhooksService {
+	private readonly paystackSecret: string = process.env
+		.PAYSTACK_SECRET_KEY as string;
+
 	constructor(@InjectQueue(WEBHOOKS_QUEUE) private webhookQueue: Queue) {}
 	async handleWebhookEvent(
 		paystackHeaderSign: string,
 		body: any,
 	): Promise<void> {
-		console.log("Received webhook event:", body.event);
-		console.log(`Paystack Header Sign: ${paystackHeaderSign}`);
-		console.log(`Secret: ${secret}`);
-
 		const hash = crypto
-			.createHmac("sha512", secret)
+			.createHmac("sha512", this.paystackSecret)
 			.update(JSON.stringify(body))
 			.digest("hex");
 
@@ -38,6 +35,8 @@ export class WebhooksService {
 			}
 		} else {
 			console.warn("Invalid signature. Webhook event not processed.");
+
+			return;
 		}
 
 		return;
