@@ -553,11 +553,10 @@ export class UserService {
 
 						break;
 					case "food":
-						const foodOrder =
-							await this.servicesService.validateFoodOrderAndGetTotals(
-								item.cartItemId,
-								userId,
-							);
+						const foodOrder = await this.servicesService.validateFoodOrder(
+							item.cartItemId,
+							userId,
+						);
 
 						if (!foodOrder) {
 							throw new BadRequestException("Invalid food order in cart");
@@ -668,6 +667,12 @@ export class UserService {
 							showtime: movieOrder.showtime.showtime,
 							ticketPrice: movieOrder.showtime.ticketPrice,
 							ticketQuantity: movieOrder.ticketQuantity,
+							snackAddOns: movieOrder.orderedSnacks.map((snack) => ({
+								snackId: snack.snack.id,
+								snackName: snack.snack.name,
+								snackQuantity: snack.quantity,
+								snackPrice: String(snack.snack.price),
+							})),
 							totalPrice: String(movieOrder.totalPrice),
 						});
 						break;
@@ -834,10 +839,12 @@ export class UserService {
 			paymentAuthorizationUrl: intializePayment.data.authorization_url,
 			accessCode: intializePayment.data.access_code,
 			paymentReference: order.paymentReference,
-			amount: order.amount,
-			subtotalAmount: order.subtotalAmount,
-			deliveryFee: order.deliveryFee,
-			taxAmount: order.taxAmount,
+			payment_breakdown: {
+				amount: order.amount,
+				subtotalAmount: order.subtotalAmount,
+				deliveryFee: order.deliveryFee,
+				taxAmount: order.taxAmount,
+			},
 		};
 	}
 
