@@ -37,6 +37,7 @@ import {
 	foodCategories,
 	foods,
 	foodToAddonsCategories,
+	hotelBookings,
 	hotelCart,
 	hotelRooms,
 	hotels,
@@ -44,31 +45,13 @@ import {
 	moviesTicketSnacksCart,
 	studioAvailability,
 	studios,
+	studioSessionBookings,
 	studioSessionCart,
 	vrgames,
 	vrgamesAvailability,
 	vrgamesCategories,
 	vrgamesTicketCart,
 } from "src/database/schema";
-import {
-	CreateEquipmentRentalBooking,
-	CreateFoodOrder,
-	CreateHotelBooking,
-	CreateMovieTicketPurchase,
-	CreateOrder,
-	CreateStudioSessionBooking,
-	CreateVRGameTicketPurchase,
-	equipmentRentalBookings,
-	foodOrders,
-	hotelBookings,
-	movieTicketPurchases,
-	Orders,
-	studioSessionBookings,
-	vrgameTicketPurchases,
-} from "src/database/schema/payment";
-import { MySqlTransaction } from "drizzle-orm/mysql-core";
-import { MySql2QueryResultHKT } from "drizzle-orm/mysql2";
-import { MysqlTransaction } from "src/common/helpers";
 
 @Injectable()
 export class ServicesRepository {
@@ -814,19 +797,22 @@ END`.as("addons"),
 	async getBookedStudioSessionsByDate(studioId: number, date: string) {
 		const bookings = await this.databaseService.db
 			.select({
-				bookingDate: studioSessionCart.bookingDate,
-				startTime: studioSessionCart.startTime,
-				endTime: studioSessionCart.endTime,
+				bookingDate: studioSessionBookings.sessionDate,
+				startTime: studioSessionBookings.sessionStartTime,
+				endTime: studioSessionBookings.sessionEndTime,
 			})
-			.from(studioSessionCart)
+			.from(studioSessionBookings)
 			.where(
 				and(
-					eq(studioSessionCart.studioId, studioId),
-					eq(studioSessionCart.status, "pending"),
-					eq(sql`DATE(${studioSessionCart.bookingDate})`, sql`DATE(${date})`),
+					eq(studioSessionBookings.studioId, studioId),
+					eq(studioSessionBookings.status, "scheduled"),
+					eq(
+						sql`DATE(${studioSessionBookings.sessionDate})`,
+						sql`DATE(${date})`,
+					),
 				),
 			)
-			.orderBy(asc(studioSessionCart.startTime));
+			.orderBy(asc(studioSessionBookings.sessionStartTime));
 
 		return bookings;
 	}
@@ -838,21 +824,21 @@ END`.as("addons"),
 	) {
 		const bookings = await this.databaseService.db
 			.select({
-				bookingDate: studioSessionCart.bookingDate,
-				startTime: studioSessionCart.startTime,
-				endTime: studioSessionCart.endTime,
+				bookingDate: studioSessionBookings.sessionDate,
+				startTime: studioSessionBookings.sessionStartTime,
+				endTime: studioSessionBookings.sessionEndTime,
 			})
-			.from(studioSessionCart)
+			.from(studioSessionBookings)
 			.where(
 				and(
-					eq(studioSessionCart.studioId, studioId),
-					eq(studioSessionCart.status, "pending"),
-					between(studioSessionCart.bookingDate, startDate, endDate),
+					eq(studioSessionBookings.studioId, studioId),
+					eq(studioSessionBookings.status, "scheduled"),
+					between(studioSessionBookings.sessionDate, startDate, endDate),
 				),
 			)
 			.orderBy(
-				asc(studioSessionCart.bookingDate),
-				asc(studioSessionCart.startTime),
+				asc(studioSessionBookings.sessionDate),
+				asc(studioSessionBookings.sessionStartTime),
 			);
 
 		return bookings;
@@ -1011,29 +997,29 @@ END`.as("addons"),
 	) {
 		const overlappingBookings = await this.databaseService.db
 			.select()
-			.from(hotelCart)
+			.from(hotelBookings)
 			.where(
 				and(
-					eq(hotelCart.hotelId, hotelId),
-					eq(hotelCart.hotelRoomId, roomId),
-					eq(hotelCart.status, "confirmed"),
+					eq(hotelBookings.hotelId, hotelId),
+					eq(hotelBookings.hotelRoomId, roomId),
+					eq(hotelBookings.status, "confirmed"),
 					or(
 						and(
-							gte(hotelCart.checkInDate, checkInDate),
-							lt(hotelCart.checkInDate, checkOutDate),
+							gte(hotelBookings.checkInDate, checkInDate),
+							lt(hotelBookings.checkInDate, checkOutDate),
 						),
 						and(
-							gt(hotelCart.checkOutDate, checkInDate),
-							lte(hotelCart.checkOutDate, checkOutDate),
+							gt(hotelBookings.checkOutDate, checkInDate),
+							lte(hotelBookings.checkOutDate, checkOutDate),
 						),
 						and(
-							lte(hotelCart.checkInDate, checkInDate),
-							gte(hotelCart.checkOutDate, checkOutDate),
+							lte(hotelBookings.checkInDate, checkInDate),
+							gte(hotelBookings.checkOutDate, checkOutDate),
 						),
 					),
 				),
 			)
-			.leftJoin(hotelRooms, eq(hotelCart.hotelRoomId, hotelRooms.id));
+			.leftJoin(hotelRooms, eq(hotelBookings.hotelRoomId, hotelRooms.id));
 
 		return overlappingBookings.length === 0;
 	}
@@ -1098,86 +1084,5 @@ END`.as("addons"),
 			.where(and(eq(foodCart.id, orderId), eq(foodCart.userId, userId)));
 
 		return updatedOrder[0];
-	}
-
-	async createOrder(orderData: CreateOrder, transaction: MysqlTransaction) {
-		const order = await transaction
-			.insert(Orders)
-			.values(orderData)
-			.$returningId();
-
-		return order[0];
-	}
-
-	async createHotelBookingsBulk(
-		bookingsData: CreateHotelBooking[],
-		transaction: MysqlTransaction,
-	) {
-		const bookings = await transaction
-			.insert(hotelBookings)
-			.values(bookingsData)
-			.$returningId();
-
-		return bookings;
-	}
-
-	async createFoodOrdersBulk(
-		ordersData: CreateFoodOrder[],
-		transaction: MysqlTransaction,
-	) {
-		const orders = await transaction
-			.insert(foodOrders)
-			.values(ordersData)
-			.$returningId();
-
-		return orders;
-	}
-
-	async createMovieTicketPurchaseRecord(
-		purchaseData: CreateMovieTicketPurchase[],
-		transaction: MysqlTransaction,
-	) {
-		const purchases = await transaction
-			.insert(movieTicketPurchases)
-			.values(purchaseData)
-			.$returningId();
-
-		return purchases;
-	}
-
-	async createVrgameTicketPurchaseRecord(
-		purchaseData: CreateVRGameTicketPurchase[],
-		transaction: MysqlTransaction,
-	) {
-		const purchases = await transaction
-			.insert(vrgameTicketPurchases)
-			.values(purchaseData)
-			.$returningId();
-
-		return purchases;
-	}
-
-	async createEquipmentRentalBookingRecord(
-		bookingData: CreateEquipmentRentalBooking[],
-		transaction: MysqlTransaction,
-	) {
-		const purchases = await transaction
-			.insert(equipmentRentalBookings)
-			.values(bookingData)
-			.$returningId();
-
-		return purchases;
-	}
-
-	async createStudioSessionBookingRecord(
-		bookingData: CreateStudioSessionBooking[],
-		transaction: MysqlTransaction,
-	) {
-		const bookings = await transaction
-			.insert(studioSessionBookings)
-			.values(bookingData)
-			.$returningId();
-
-		return bookings;
 	}
 }
