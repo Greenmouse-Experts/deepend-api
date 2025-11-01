@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
 import {
 	// AddToCartType,
@@ -26,6 +26,23 @@ import {
 	StudioBookingStatus,
 } from "../admin/admin.repository";
 import { unionAll } from "drizzle-orm/mysql-core";
+import { decrement, MysqlDatabaseTransaction } from "src/common/helpers";
+import {
+	CreateEquipmentRentalBooking,
+	CreateFoodOrder,
+	CreateHotelBooking,
+	CreateMovieTicketPurchase,
+	CreateOrder,
+	CreateStudioSessionBooking,
+	CreateVRGameTicketPurchase,
+	equipmentRentalBookings,
+	foodOrders,
+	hotelBookings,
+	movieTicketPurchases,
+	orders,
+	studioSessionBookings,
+	vrgameTicketPurchases,
+} from "src/database/schema/payment";
 
 @Injectable()
 export class UserRepository {
@@ -34,6 +51,15 @@ export class UserRepository {
 	async findUserById(id: string) {
 		return await this.databaseService.db.query.users.findFirst({
 			where: eq(users.id, id),
+		});
+	}
+
+	async findUserEmailByUserId(id: string) {
+		return await this.databaseService.db.query.users.findFirst({
+			where: eq(users.id, id),
+			columns: {
+				email: true,
+			},
 		});
 	}
 
@@ -225,6 +251,14 @@ export class UserRepository {
 							createdAt: false,
 							updatedAt: false,
 						},
+						with: {
+							category: {
+								columns: {
+									createdAt: false,
+									updatedAt: false,
+								},
+							},
+						},
 					},
 				},
 			});
@@ -311,12 +345,7 @@ export class UserRepository {
 				with: {
 					showtime: {
 						columns: {
-							movieId: false,
-							cinemaHallId: false,
-							showDate: false,
-							showtime: false,
 							totalSeats: false,
-							ticketPrice: false,
 							isAvailable: false,
 							createdAt: false,
 							updatedAt: false,
@@ -326,6 +355,36 @@ export class UserRepository {
 								columns: {
 									createdAt: false,
 									updatedAt: false,
+								},
+								with: {
+									genres: {
+										columns: {
+											createdAt: false,
+											updatedAt: false,
+										},
+										with: {
+											genre: {
+												columns: {
+													createdAt: false,
+													updatedAt: false,
+												},
+											},
+										},
+									},
+								},
+							},
+							cinemaHall: {
+								columns: {
+									createdAt: false,
+									updatedAt: false,
+								},
+								with: {
+									cinema: {
+										columns: {
+											createdAt: false,
+											updatedAt: false,
+										},
+									},
 								},
 							},
 						},
@@ -725,5 +784,293 @@ export class UserRepository {
 					),
 				);
 		});
+	}
+
+	async decrementServicesAndClearUserCart(userId: string) {
+		await this.databaseService.db.transaction(async (tx) => {
+			const vrgameCartItems = await tx
+				.select()
+				.from(vrgamesTicketCart)
+				.where(
+					and(
+						eq(vrgamesTicketCart.userId, userId),
+						eq(vrgamesTicketCart.status, "pending"),
+					),
+				);
+
+			if (vrgameCartItems.length > 0) {
+				for (const item of vrgameCartItems) {
+					await tx
+						.update(vrgames)
+						.set({
+							ticketQuantity: decrement(
+								vrgames.ticketQuantity,
+								item.ticketQuantity,
+							),
+						})
+						.where(eq(vrgames.id, item.vrgameId));
+				}
+			}
+
+			const movieCartItems = await tx
+				.select()
+				.from(moviesTicketCart)
+				.where(
+					and(
+						eq(moviesTicketCart.userId, userId),
+						eq(moviesTicketCart.status, "pending"),
+					),
+				);
+
+			if (movieCartItems.length > 0) {
+				for (const item of movieCartItems) {
+					const showtime = await tx
+						.select()
+						.from(cinemaMoviesShowtimes)
+						.where(eq(cinemaMoviesShowtimes.id, item.showtimeId))
+						.limit(1);
+
+					if (showtime) {
+						await tx
+							.update(cinemaMoviesShowtimes)
+							.set({
+								totalSeats: decrement(
+									cinemaMoviesShowtimes.totalSeats,
+									item.ticketQuantity,
+								),
+							})
+							.where(eq(cinemaMoviesShowtimes.id, item.showtimeId));
+					}
+				}
+			}
+
+			const foodCartItems = await tx
+				.select()
+				.from(foodCart)
+				.where(
+					and(eq(foodCart.userId, userId), eq(foodCart.status, "pending")),
+				);
+
+			if (foodCartItems.length > 0) {
+				for (const item of foodCartItems) {
+					await tx
+						.update(foods)
+						.set({
+							quantity: decrement(foods.quantity, item.quantity),
+						})
+						.where(eq(foods.id, item.foodId));
+				}
+			}
+
+			const equipmentCartItems = await tx
+				.select()
+				.from(equipmentRentalsCart)
+				.where(
+					and(
+						eq(equipmentRentalsCart.userId, userId),
+						eq(equipmentRentalsCart.status, "pending"),
+					),
+				);
+
+			if (equipmentCartItems.length > 0) {
+				for (const item of equipmentCartItems) {
+					await tx
+						.update(equipmentRentals)
+						.set({
+							quantityAvailable: decrement(
+								equipmentRentals.quantityAvailable,
+								item.quantity,
+							),
+						})
+						.where(eq(equipmentRentals.id, item.equipmentRentalId));
+				}
+			}
+
+			// Clear the cart after decrementing
+			await this.clearUserCart(userId);
+		});
+	}
+
+	async getDatabaseConnection() {
+		return this.databaseService.db;
+	}
+
+	async createPendingOrder(
+		orderData: CreateOrder,
+		transaction: MysqlDatabaseTransaction,
+	) {
+		const order = await transaction
+			.insert(orders)
+			.values(orderData)
+			.$returningId();
+
+		return order[0];
+	}
+
+	async createHotelBookingsBulk(
+		bookingsData: CreateHotelBooking[],
+		transaction: MysqlDatabaseTransaction,
+	) {
+		const bookings = await transaction
+			.insert(hotelBookings)
+			.values(bookingsData)
+			.$returningId();
+
+		return bookings;
+	}
+
+	async createFoodOrdersBulk(
+		ordersData: CreateFoodOrder[],
+		transaction: MysqlDatabaseTransaction,
+	) {
+		const orders = await transaction
+			.insert(foodOrders)
+			.values(ordersData)
+			.$returningId();
+
+		return orders;
+	}
+
+	async createMovieTicketPurchaseRecord(
+		purchaseData: CreateMovieTicketPurchase[],
+		transaction: MysqlDatabaseTransaction,
+	) {
+		const purchases = await transaction
+			.insert(movieTicketPurchases)
+			.values(purchaseData)
+			.$returningId();
+
+		return purchases;
+	}
+
+	async createVrgameTicketPurchaseRecord(
+		purchaseData: CreateVRGameTicketPurchase[],
+		transaction: MysqlDatabaseTransaction,
+	) {
+		const purchases = await transaction
+			.insert(vrgameTicketPurchases)
+			.values(purchaseData)
+			.$returningId();
+
+		return purchases;
+	}
+
+	async createEquipmentRentalBookingRecord(
+		bookingData: CreateEquipmentRentalBooking[],
+		transaction: MysqlDatabaseTransaction,
+	) {
+		const purchases = await transaction
+			.insert(equipmentRentalBookings)
+			.values(bookingData)
+			.$returningId();
+
+		return purchases;
+	}
+
+	async createStudioSessionBookingRecord(
+		bookingData: CreateStudioSessionBooking[],
+		transaction: MysqlDatabaseTransaction,
+	) {
+		const bookings = await transaction
+			.insert(studioSessionBookings)
+			.values(bookingData)
+			.$returningId();
+
+		return bookings;
+	}
+
+	async getOrderByPaymentReference(paymentReference: string) {
+		return await this.databaseService.db.query.orders.findFirst({
+			where: eq(orders.paymentReference, paymentReference),
+		});
+	}
+
+	async updatePendingOrder(
+		orderId: string,
+		updateData: Partial<Omit<CreateOrder, "id" | "createdAt" | "updatedAt">>,
+		transaction: MysqlDatabaseTransaction,
+	) {
+		await transaction
+			.update(orders)
+			.set(updateData)
+			.where(eq(orders.id, orderId));
+	}
+
+	async bulkUpdateVrgameTickets(
+		ticketIds: string[],
+		updateData: Partial<
+			Omit<CreateVRGameTicketPurchase, "id" | "createdAt" | "updatedAt">
+		>,
+		transaction: MysqlDatabaseTransaction,
+	) {
+		await transaction
+			.update(vrgameTicketPurchases)
+			.set(updateData)
+			.where(inArray(vrgameTicketPurchases.ticketId, ticketIds));
+	}
+
+	async bulkUpdateMovieTickets(
+		ticketIds: string[],
+		updateData: Partial<
+			Omit<CreateMovieTicketPurchase, "id" | "createdAt" | "updatedAt">
+		>,
+		transaction: MysqlDatabaseTransaction,
+	) {
+		await transaction
+			.update(movieTicketPurchases)
+			.set(updateData)
+			.where(inArray(movieTicketPurchases.ticketId, ticketIds));
+	}
+
+	async bulkUpdateStudioBookings(
+		bookingIds: string[],
+		updateData: Partial<
+			Omit<CreateStudioSessionBooking, "id" | "createdAt" | "updatedAt">
+		>,
+		transaction: MysqlDatabaseTransaction,
+	) {
+		await transaction
+			.update(studioSessionBookings)
+			.set(updateData)
+			.where(inArray(studioSessionBookings.id, bookingIds));
+	}
+
+	async bulkUpdateEquipmentRentalBookings(
+		bookingIds: string[],
+		updateData: Partial<
+			Omit<CreateEquipmentRentalBooking, "id" | "createdAt" | "updatedAt">
+		>,
+		transaction: MysqlDatabaseTransaction,
+	) {
+		await transaction
+			.update(equipmentRentalBookings)
+			.set(updateData)
+			.where(inArray(equipmentRentalBookings.id, bookingIds));
+	}
+
+	async bulkUpdateFoodOrders(
+		orderIds: string[],
+		updateData: Partial<
+			Omit<CreateFoodOrder, "id" | "createdAt" | "updatedAt">
+		>,
+		transaction: MysqlDatabaseTransaction,
+	) {
+		await transaction
+			.update(foodOrders)
+			.set(updateData)
+			.where(inArray(foodOrders.id, orderIds));
+	}
+
+	async bulkUpdateHotelBookings(
+		bookingIds: string[],
+		updateData: Partial<
+			Omit<CreateHotelBooking, "id" | "createdAt" | "updatedAt">
+		>,
+		transaction: MysqlDatabaseTransaction,
+	) {
+		await transaction
+			.update(hotelBookings)
+			.set(updateData)
+			.where(inArray(hotelBookings.id, bookingIds));
 	}
 }
