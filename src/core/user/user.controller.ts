@@ -6,6 +6,7 @@ import {
 	HttpCode,
 	Param,
 	Patch,
+	Post,
 	Query,
 	UseGuards,
 } from "@nestjs/common";
@@ -189,5 +190,11 @@ export class UserController {
 			itemId,
 			itemType: query.itemType,
 		});
+	}
+
+	@Post("cart/checkout")
+	@ApiOperation({ summary: "Checkout user's cart" })
+	async checkoutUserCart(@GetUser("userId") userId: string) {
+		return await this.userService.checkoutUserCart(userId);
 	}
 }
