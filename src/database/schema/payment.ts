@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+import { boolean } from "drizzle-orm/mysql-core";
 import {
 	varchar,
 	decimal,
@@ -10,9 +11,10 @@ import {
 	time,
 	check,
 	json,
+	text,
 } from "drizzle-orm/mysql-core";
 import { ID_GENERATOR_LENGTH } from "src/common/constants";
-import { generateId } from "src/common/helpers";
+import { generateId, generateTicketId } from "src/common/helpers";
 
 export type PaymentStatus = "pending" | "completed" | "failed";
 export type OrderStatus = "pending" | "completed" | "failed";
@@ -44,7 +46,9 @@ export type StudioSessionBookingStatus =
 	| "completed"
 	| "cancelled";
 
-export type CreateOrder = typeof Orders.$inferInsert;
+export type CreatePaymentRecord = typeof Payments.$inferInsert;
+
+export type CreateOrder = typeof orders.$inferInsert;
 export type CreatePayment = typeof Payments.$inferInsert;
 export type CreateHotelBooking = typeof hotelBookings.$inferInsert;
 export type CreateFoodOrder = typeof foodOrders.$inferInsert;
@@ -60,44 +64,72 @@ export type CreateStudioSessionBooking =
 export const Payments = mysqlTable(
 	"payments",
 	{
-		id: varchar("id", { length: 191 }).primaryKey(),
+		id: varchar("id", { length: ID_GENERATOR_LENGTH })
+			.$defaultFn(() => generateId())
+			.primaryKey(),
 		orderId: varchar("order_id", { length: 191 }).notNull(),
-		paymentMethod: varchar("payment_method", { length: 50 }).notNull(),
 		amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
 		currency: varchar("currency", { length: 10 }).notNull().default("NGN"),
 		status: varchar("status", { length: 50 })
 			.notNull()
-			.$type<"pending" | "completed" | "failed">(),
-		paymentReference: varchar("payment_reference", { length: 191 }).notNull(),
+			.$type<"pending" | "successful" | "failed">(),
+		paymentReference: text("payment_reference").notNull().unique(),
+		paymentChannel: varchar("payment_channel", { length: 100 }),
+		paidAt: timestamp("paid_at", { mode: "string" }).notNull(),
+		paymentDetails: json("payment_details").notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 	},
 	(table) => [
 		check(
 			"payments_status_check",
-			sql`${table.status} IN ('pending', 'completed', 'failed')`,
+			sql`${table.status} IN ('pending', 'successful', 'failed')`,
 		),
 		foreignKey({
 			name: "payments_order_fk",
 			columns: [table.orderId],
-			foreignColumns: [Orders.id],
+			foreignColumns: [orders.id],
 		}),
 	],
 );
 
-export const Orders = mysqlTable(
+export const orders = mysqlTable(
 	"orders",
 	{
 		id: varchar("id", { length: ID_GENERATOR_LENGTH })
 			.$defaultFn(() => generateId())
 			.primaryKey(),
 		userId: varchar("user_id", { length: 191 }).notNull(),
-		paymentReference: varchar("payment_reference", { length: 191 }).notNull(),
+		paymentReference: text("payment_reference").notNull().unique(),
+		deliveryFee: decimal("delivery_fee", { precision: 10, scale: 2 })
+			.notNull()
+			.default("0"),
+		taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }),
+		subtotalAmount: decimal("subtotal_amount", {
+			precision: 10,
+			scale: 2,
+		}).notNull(),
 		totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
-		currency: varchar("currency", { length: 10 }).notNull(),
+		paymentMethod: varchar("payment_method", { length: 50 })
+			.notNull()
+			.$type<"paystack">(),
+		currency: varchar("currency", { length: 10 }).notNull().$type<"NGN">(),
 		status: varchar("status", { length: 50 })
 			.notNull()
+			.default("pending")
 			.$type<"pending" | "completed" | "failed">(),
+		orderDetails: json("order_details")
+			.$type<
+				{
+					type: "hotel" | "food" | "movie" | "vrgame" | "equipment" | "studio";
+					ticketId: string | null;
+					userId: string;
+					itemId: string;
+					orderId: string;
+				}[]
+			>()
+			.default(sql`'[]'`)
+			.notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 	},
@@ -105,6 +137,14 @@ export const Orders = mysqlTable(
 		check(
 			"orders_status_check",
 			sql`${table.status} IN ('pending', 'completed', 'failed')`,
+		),
+		check(
+			"payments_payment_method_check",
+			sql`${table.paymentMethod} IN ('paystack')`,
+		),
+		check(
+			"check_order_details_not_empty",
+			sql`${table.status} != 'completed' OR JSON_LENGTH(${table.orderDetails}) > 0`,
 		),
 	],
 );
@@ -130,6 +170,8 @@ export const hotelBookings = mysqlTable(
 		checkOutDate: date("check_out_date", { mode: "string" }).notNull(),
 		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
 		currency: varchar("currency", { length: 10 }).notNull().default("NGN"),
+		qrcodeData: json("qrcode_data"),
+		recieptBarcodeData: varchar("reciept_barcode_data", { length: 1000 }),
 		status: varchar("status", { length: 50 })
 			.notNull()
 			.default("pending")
@@ -141,7 +183,7 @@ export const hotelBookings = mysqlTable(
 		foreignKey({
 			name: "hotel_bookings_order_fk",
 			columns: [table.orderId],
-			foreignColumns: [Orders.id],
+			foreignColumns: [orders.id],
 		}),
 		check(
 			"hotel_bookings_status_check",
@@ -164,7 +206,7 @@ export const foodOrders = mysqlTable(
 		quantity: int("quantity").notNull(),
 		foodPrice: decimal("food_price", { precision: 10, scale: 2 }).notNull(),
 		foodAddons: json("food_addons")
-			.$type<{ addonId: string; addonName: string; addonPrice: number }[]>()
+			.$type<{ addonId: number; addonName: string; addonPrice: string }[]>()
 			.default(sql`'[]'`)
 			.notNull(),
 		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
@@ -172,10 +214,11 @@ export const foodOrders = mysqlTable(
 		deliveryType: varchar("delivery_type", { length: 50 })
 			.notNull()
 			.$type<"pickup" | "delivery">(),
-		deliveryAddress: varchar("delivery_address", { length: 500 }).notNull(),
+		deliveryAddress: varchar("delivery_address", { length: 500 }),
 		specialInstructions: varchar("special_instructions", {
 			length: 500,
 		}).default(""),
+		recieptBarcodeData: varchar("reciept_barcode_data", { length: 1000 }),
 		status: varchar("status", { length: 50 })
 			.notNull()
 			.default("pending")
@@ -187,11 +230,15 @@ export const foodOrders = mysqlTable(
 		foreignKey({
 			name: "food_orders_order_fk",
 			columns: [table.orderId],
-			foreignColumns: [Orders.id],
+			foreignColumns: [orders.id],
 		}),
 		check(
 			"food_orders_delivery_type_check",
 			sql`delivery_type IN ('pickup', 'delivery')`,
+		),
+		check(
+			"food_orders_delivery_address_check",
+			sql`(${table.deliveryType} = 'delivery' AND ${table.deliveryAddress} IS NOT NULL) OR (${table.deliveryType} = 'pickup')`,
 		),
 		check(
 			"food_orders_status_check",
@@ -203,8 +250,8 @@ export const foodOrders = mysqlTable(
 export const movieTicketPurchases = mysqlTable(
 	"movie_ticket_purchases",
 	{
-		id: varchar("id", { length: ID_GENERATOR_LENGTH })
-			.$defaultFn(() => generateId())
+		ticketId: varchar("ticket_id", { length: ID_GENERATOR_LENGTH })
+			.$defaultFn(() => generateTicketId())
 			.primaryKey(),
 		userId: varchar("user_id", { length: 191 }).notNull(),
 		orderId: varchar("order_id", { length: 191 }).notNull(),
@@ -220,6 +267,12 @@ export const movieTicketPurchases = mysqlTable(
 		showDate: date("show_date", { mode: "string" }).notNull(),
 		showtime: time("showtime").notNull(),
 		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+		purchaseDate: timestamp("purchase_date", { fsp: 6 }).defaultNow().notNull(),
+		isUsed: boolean("is_used").default(false).notNull(),
+		qrcodeData: json("qrcode_data"),
+		recieptBarcodeData: varchar("reciept_barcode_data", { length: 1000 }),
+		verifiedAt: timestamp("verified_at", { mode: "string" }),
+		verifiedBy: varchar("verified_by"),
 		snackAddOns: json("snack_add_ons")
 			.$type<
 				{
@@ -243,7 +296,7 @@ export const movieTicketPurchases = mysqlTable(
 		foreignKey({
 			name: "movie_ticket_purchases_order_fk",
 			columns: [table.orderId],
-			foreignColumns: [Orders.id],
+			foreignColumns: [orders.id],
 		}),
 		check(
 			"movie_ticket_purchases_status_check",
@@ -255,8 +308,8 @@ export const movieTicketPurchases = mysqlTable(
 export const vrgameTicketPurchases = mysqlTable(
 	"vrgame_ticket_purchases",
 	{
-		id: varchar("id", { length: ID_GENERATOR_LENGTH })
-			.$defaultFn(() => generateId())
+		ticketId: varchar("ticket_id", { length: ID_GENERATOR_LENGTH })
+			.$defaultFn(() => generateTicketId())
 			.primaryKey(),
 		userId: varchar("user_id", { length: 191 }).notNull(),
 		orderId: varchar("order_id", { length: 191 }).notNull(),
@@ -273,7 +326,13 @@ export const vrgameTicketPurchases = mysqlTable(
 		purchaseDate: timestamp("purchase_date", { fsp: 6 }).defaultNow().notNull(),
 		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
 		currency: varchar("currency", { length: 10 }).notNull().default("NGN"),
+		isUsed: boolean("is_used").default(false).notNull(),
+		qrcodeData: json("qrcode_data"),
+		recieptBarcodeData: varchar("reciept_barcode_data", { length: 1000 }),
+		verifiedAt: timestamp("verified_at", { mode: "string" }),
+		verifiedBy: varchar("verified_by"),
 		status: varchar("status", { length: 50 })
+			.default("pending")
 			.$type<"pending" | "completed" | "cancelled">()
 			.notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -283,7 +342,7 @@ export const vrgameTicketPurchases = mysqlTable(
 		foreignKey({
 			name: "vrgame_ticket_purchases_order_fk",
 			columns: [table.orderId],
-			foreignColumns: [Orders.id],
+			foreignColumns: [orders.id],
 		}),
 		check(
 			"vrgame_ticket_purchases_status_check",
@@ -314,8 +373,10 @@ export const equipmentRentalBookings = mysqlTable(
 		rentalEndDate: date("rental_end_date", { mode: "string" }).notNull(),
 		quantity: int("quantity").notNull(),
 		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+		recieptBarcodeData: varchar("reciept_barcode_data", { length: 1000 }),
 		currency: varchar("currency", { length: 10 }).notNull().default("NGN"),
 		status: varchar("status", { length: 50 })
+			.default("pending")
 			.$type<"pending" | "ongoing" | "completed" | "cancelled">()
 			.notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -325,7 +386,7 @@ export const equipmentRentalBookings = mysqlTable(
 		foreignKey({
 			name: "equipment_rental_bookings_order_fk",
 			columns: [table.orderId],
-			foreignColumns: [Orders.id],
+			foreignColumns: [orders.id],
 		}),
 		check(
 			"equipment_rental_bookings_status_check",
@@ -342,7 +403,7 @@ export const studioSessionBookings = mysqlTable(
 			.primaryKey(),
 		userId: varchar("user_id", { length: 191 }).notNull(),
 		orderId: varchar("order_id", { length: 191 }).notNull(),
-		studioId: varchar("studio_id", { length: 191 }).notNull(),
+		studioId: int("studio_id").notNull(),
 		studioName: varchar("studio_name", { length: 255 }).notNull(),
 		sessionPricePerHour: decimal("session_price_per_hour", {
 			precision: 10,
@@ -353,8 +414,13 @@ export const studioSessionBookings = mysqlTable(
 		sessionEndTime: time("session_end_time").notNull(),
 		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
 		currency: varchar("currency", { length: 10 }).notNull().default("NGN"),
+		qrcodeData: json("qrcode_data"),
+		recieptBarcodeData: varchar("reciept_barcode_data", { length: 1000 }),
+		verifiedAt: timestamp("verified_at", { mode: "string" }),
+		verifiedBy: varchar("verified_by"),
 		status: varchar("status", { length: 50 })
 			.$type<"pending" | "scheduled" | "completed" | "cancelled">()
+			.default("pending")
 			.notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
@@ -363,7 +429,7 @@ export const studioSessionBookings = mysqlTable(
 		foreignKey({
 			name: "studio_session_bookings_order_fk",
 			columns: [table.orderId],
-			foreignColumns: [Orders.id],
+			foreignColumns: [orders.id],
 		}),
 		check(
 			"studio_session_bookings_status_check",
