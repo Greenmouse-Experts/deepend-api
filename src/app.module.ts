@@ -5,6 +5,8 @@ import { ConfigModule } from "@nestjs/config";
 import { envSchema } from "./app.envSchema";
 import { DatabaseModule } from "./database/database.module";
 import { CoreModule } from "./core/core.module";
+import { BullModule } from "@nestjs/bullmq";
+import { WEBHOOKS_QUEUE } from "./common/constants";
 
 @Module({
 	imports: [
@@ -14,6 +16,19 @@ import { CoreModule } from "./core/core.module";
 		}),
 		DatabaseModule,
 		CoreModule,
+		BullModule.registerQueue({
+			name: WEBHOOKS_QUEUE,
+		}),
+		BullModule.forRoot({
+			connection: {
+				url: process.env.REDIS_QUEUE_URL,
+			},
+			defaultJobOptions: {
+				removeOnComplete: {
+					count: 50,
+				},
+			},
+		}),
 	],
 	controllers: [AppController],
 	providers: [AppService],
