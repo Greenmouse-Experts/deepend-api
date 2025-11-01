@@ -206,6 +206,14 @@ export const vrgames = mysqlTable("vrgames", {
 		.notNull(),
 });
 
+export const vrgamesRelations = relations(vrgames, ({ one, many }) => ({
+	category: one(vrgamesCategories, {
+		fields: [vrgames.categoryId],
+		references: [vrgamesCategories.id],
+	}),
+	availability: many(vrgamesAvailability),
+}));
+
 export const vrgamesAvailability = mysqlTable(
 	"vrgames_availability",
 	{
@@ -731,7 +739,7 @@ export const equipmentRentalsCart = mysqlTable(
 			.primaryKey(),
 		equipmentRentalId: varchar("equipment_rental_id", {
 			length: ID_GENERATOR_LENGTH,
-		}),
+		}).notNull(),
 		userId: varchar("user_id", { length: ID_GENERATOR_LENGTH }).notNull(),
 		rentalStartDate: date("rental_start_date", { mode: "string" }).notNull(),
 		rentalEndDate: date("rental_end_date", { mode: "string" }).notNull(),
