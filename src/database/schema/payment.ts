@@ -11,7 +11,6 @@ import {
 	time,
 	check,
 	json,
-	text,
 } from "drizzle-orm/mysql-core";
 import { ID_GENERATOR_LENGTH } from "src/common/constants";
 import { generateId, generateTicketId } from "src/common/helpers";
@@ -73,7 +72,9 @@ export const Payments = mysqlTable(
 		status: varchar("status", { length: 50 })
 			.notNull()
 			.$type<"pending" | "successful" | "failed">(),
-		paymentReference: text("payment_reference").notNull().unique(),
+		paymentReference: varchar("payment_reference", { length: 15 })
+			.notNull()
+			.unique(),
 		paymentChannel: varchar("payment_channel", { length: 100 }),
 		paidAt: timestamp("paid_at", { mode: "string" }).notNull(),
 		paymentDetails: json("payment_details").notNull(),
@@ -100,7 +101,9 @@ export const orders = mysqlTable(
 			.$defaultFn(() => generateId())
 			.primaryKey(),
 		userId: varchar("user_id", { length: 191 }).notNull(),
-		paymentReference: text("payment_reference").notNull().unique(),
+		paymentReference: varchar("payment_reference", { length: 15 })
+			.notNull()
+			.unique(),
 		deliveryFee: decimal("delivery_fee", { precision: 10, scale: 2 })
 			.notNull()
 			.default("0"),
@@ -128,7 +131,7 @@ export const orders = mysqlTable(
 					orderId: string;
 				}[]
 			>()
-			.default(sql`'[]'`)
+			.default([])
 			.notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
@@ -207,7 +210,7 @@ export const foodOrders = mysqlTable(
 		foodPrice: decimal("food_price", { precision: 10, scale: 2 }).notNull(),
 		foodAddons: json("food_addons")
 			.$type<{ addonId: number; addonName: string; addonPrice: string }[]>()
-			.default(sql`'[]'`)
+			.default([])
 			.notNull(),
 		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
 		currency: varchar("currency", { length: 10 }).notNull().default("NGN"),
@@ -272,17 +275,17 @@ export const movieTicketPurchases = mysqlTable(
 		qrcodeData: json("qrcode_data"),
 		recieptBarcodeData: varchar("reciept_barcode_data", { length: 1000 }),
 		verifiedAt: timestamp("verified_at", { mode: "string" }),
-		verifiedBy: varchar("verified_by"),
+		verifiedBy: varchar("verified_by", { length: ID_GENERATOR_LENGTH }),
 		snackAddOns: json("snack_add_ons")
 			.$type<
 				{
-					snackId: string;
+					snackId: number;
 					snackName: string;
-					snackPrice: number;
+					snackPrice: string;
 					snackQuantity: number;
 				}[]
 			>()
-			.default(sql`'[]'`)
+			.default([])
 			.notNull(),
 		currency: varchar("currency", { length: 10 }).notNull().default("NGN"),
 		status: varchar("status", { length: 50 })
@@ -330,7 +333,7 @@ export const vrgameTicketPurchases = mysqlTable(
 		qrcodeData: json("qrcode_data"),
 		recieptBarcodeData: varchar("reciept_barcode_data", { length: 1000 }),
 		verifiedAt: timestamp("verified_at", { mode: "string" }),
-		verifiedBy: varchar("verified_by"),
+		verifiedBy: varchar("verified_by", { length: ID_GENERATOR_LENGTH }),
 		status: varchar("status", { length: 50 })
 			.default("pending")
 			.$type<"pending" | "completed" | "cancelled">()
@@ -417,7 +420,7 @@ export const studioSessionBookings = mysqlTable(
 		qrcodeData: json("qrcode_data"),
 		recieptBarcodeData: varchar("reciept_barcode_data", { length: 1000 }),
 		verifiedAt: timestamp("verified_at", { mode: "string" }),
-		verifiedBy: varchar("verified_by"),
+		verifiedBy: varchar("verified_by", { length: ID_GENERATOR_LENGTH }),
 		status: varchar("status", { length: 50 })
 			.$type<"pending" | "scheduled" | "completed" | "cancelled">()
 			.default("pending")
