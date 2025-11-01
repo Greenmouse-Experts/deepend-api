@@ -17,7 +17,7 @@ export class PaymentService {
 		private readonly configService: ConfigService,
 	) {
 		this.secretKey = this.configService.get<string>(
-			"PAYMENT_SECRET_KEY",
+			"PAYSTACK_SECRET_KEY",
 		) as string;
 	}
 
