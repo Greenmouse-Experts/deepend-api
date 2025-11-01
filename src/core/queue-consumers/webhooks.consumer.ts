@@ -13,10 +13,15 @@ import {
 	generateTicketQrCodeData,
 } from "src/common/helpers";
 import {
+	equipmentRentalBookings,
 	EquipmentRentalBookingStatus,
+	foodOrders,
 	FoodOrderStatus,
+	hotelBookings,
 	HotelBookingStatus,
+	movieTicketPurchases,
 	MovieTicketPurchaseStatus,
+	studioSessionBookings,
 	StudioSessionBookingStatus,
 	vrgameTicketPurchases,
 	VRGameTicketPurchaseStatus,
@@ -122,7 +127,12 @@ export class WebhooksConsumer extends WorkerHost {
 									paymentReference: webhookPayload.reference,
 									paymentChannel: webhookPayload.channel,
 									paymentDetails: webhookPayload,
-									paidAt: webhookPayload.paid_at || "",
+									paidAt: webhookPayload.paid_at
+										? new Date(webhookPayload.paid_at)
+												.toISOString()
+												.slice(0, 19)
+												.replace("T", " ")
+										: new Date().toISOString(),
 								},
 								transactions,
 							);
@@ -192,7 +202,10 @@ export class WebhooksConsumer extends WorkerHost {
 												item.itemId,
 												RECEIPT_BARCODE_SECRET_KEY || "",
 											),
-											purchaseDate: new Date().toISOString(),
+											purchaseDate: new Date()
+												.toISOString()
+												.slice(0, 19)
+												.replace("T", " "),
 										});
 										break;
 									case "movie":
@@ -208,7 +221,10 @@ export class WebhooksConsumer extends WorkerHost {
 												item.itemId,
 												RECEIPT_BARCODE_SECRET_KEY || "",
 											),
-											purchaseDate: new Date().toISOString(),
+											purchaseDate: new Date()
+												.toISOString()
+												.slice(0, 19)
+												.replace("T", " "),
 										});
 										break;
 									case "studio":
@@ -281,7 +297,7 @@ export class WebhooksConsumer extends WorkerHost {
 
 								if (movieTicketUpdates.length > 0) {
 									const { ids, sqlFragments } = bulkUpdateTickets(
-										vrgameTicketPurchases.ticketId,
+										movieTicketPurchases.ticketId,
 										movieTicketUpdates,
 										[
 											"status",
@@ -300,7 +316,7 @@ export class WebhooksConsumer extends WorkerHost {
 
 								if (studioSessionBookingUpdates.length > 0) {
 									const { ids, sqlFragments } = bulkUpdateTickets(
-										vrgameTicketPurchases.ticketId,
+										studioSessionBookings.id,
 										studioSessionBookingUpdates,
 										["status", "qrcodeData", "recieptBarcodeData"],
 									);
@@ -311,15 +327,11 @@ export class WebhooksConsumer extends WorkerHost {
 										transactions,
 									);
 								}
-
-								await this.userService.decrementServicesAndClearUserCart(
-									order.userId,
-								);
 							}
 
 							if (equipmentRentalRecieptUpdates.length > 0) {
 								const { ids, sqlFragments } = bulkUpdateReciepts(
-									vrgameTicketPurchases.ticketId,
+									equipmentRentalBookings.id,
 									equipmentRentalRecieptUpdates,
 									["status", "recieptBarcodeData"],
 								);
@@ -333,7 +345,7 @@ export class WebhooksConsumer extends WorkerHost {
 
 							if (foodOrderRecieptUpdates.length > 0) {
 								const { ids, sqlFragments } = bulkUpdateReciepts(
-									vrgameTicketPurchases.ticketId,
+									foodOrders.id,
 									foodOrderRecieptUpdates,
 									["status", "recieptBarcodeData"],
 								);
@@ -347,7 +359,7 @@ export class WebhooksConsumer extends WorkerHost {
 
 							if (hotelBookingRecieptUpdates.length > 0) {
 								const { ids, sqlFragments } = bulkUpdateReciepts(
-									vrgameTicketPurchases.ticketId,
+									hotelBookings.id,
 									hotelBookingRecieptUpdates,
 									["status", "qrcodeData", "recieptBarcodeData"],
 								);
@@ -358,6 +370,10 @@ export class WebhooksConsumer extends WorkerHost {
 									transactions,
 								);
 							}
+
+							await this.userService.decrementServicesAndClearUserCart(
+								order.userId,
+							);
 
 							return { success: true };
 						}
