@@ -545,8 +545,8 @@ export class ServicesService {
 
 		const studioTotalPrice = calculateStudioTotalPrice(
 			Number(studio.hourlyRate),
-			booking.startTime,
-			booking.endTime,
+			format(parse(booking.startTime, "HH:mm:ss", new Date()), "HH:mm"),
+			format(parse(booking.endTime, "HH:mm:ss", new Date()), "HH:mm"),
 		);
 
 		return { ...booking, totalPrice: studioTotalPrice };
@@ -859,7 +859,7 @@ export class ServicesService {
 
 		if (
 			!isWithinInterval(
-				parse(`${order.scheduledTime}:00`, "HH:mm:ss", new Date()),
+				parse(`${order.scheduledTime}`, "HH:mm:ss", new Date()),
 				{
 					start: parse(vrgameAvailability.startTime, "HH:mm:ss", new Date()),
 					end: parse(vrgameAvailability.endTime, "HH:mm:ss", new Date()),
@@ -1265,7 +1265,7 @@ export class ServicesService {
 		}
 	}
 
-	async validateFoodOrderAndGetTotals(orderId: string, userId: string) {
+	async validateFoodOrder(orderId: string, userId: string) {
 		const order = await this.userService.getUserFoodOrderById(orderId, userId);
 
 		if (!order) {
@@ -1290,7 +1290,7 @@ export class ServicesService {
 							item.categoryId === addon.categoryId && addon.id === item.id,
 					);
 
-				if (matchingAddOn.length > 0) {
+				if (matchingAddOn.length === 0) {
 					throw new BadRequestException(
 						`One or more selected add-ons do not exist for this food item.`,
 					);
