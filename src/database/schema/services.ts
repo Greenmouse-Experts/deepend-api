@@ -693,7 +693,7 @@ export const studioSessionCart = mysqlTable(
 		status: varchar("status", { length: 50 })
 			.default("pending")
 			.notNull()
-			.$type<"pending" | "confirmed" | "cancelled" | "completed">(),
+			.$type<"pending" | "scheduled" | "cancelled" | "completed">(),
 		createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
 		updatedAt: timestamp("updated_at", { fsp: 6 })
 			.$onUpdateFn(() => new Date())
@@ -748,7 +748,7 @@ export const equipmentRentalsCart = mysqlTable(
 		status: varchar("status", { length: 50 })
 			.default("pending")
 			.notNull()
-			.$type<"pending" | "confirmed" | "cancelled" | "completed">(),
+			.$type<"pending" | "ongoing" | "cancelled" | "completed">(),
 		createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
 		updatedAt: timestamp("updated_at", { fsp: 6 })
 			.$onUpdateFn(() => new Date())
@@ -766,7 +766,7 @@ export const equipmentRentalsCart = mysqlTable(
 		),
 		check(
 			"chk_equipment_rentals_cart_status",
-			sql`${table.status} IN ('pending', 'confirmed', 'cancelled', 'completed')`,
+			sql`${table.status} IN ('pending', 'ongoing', 'cancelled', 'completed')`,
 		),
 		unique("uk_equipment_rentals_cart_unique").on(
 			table.equipmentRentalId,
@@ -798,7 +798,7 @@ export const vrgamesTicketCart = mysqlTable(
 		ticketQuantity: int("ticket_quantity").default(1).notNull(),
 		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
 		status: varchar("status", { length: 50 })
-			.$type<"pending" | "completed" | "canceled">()
+			.$type<"pending" | "completed" | "cancelled">()
 			.default("pending")
 			.notNull(),
 		scheduledDate: date("scheduled_date", { mode: "string" }).notNull(),
@@ -817,7 +817,7 @@ export const vrgamesTicketCart = mysqlTable(
 		}).onDelete("cascade"),
 		check(
 			"chk_vrgames_ticket_cart_status",
-			sql`${table.status} IN ('pending', 'completed', 'canceled')`,
+			sql`${table.status} IN ('pending', 'completed', 'cancelled')`,
 		),
 	],
 );
@@ -843,7 +843,7 @@ export const moviesTicketCart = mysqlTable(
 		ticketQuantity: int("ticket_quantity").default(1).notNull(),
 		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
 		status: varchar("status", { length: 50 })
-			.$type<"pending" | "completed" | "canceled">()
+			.$type<"pending" | "completed" | "cancelled">()
 			.default("pending")
 			.notNull(),
 		purchaseDate: timestamp("purchase_date", {
@@ -865,7 +865,7 @@ export const moviesTicketCart = mysqlTable(
 		}).onDelete("cascade"),
 		check(
 			"chk_movies_ticket_cart_status",
-			sql`${table.status} IN ('pending', 'completed', 'canceled')`,
+			sql`${table.status} IN ('pending', 'completed', 'cancelled')`,
 		),
 	],
 );
