@@ -109,7 +109,7 @@ export class UserService {
 		userId: string;
 		page: number;
 		limit: number;
-		status?: "pending" | "completed" | "canceled";
+		status?: "pending" | "completed" | "cancelled";
 	}) {
 		const offset = (Number(page) - 1) * Number(limit);
 
@@ -130,7 +130,7 @@ export class UserService {
 		userId: string;
 		page: number;
 		limit: number;
-		status?: "pending" | "completed" | "canceled";
+		status?: "pending" | "completed" | "cancelled";
 	}) {
 		const offset = (Number(page) - 1) * Number(limit);
 
