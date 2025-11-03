@@ -219,7 +219,7 @@ export class UserRepository {
 		userId: string;
 		offset: number;
 		limit: number;
-		status?: "pending" | "completed" | "canceled";
+		status?: "pending" | "completed" | "cancelled";
 	}) {
 		const purchases =
 			await this.databaseService.db.query.vrgamesTicketCart.findMany({
@@ -289,7 +289,7 @@ export class UserRepository {
 		userId: string;
 		offset: number;
 		limit: number;
-		status?: "pending" | "completed" | "canceled";
+		status?: "pending" | "completed" | "cancelled";
 	}) {
 		const purchases =
 			await this.databaseService.db.query.moviesTicketCart.findMany({
