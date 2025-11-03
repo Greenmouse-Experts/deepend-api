@@ -253,6 +253,34 @@ export const CalculateEquipmentRentalPriceQuerySchema =
 		quantity: Joi.number().integer().min(1).required(),
 	});
 
+export class EquipmentPaginationQueryDto extends PaginationQueryDto {
+	@ApiProperty({
+		example: "ongoing",
+		description:
+			'Filter equipment rentals by status ("ongoing", "completed", "cancelled")',
+		required: false,
+	})
+	status?: "ongoing" | "completed" | "cancelled";
+}
+
+export const EquipmentPaginationQuerySchema = PaginationQuerySchema.keys({
+	status: Joi.string().valid("ongoing", "completed", "cancelled").optional(),
+});
+
+export class StudioSessionPaginationQueryDto extends PaginationQueryDto {
+	@ApiProperty({
+		example: "confirmed",
+		description:
+			'Filter studio sessions by status ("scheduled", "completed", "cancelled")',
+		required: false,
+	})
+	status?: "scheduled" | "completed" | "cancelled";
+}
+
+export const StudioSessionPaginationQuerySchema = PaginationQuerySchema.keys({
+	status: Joi.string().valid("confirmed", "completed", "cancelled").optional(),
+});
+
 export class BookingPaginationQueryDto extends PaginationQueryDto {
 	@ApiProperty({
 		example: "confirmed",
@@ -260,27 +288,24 @@ export class BookingPaginationQueryDto extends PaginationQueryDto {
 			'Filter bookings by status ("pending", "confirmed", "cancelled", "completed")',
 		required: false,
 	})
-	status?: "pending" | "confirmed" | "cancelled" | "completed";
+	status?: "confirmed" | "cancelled" | "completed";
 }
 
 export const BookingPaginationQuerySchema = PaginationQuerySchema.keys({
-	status: Joi.string()
-		.valid("pending", "confirmed", "cancelled", "completed")
-		.optional(),
+	status: Joi.string().valid("confirmed", "cancelled", "completed").optional(),
 });
 
 export class TicketPaginationQueryDto extends PaginationQueryDto {
 	@ApiProperty({
 		example: "completed",
-		description:
-			'Filter tickets by status ("pending", "completed", "canceled")',
+		description: 'Filter tickets by status ("completed", "cancelled")',
 		required: false,
 	})
-	status?: "pending" | "completed" | "canceled";
+	status?: "completed" | "cancelled";
 }
 
 export const TicketPaginationQuerySchema = PaginationQuerySchema.keys({
-	status: Joi.string().valid("pending", "completed", "canceled").optional(),
+	status: Joi.string().valid("completed", "cancelled").optional(),
 });
 
 export class UserPaginationQueryDto extends PaginationQueryDto {
@@ -300,16 +325,14 @@ export class FoodOrderPaginationQueryDto extends PaginationQueryDto {
 	@ApiProperty({
 		example: "completed",
 		description:
-			'Filter food orders by status ("pending", "preparing", "delivered", "cancelled")',
+			'Filter food orders by status ("preparing", "delivered", "cancelled")',
 		required: false,
 	})
-	status?: "pending" | "preparing" | "delivered" | "cancelled";
+	status?: "preparing" | "delivered" | "cancelled";
 }
 
 export const FoodOrderPaginationQuerySchema = PaginationQuerySchema.keys({
-	status: Joi.string()
-		.valid("pending", "preparing", "delivered", "cancelled")
-		.optional(),
+	status: Joi.string().valid("preparing", "delivered", "cancelled").optional(),
 });
 
 export class ItemTypeQueryDto {
