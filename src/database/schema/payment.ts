@@ -289,7 +289,7 @@ export const movieTicketPurchases = mysqlTable(
 			.notNull(),
 		currency: varchar("currency", { length: 10 }).notNull().default("NGN"),
 		status: varchar("status", { length: 50 })
-			.$type<"pending" | "completed" | "canceled">()
+			.$type<"pending" | "completed" | "cancelled">()
 			.default("pending")
 			.notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -303,7 +303,7 @@ export const movieTicketPurchases = mysqlTable(
 		}),
 		check(
 			"movie_ticket_purchases_status_check",
-			sql`status IN ('pending' ,'completed', 'canceled')`,
+			sql`status IN ('pending' ,'completed', 'cancelled')`,
 		),
 	],
 );
@@ -380,7 +380,7 @@ export const equipmentRentalBookings = mysqlTable(
 		currency: varchar("currency", { length: 10 }).notNull().default("NGN"),
 		status: varchar("status", { length: 50 })
 			.default("pending")
-			.$type<"pending" | "ongoing" | "completed" | "cancelled">()
+			.$type<"ongoing" | "completed" | "cancelled">()
 			.notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
