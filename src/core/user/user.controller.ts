@@ -20,10 +20,13 @@ import { AuthGuard } from "src/common/guards/auth.guard";
 import {
 	BookingPaginationQueryDto,
 	BookingPaginationQuerySchema,
+	EquipmentPaginationQueryDto,
 	FoodOrderPaginationQueryDto,
 	FoodOrderPaginationQuerySchema,
 	ItemTypeQueryDto,
 	ItemTypeQuerySchema,
+	StudioPaginationQueryDto,
+	StudioSessionPaginationQueryDto,
 	TicketPaginationQueryDto,
 	TicketPaginationQuerySchema,
 	UpdateCartItemQuantityBodyDto,
@@ -42,7 +45,7 @@ export class UserController {
 	async getUserStudioBookings(
 		@GetUser("id") userId: string,
 		@Query(new QueryJoiValidationPipe(BookingPaginationQuerySchema))
-		{ page, limit, status }: BookingPaginationQueryDto,
+		{ page, limit, status }: StudioSessionPaginationQueryDto,
 	) {
 		return await this.userService.getUserStudioBookings({
 			userId,
@@ -59,7 +62,7 @@ export class UserController {
 	async getUserEquipmentRentalBookings(
 		@GetUser("userId") userId: string,
 		@Query(new QueryJoiValidationPipe(BookingPaginationQuerySchema))
-		{ page, limit, status }: BookingPaginationQueryDto,
+		{ page, limit, status }: EquipmentPaginationQueryDto,
 	) {
 		return await this.userService.getUserEquipmentRentalBookings({
 			userId,
