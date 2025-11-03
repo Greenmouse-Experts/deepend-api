@@ -17,6 +17,8 @@ import { UserRoles } from "src/common/decorators/role/role.enum";
 import {
 	BookingPaginationQueryDto,
 	BookingPaginationQuerySchema,
+	EquipmentPaginationQueryDto,
+	EquipmentPaginationQuerySchema,
 	FoodOrderPaginationQueryDto,
 	FoodOrderPaginationQuerySchema,
 	MoviePaginationQueryDto,
@@ -27,6 +29,8 @@ import {
 	PaginationQuerySchema,
 	ServicePaginationQueryDto,
 	ServicePaginationQuerySchema,
+	StudioSessionPaginationQueryDto,
+	StudioSessionPaginationQuerySchema,
 	TicketPaginationQueryDto,
 	TicketPaginationQuerySchema,
 	UserPaginationQueryDto,
@@ -695,8 +699,6 @@ export class AdminController {
 		return await this.adminService.getAllHotels(+page, +limit, search);
 	}
 
-	@Get("hotels/bookings")
-	@ApiOperation({ summary: "Get all hotel bookings with pagination" })
 	async getAllHotelBookings(
 		@Query(new QueryJoiValidationPipe(BookingPaginationQuerySchema))
 		{ page, limit, status }: BookingPaginationQueryDto,
@@ -811,8 +813,8 @@ export class AdminController {
 		summary: "Get all equipment rental bookings with pagination",
 	})
 	async getAllEquipmentRentalBookings(
-		@Query(new QueryJoiValidationPipe(BookingPaginationQuerySchema))
-		{ page, limit, status }: BookingPaginationQueryDto,
+		@Query(new QueryJoiValidationPipe(EquipmentPaginationQuerySchema))
+		{ page, limit, status }: EquipmentPaginationQueryDto,
 	) {
 		return await this.adminService.getEquipmentRentalBookings({
 			page,
@@ -1283,8 +1285,8 @@ export class AdminController {
 	@Get("studios/bookings")
 	@ApiOperation({ summary: "Get all studio bookings with pagination" })
 	async getAllStudioBookings(
-		@Query(new QueryJoiValidationPipe(BookingPaginationQuerySchema))
-		{ page, limit, status }: BookingPaginationQueryDto,
+		@Query(new QueryJoiValidationPipe(StudioSessionPaginationQuerySchema))
+		{ page, limit, status }: StudioSessionPaginationQueryDto,
 	) {
 		return await this.adminService.getStudioBookings({
 			page,
