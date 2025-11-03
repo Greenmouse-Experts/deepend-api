@@ -6,6 +6,7 @@ import {
 	HttpCode,
 	Param,
 	Patch,
+	Post,
 	Query,
 	UseGuards,
 } from "@nestjs/common";
@@ -19,10 +20,13 @@ import { AuthGuard } from "src/common/guards/auth.guard";
 import {
 	BookingPaginationQueryDto,
 	BookingPaginationQuerySchema,
+	EquipmentPaginationQueryDto,
 	FoodOrderPaginationQueryDto,
 	FoodOrderPaginationQuerySchema,
 	ItemTypeQueryDto,
 	ItemTypeQuerySchema,
+	StudioPaginationQueryDto,
+	StudioSessionPaginationQueryDto,
 	TicketPaginationQueryDto,
 	TicketPaginationQuerySchema,
 	UpdateCartItemQuantityBodyDto,
@@ -41,7 +45,7 @@ export class UserController {
 	async getUserStudioBookings(
 		@GetUser("id") userId: string,
 		@Query(new QueryJoiValidationPipe(BookingPaginationQuerySchema))
-		{ page, limit, status }: BookingPaginationQueryDto,
+		{ page, limit, status }: StudioSessionPaginationQueryDto,
 	) {
 		return await this.userService.getUserStudioBookings({
 			userId,
@@ -58,7 +62,7 @@ export class UserController {
 	async getUserEquipmentRentalBookings(
 		@GetUser("userId") userId: string,
 		@Query(new QueryJoiValidationPipe(BookingPaginationQuerySchema))
-		{ page, limit, status }: BookingPaginationQueryDto,
+		{ page, limit, status }: EquipmentPaginationQueryDto,
 	) {
 		return await this.userService.getUserEquipmentRentalBookings({
 			userId,
@@ -189,5 +193,11 @@ export class UserController {
 			itemId,
 			itemType: query.itemType,
 		});
+	}
+
+	@Post("cart/checkout")
+	@ApiOperation({ summary: "Checkout user's cart" })
+	async checkoutUserCart(@GetUser("userId") userId: string) {
+		return await this.userService.checkoutUserCart(userId);
 	}
 }

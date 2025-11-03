@@ -11,6 +11,18 @@ import {
 	StudioBookingStatus,
 } from "../admin/admin.repository";
 import { ServicesService } from "../services/services.service";
+import { PaymentService } from "../payment/payment.service";
+import {
+	CreateEquipmentRentalBooking,
+	CreateFoodOrder,
+	CreateHotelBooking,
+	CreateMovieTicketPurchase,
+	CreateOrder,
+	CreateStudioSessionBooking,
+	CreateVRGameTicketPurchase,
+} from "src/database/schema/payment";
+import Decimal from "decimal.js";
+import { MysqlDatabaseTransaction } from "src/common/helpers";
 
 @Injectable()
 export class UserService {
@@ -18,6 +30,7 @@ export class UserService {
 		private readonly userRepository: UserRepository,
 		@Inject(forwardRef(() => ServicesService))
 		private readonly servicesService: ServicesService,
+		private readonly paymentService: PaymentService,
 	) {}
 
 	async getUserById(id: string) {
@@ -26,6 +39,10 @@ export class UserService {
 
 	async getUserByEmail(email: string) {
 		return await this.userRepository.findUserByEmail(email);
+	}
+
+	async getUserEmailByUserId(userId: string) {
+		return await this.userRepository.findUserEmailByUserId(userId);
 	}
 
 	async createUser(
@@ -92,7 +109,7 @@ export class UserService {
 		userId: string;
 		page: number;
 		limit: number;
-		status?: "pending" | "completed" | "canceled";
+		status?: "pending" | "completed" | "cancelled";
 	}) {
 		const offset = (Number(page) - 1) * Number(limit);
 
@@ -113,7 +130,7 @@ export class UserService {
 		userId: string;
 		page: number;
 		limit: number;
-		status?: "pending" | "completed" | "canceled";
+		status?: "pending" | "completed" | "cancelled";
 	}) {
 		const offset = (Number(page) - 1) * Number(limit);
 
@@ -444,5 +461,496 @@ export class UserService {
 
 	async getUserFoodOrderById(orderId: string, userId: string) {
 		return await this.userRepository.getUserFoodOrderById(orderId, userId);
+	}
+
+	async getDatabaseConnection() {
+		return await this.userRepository.getDatabaseConnection();
+	}
+
+	async checkoutUserCart(userId: string) {
+		const email = (await this.getUserEmailByUserId(userId))?.email;
+
+		if (!email) {
+			throw new BadRequestException("User email not found");
+		}
+
+		const cartItems = await this.getUserCart(userId);
+
+		if (cartItems.length === 0) {
+			throw new BadRequestException("User cart is empty");
+		}
+
+		const database = await this.userRepository.getDatabaseConnection();
+
+		const order = await database.transaction(async (tx) => {
+			const paymentReference =
+				await this.paymentService.generatePaymentReference();
+
+			const deliveryFee = new Decimal(0);
+
+			const taxAmount = new Decimal(0);
+
+			const subtotalAmount = cartItems.reduce(
+				(sum, item) => new Decimal(sum).plus(new Decimal(item.totalPrice || 0)),
+				new Decimal(0),
+			);
+
+			const totalAmount = subtotalAmount.plus(deliveryFee).plus(taxAmount);
+
+			const createdOrder = await this.userRepository.createPendingOrder(
+				{
+					userId,
+					paymentMethod: "paystack",
+					deliveryFee: "0",
+					taxAmount: "0",
+					subtotalAmount: subtotalAmount.toString(),
+					totalAmount: totalAmount.toString(),
+					currency: "NGN",
+					paymentReference,
+				},
+				tx,
+			);
+
+			let studioBookings: CreateStudioSessionBooking[] = [];
+			let foodOrderItems: CreateFoodOrder[] = [];
+			let equipmentRentals: CreateEquipmentRentalBooking[] = [];
+			let vrgameTicketPurchases: CreateVRGameTicketPurchase[] = [];
+			let movieTicketPurchases: CreateMovieTicketPurchase[] = [];
+			let hotelBookings: CreateHotelBooking[] = [];
+
+			let orderDetails: {
+				type: "studio" | "food" | "equipment" | "vrgame" | "movie" | "hotel";
+				ticketId: string | null;
+				userId: string;
+				itemId: string;
+				orderId: string;
+			}[] = [];
+
+			for (const item of cartItems) {
+				switch (item.cartItemType) {
+					case "studio":
+						const studioSession =
+							await this.servicesService.validateStudioSession(
+								item.cartItemId,
+								userId,
+							);
+
+						if (!studioSession) {
+							throw new BadRequestException("Invalid studio session in cart");
+						}
+
+						studioBookings.push({
+							userId,
+							orderId: createdOrder.id,
+							studioId: studioSession.studioId,
+							studioName: studioSession.studio.name,
+							sessionPricePerHour: studioSession.studio.hourlyRate,
+							sessionDate: studioSession.bookingDate,
+							sessionStartTime: studioSession.startTime,
+							sessionEndTime: studioSession.endTime,
+							totalPrice: String(studioSession.totalPrice),
+						});
+
+						break;
+					case "food":
+						const foodOrder = await this.servicesService.validateFoodOrder(
+							item.cartItemId,
+							userId,
+						);
+
+						if (!foodOrder) {
+							throw new BadRequestException("Invalid food order in cart");
+						}
+
+						foodOrderItems.push({
+							userId,
+							orderId: createdOrder.id,
+							foodId: foodOrder.foodId,
+							foodName: foodOrder.food.name,
+							foodImageUrl: foodOrder.food.imageUrls[0].url,
+							foodPrice: String(foodOrder.food.price),
+							quantity: foodOrder.quantity,
+							deliveryAddress: foodOrder.deliveryAddress,
+							deliveryType: foodOrder.deliveryType,
+							totalPrice: String(foodOrder.totalPrice),
+							foodAddons:
+								foodOrder.foodAddons.map((addon) => ({
+									addonId: addon.id,
+									addonName: addon.name,
+									addonPrice: String(addon.price),
+								})) || [],
+							specialInstructions: foodOrder.specialInstructions,
+						});
+						break;
+					case "equipment":
+						const equipmentRental =
+							await this.servicesService.validateEquipmentRental(
+								item.cartItemId,
+								userId,
+							);
+
+						if (!equipmentRental) {
+							throw new BadRequestException(
+								"Invalid equipment rental booking in cart",
+							);
+						}
+
+						equipmentRentals.push({
+							userId,
+							orderId: createdOrder.id,
+							equipmentId: equipmentRental.equipmentRentalId as string,
+							equipmentName: equipmentRental.equipmentRental?.name as string,
+							equipmentImageUrl: equipmentRental.equipmentRental?.imageUrls[0]
+								.url as string,
+							rentalPricePerDay: equipmentRental.equipmentRental
+								?.rentalPricePerDay as string,
+							rentalStartDate: equipmentRental.rentalStartDate,
+							rentalEndDate: equipmentRental.rentalEndDate,
+							quantity: equipmentRental.quantity,
+							address: equipmentRental.equipmentRental?.address as string,
+							totalPrice: String(equipmentRental.totalPrice),
+						});
+						break;
+					case "vrgame":
+						const vrgameOrder =
+							await this.servicesService.validateVrgameTicketOrder(
+								item.cartItemId,
+								userId,
+							);
+
+						if (!vrgameOrder) {
+							throw new BadRequestException(
+								"Invalid VR game ticket purchase in cart",
+							);
+						}
+
+						vrgameTicketPurchases.push({
+							userId,
+							orderId: createdOrder.id,
+							vrgameId: vrgameOrder.vrgameId as string,
+							vrgameName: vrgameOrder.vrgame?.name as string,
+							vrgameImageUrl: vrgameOrder.vrgame?.imageUrls[0].url as string,
+							vrgameCategory: vrgameOrder.vrgame.category.name as string,
+							ticketPrice: vrgameOrder.vrgame?.ticketPrice as string,
+							scheduledDate: vrgameOrder.scheduledDate,
+							scheduledTime: vrgameOrder.scheduledTime,
+							ticketQuantity: vrgameOrder.ticketQuantity,
+							totalPrice: String(vrgameOrder.totalPrice),
+						});
+						break;
+					case "movie":
+						const movieOrder =
+							await this.servicesService.validateMovieTicketOrder(
+								item.cartItemId,
+								userId,
+							);
+
+						if (!movieOrder) {
+							throw new BadRequestException(
+								"Invalid movie ticket purchase in cart",
+							);
+						}
+
+						movieTicketPurchases.push({
+							userId,
+							orderId: createdOrder.id,
+							movieId: movieOrder.showtime.movie.id,
+							movieName: movieOrder.showtime.movie.title,
+							movieImageUrl: movieOrder.showtime.movie.posterUrl as string,
+							cinemaHallId: movieOrder.showtime.cinemaHallId,
+							cinemaHallName: movieOrder.showtime.cinemaHall.name,
+							location: `${movieOrder.showtime.cinemaHall.cinema.address}, ${movieOrder.showtime.cinemaHall.cinema.city}, ${movieOrder.showtime.cinemaHall.cinema.state}`,
+							genre: movieOrder.showtime.movie.genres
+								.map((g) => g.genre.name)
+								.join(", "),
+							showDate: movieOrder.showtime.showDate,
+							showtime: movieOrder.showtime.showtime,
+							ticketPrice: movieOrder.showtime.ticketPrice,
+							ticketQuantity: movieOrder.ticketQuantity,
+							snackAddOns: movieOrder.orderedSnacks.map((snack) => ({
+								snackId: snack.snack.id,
+								snackName: snack.snack.name,
+								snackQuantity: snack.quantity,
+								snackPrice: String(snack.snack.price),
+							})),
+							totalPrice: String(movieOrder.totalPrice),
+						});
+						break;
+					case "hotel":
+						const hotelBooking =
+							await this.servicesService.validateHotelBooking(
+								item.cartItemId,
+								userId,
+							);
+
+						if (!hotelBooking) {
+							throw new BadRequestException("Invalid hotel booking in cart");
+						}
+
+						hotelBookings.push({
+							userId,
+							orderId: createdOrder.id,
+							hotelId: hotelBooking.hotelId as string,
+							hotelName: hotelBooking.hotel?.name as string,
+							hotelImageUrl: hotelBooking.hotel?.imageUrls[0].url as string,
+							hotelRoomId: hotelBooking.hotelRoom.id,
+							hotelRoomName: hotelBooking.hotelRoom.name as string,
+							hotelRoomPricePerNight: String(
+								hotelBooking.hotelRoom.pricePerNight,
+							),
+							checkInDate: hotelBooking.checkInDate,
+							checkOutDate: hotelBooking.checkOutDate,
+							totalPrice: String(hotelBooking.totalPrice),
+						});
+
+						break;
+					default:
+						throw new BadRequestException("Invalid item type in cart");
+				}
+
+				if (studioBookings.length > 0) {
+					const createdStudioSessionBookingRecords =
+						await this.userRepository.createStudioSessionBookingRecord(
+							studioBookings,
+							tx,
+						);
+
+					createdStudioSessionBookingRecords.forEach((booking) => {
+						orderDetails.push({
+							type: "studio",
+							ticketId: null,
+							userId: userId,
+							itemId: booking.id,
+							orderId: createdOrder.id,
+						});
+					});
+				}
+
+				if (foodOrderItems.length > 0) {
+					const createdFoodOrders =
+						await this.userRepository.createFoodOrdersBulk(foodOrderItems, tx);
+
+					createdFoodOrders.forEach((order) => {
+						orderDetails.push({
+							type: "food",
+							ticketId: null,
+							userId: userId,
+							itemId: order.id,
+							orderId: createdOrder.id,
+						});
+					});
+				}
+
+				if (equipmentRentals.length > 0) {
+					const equipmentRentalBookings =
+						await this.userRepository.createEquipmentRentalBookingRecord(
+							equipmentRentals,
+							tx,
+						);
+
+					equipmentRentalBookings.forEach((booking) => {
+						orderDetails.push({
+							type: "equipment",
+							ticketId: null,
+							userId: userId,
+							itemId: booking.id,
+							orderId: createdOrder.id,
+						});
+					});
+				}
+
+				if (vrgameTicketPurchases.length > 0) {
+					const vrgameTickets =
+						await this.userRepository.createVrgameTicketPurchaseRecord(
+							vrgameTicketPurchases,
+							tx,
+						);
+
+					vrgameTickets.forEach((ticket) => {
+						orderDetails.push({
+							type: "vrgame",
+							ticketId: ticket.ticketId,
+							userId: userId,
+							itemId: ticket.ticketId,
+							orderId: createdOrder.id,
+						});
+					});
+				}
+
+				if (movieTicketPurchases.length > 0) {
+					const movieTickets =
+						await this.userRepository.createMovieTicketPurchaseRecord(
+							movieTicketPurchases,
+							tx,
+						);
+
+					movieTickets.forEach((ticket) => {
+						orderDetails.push({
+							type: "movie",
+							ticketId: ticket.ticketId,
+							userId: userId,
+							itemId: ticket.ticketId,
+							orderId: createdOrder.id,
+						});
+					});
+				}
+
+				if (hotelBookings.length > 0) {
+					const hotelBookingRecords =
+						await this.userRepository.createHotelBookingsBulk(
+							hotelBookings,
+							tx,
+						);
+
+					hotelBookingRecords.forEach((booking) => {
+						orderDetails.push({
+							type: "hotel",
+							ticketId: null,
+							userId: userId,
+							itemId: booking.id,
+							orderId: createdOrder.id,
+						});
+					});
+				}
+
+				await this.userRepository.updatePendingOrder(
+					createdOrder.id,
+					{ orderDetails },
+					tx,
+				);
+			}
+
+			return {
+				amount: totalAmount.toString(),
+				subtotalAmount,
+				deliveryFee,
+				taxAmount,
+				paymentReference,
+			};
+		});
+
+		const intializePayment = await this.paymentService.initializePayment({
+			email,
+			amount: new Decimal(order.amount).mul(100).toNumber(),
+			reference: order.paymentReference,
+		});
+
+		return {
+			paymentAuthorizationUrl: intializePayment.data.authorization_url,
+			accessCode: intializePayment.data.access_code,
+			paymentReference: order.paymentReference,
+			payment_breakdown: {
+				amount: order.amount,
+				subtotalAmount: order.subtotalAmount,
+				deliveryFee: order.deliveryFee,
+				taxAmount: order.taxAmount,
+			},
+		};
+	}
+
+	async getOrderByPaymentReference(paymentReference: string) {
+		return await this.userRepository.getOrderByPaymentReference(
+			paymentReference,
+		);
+	}
+
+	async updatePendingOrder(
+		orderId: string,
+		updateData: Partial<Omit<CreateOrder, "id" | "createdAt" | "updatedAt">>,
+		transactions: MysqlDatabaseTransaction,
+	) {
+		return await this.userRepository.updatePendingOrder(
+			orderId,
+			updateData,
+			transactions,
+		);
+	}
+
+	async decrementServicesAndClearUserCart(userId: string) {
+		return await this.userRepository.decrementServicesAndClearUserCart(userId);
+	}
+
+	async bulkUpdateVrgameTickets(
+		ticketIds: string[],
+		updateData: Partial<
+			Omit<CreateVRGameTicketPurchase, "id" | "createdAt" | "updatedAt">
+		>,
+		transactions: MysqlDatabaseTransaction,
+	) {
+		return await this.userRepository.bulkUpdateVrgameTickets(
+			ticketIds,
+			updateData,
+			transactions,
+		);
+	}
+
+	async bulkUpdateMovieTickets(
+		ticketIds: string[],
+		updateData: Partial<
+			Omit<CreateMovieTicketPurchase, "id" | "createdAt" | "updatedAt">
+		>,
+		transactions: MysqlDatabaseTransaction,
+	) {
+		return await this.userRepository.bulkUpdateMovieTickets(
+			ticketIds,
+			updateData,
+			transactions,
+		);
+	}
+
+	async bulkUpdateEquipmentRentalBookings(
+		bookingIds: string[],
+		updateData: Partial<
+			Omit<CreateEquipmentRentalBooking, "id" | "createdAt" | "updatedAt">
+		>,
+		transactions: MysqlDatabaseTransaction,
+	) {
+		return await this.userRepository.bulkUpdateEquipmentRentalBookings(
+			bookingIds,
+			updateData,
+			transactions,
+		);
+	}
+
+	async bulkUpdateFoodOrders(
+		orderIds: string[],
+		updateData: Partial<
+			Omit<CreateFoodOrder, "id" | "createdAt" | "updatedAt">
+		>,
+		transactions: MysqlDatabaseTransaction,
+	) {
+		return await this.userRepository.bulkUpdateFoodOrders(
+			orderIds,
+			updateData,
+			transactions,
+		);
+	}
+
+	async bulkUpdateHotelBookings(
+		bookingIds: string[],
+		updateData: Partial<
+			Omit<CreateHotelBooking, "id" | "createdAt" | "updatedAt">
+		>,
+		transactions: MysqlDatabaseTransaction,
+	) {
+		return await this.userRepository.bulkUpdateHotelBookings(
+			bookingIds,
+			updateData,
+			transactions,
+		);
+	}
+
+	async bulkUpdateStudioBookings(
+		bookingIds: string[],
+		updateData: Partial<
+			Omit<CreateStudioSessionBooking, "id" | "createdAt" | "updatedAt">
+		>,
+		transactions: MysqlDatabaseTransaction,
+	) {
+		return await this.userRepository.bulkUpdateStudioBookings(
+			bookingIds,
+			updateData,
+			transactions,
+		);
 	}
 }

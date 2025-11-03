@@ -1,5 +1,5 @@
 import { init } from "@paralleldrive/cuid2";
-import { ID_GENERATOR_LENGTH } from "./constants";
+import { ID_GENERATOR_LENGTH, TICKET_ID_LENGTH } from "./constants";
 import crypto from "node:crypto";
 import {
 	addDays,
@@ -9,10 +9,23 @@ import {
 	parse,
 	parseISO,
 } from "date-fns";
+import { MySqlTransaction } from "drizzle-orm/mysql-core";
+import {
+	MySql2PreparedQueryHKT,
+	MySql2QueryResultHKT,
+} from "drizzle-orm/mysql2";
+import { ExtractTablesWithRelations, sql } from "drizzle-orm";
+import * as databaseSchema from "../database/schema";
+import { AxiosError } from "axios";
+import { AnyColumn } from "drizzle-orm";
 
 export const generateId = init({
 	length: ID_GENERATOR_LENGTH,
 });
+
+export function generateTicketId() {
+	return `T-${init({ length: TICKET_ID_LENGTH })()}`;
+}
 
 export function generateOtp(): string {
 	const n = crypto.randomInt(0, 1_000_000);
@@ -136,3 +149,60 @@ export function isBookingWithinStudioHours(
 	// Check if booking is completely within studio hours
 	return bookingStartMin >= studioOpenMin && bookingEndMin <= studioCloseMin;
 }
+
+export type MysqlDatabaseTransaction = MySqlTransaction<
+	MySql2QueryResultHKT,
+	MySql2PreparedQueryHKT,
+	typeof databaseSchema,
+	ExtractTablesWithRelations<typeof databaseSchema>
+>;
+
+export function HandleAxiosError(error: AxiosError) {
+	if (error.response?.status && error.response.status < 500) {
+		const errorMessage =
+			(error?.response?.data as { message: string }).message || "Bad request";
+
+		return errorMessage;
+	}
+
+	console.error(error?.response?.data);
+
+	const errorMessage = "An error occurred";
+
+	return errorMessage;
+}
+
+export const decrement = (column: AnyColumn, value: number) => {
+	return sql`${column} - ${value}`;
+};
+
+export const generateTicketQrCodeData = ({
+	ticketId,
+	userId,
+	secretKey,
+}: { ticketId: string; userId: string; secretKey: string }): string => {
+	const hmac = crypto.createHmac("sha256", secretKey);
+	hmac.update(ticketId + userId);
+	const signature = hmac.digest("hex");
+
+	const qrCodeData = JSON.stringify({
+		ticketId,
+		userId,
+		signature,
+	});
+
+	return qrCodeData;
+};
+
+export const generateReceiptBarcodeData = (
+	receiptId: string,
+	secretKey: string,
+): string => {
+	const hmac = crypto.createHmac("sha256", secretKey);
+	hmac.update(receiptId);
+	const signature = hmac.digest("hex");
+
+	const barcodeData = `${receiptId}|${signature}`;
+
+	return barcodeData;
+};

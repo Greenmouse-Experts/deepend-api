@@ -500,7 +500,7 @@ export class ServicesService {
 		}
 	}
 
-	async validateStudioSessionAndGetTotals(bookingId: string, userId: string) {
+	async validateStudioSession(bookingId: string, userId: string) {
 		const booking = await this.userService.getUserStudioBookingById(
 			bookingId,
 			userId,
@@ -545,11 +545,11 @@ export class ServicesService {
 
 		const studioTotalPrice = calculateStudioTotalPrice(
 			Number(studio.hourlyRate),
-			booking.startTime,
-			booking.endTime,
+			format(parse(booking.startTime, "HH:mm:ss", new Date()), "HH:mm"),
+			format(parse(booking.endTime, "HH:mm:ss", new Date()), "HH:mm"),
 		);
 
-		return { totalPrice: studioTotalPrice };
+		return { ...booking, totalPrice: studioTotalPrice };
 	}
 
 	async getStudioSessionTotalPriceById(bookingId: string, userId: string) {
@@ -575,8 +575,6 @@ export class ServicesService {
 			format(parse(booking.startTime, "HH:mm:ss", new Date()), "HH:mm"),
 			format(parse(booking.endTime, "HH:mm:ss", new Date()), "HH:mm"),
 		);
-
-		console.log("Studio Total Price:", studioTotalPrice);
 
 		return { totalPrice: studioTotalPrice };
 	}
@@ -627,7 +625,7 @@ export class ServicesService {
 		}
 	}
 
-	async validateEquipmentRentalAndGetTotals(bookingId: string, userId: string) {
+	async validateEquipmentRental(bookingId: string, userId: string) {
 		const booking = await this.userService.getUserEquipmentRentalBookingById(
 			bookingId,
 			userId,
@@ -658,7 +656,7 @@ export class ServicesService {
 				booking.rentalEndDate,
 			) * Number(booking.quantity);
 
-		return { totalPrice: equipmentRentalTotalPrice };
+		return { ...booking, totalPrice: equipmentRentalTotalPrice };
 	}
 
 	async getEquipmentRentalTotalPrice(
@@ -827,7 +825,7 @@ export class ServicesService {
 		});
 	}
 
-	async validateVrgameTicketAndGetTotals(orderId: string, userId: string) {
+	async validateVrgameTicketOrder(orderId: string, userId: string) {
 		const order = await this.userService.getUserVrgamesTicketPurchaseById(
 			orderId,
 			userId,
@@ -861,7 +859,7 @@ export class ServicesService {
 
 		if (
 			!isWithinInterval(
-				parse(`${order.scheduledTime}:00`, "HH:mm:ss", new Date()),
+				parse(`${order.scheduledTime}`, "HH:mm:ss", new Date()),
 				{
 					start: parse(vrgameAvailability.startTime, "HH:mm:ss", new Date()),
 					end: parse(vrgameAvailability.endTime, "HH:mm:ss", new Date()),
@@ -876,7 +874,7 @@ export class ServicesService {
 		const vrgameTotalPrice =
 			Number(vrgame.ticketPrice) * Number(order.ticketQuantity);
 
-		return { totalPrice: vrgameTotalPrice };
+		return { ...order, totalPrice: vrgameTotalPrice };
 	}
 
 	async getVrgameTotalPrice(vrGameId: string, ticketQuantity: number) {
@@ -989,7 +987,7 @@ export class ServicesService {
 		}
 	}
 
-	async validateMovieTicketOrderAndGetTotals(orderId: string, userId: string) {
+	async validateMovieTicketOrder(orderId: string, userId: string) {
 		const order = await this.userService.getUserMovieTicketPurchaseById(
 			orderId,
 			userId,
@@ -1025,7 +1023,7 @@ export class ServicesService {
 			Number(movieShowtime.ticketPrice) * Number(order.ticketQuantity) +
 			movieSnacksTotalPrice;
 
-		return { totalPrice: movieTotalPrice };
+		return { ...order, totalPrice: movieTotalPrice };
 	}
 
 	async getMovieShowtimeTotalPriceById(orderId: string, userId: string) {
@@ -1115,7 +1113,7 @@ export class ServicesService {
 		}
 	}
 
-	async validateHotelBookingAndGetTotals(bookingId: string, userId: string) {
+	async validateHotelBooking(bookingId: string, userId: string) {
 		const booking = await this.userService.getUserHotelBookingById(
 			bookingId,
 			userId,
@@ -1156,7 +1154,7 @@ export class ServicesService {
 
 		const totalPrice = Number(hotelRoom.pricePerNight) * Number(numberOfNights);
 
-		return { totalPrice };
+		return { ...booking, totalPrice };
 	}
 
 	async getHotelBookingTotalPriceById(bookingId: string, userId: string) {
@@ -1267,7 +1265,7 @@ export class ServicesService {
 		}
 	}
 
-	async validateFoodOrderAndGetTotals(orderId: string, userId: string) {
+	async validateFoodOrder(orderId: string, userId: string) {
 		const order = await this.userService.getUserFoodOrderById(orderId, userId);
 
 		if (!order) {
@@ -1292,7 +1290,7 @@ export class ServicesService {
 							item.categoryId === addon.categoryId && addon.id === item.id,
 					);
 
-				if (matchingAddOn.length > 0) {
+				if (matchingAddOn.length === 0) {
 					throw new BadRequestException(
 						`One or more selected add-ons do not exist for this food item.`,
 					);
@@ -1315,7 +1313,7 @@ export class ServicesService {
 			foodPrice += foodAddOnsPrice;
 		}
 
-		return { totalPrice: foodPrice };
+		return { ...order, totalPrice: foodPrice };
 	}
 
 	async getFoodOrderTotalPriceById(orderId: string, userId: string) {

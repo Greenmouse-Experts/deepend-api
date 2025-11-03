@@ -39,6 +39,7 @@ import {
 	UpdateEquipmentCategoryDto,
 	UpdateMovieGenreDto,
 } from "./dto/category.dto";
+import { StudioSessionBookingStatus } from "src/database/schema";
 
 @Injectable()
 export class AdminService {
@@ -2284,7 +2285,7 @@ export class AdminService {
 	}: {
 		page: number;
 		limit: number;
-		status?: StudioBookingStatus;
+		status?: "scheduled" | "cancelled" | "completed";
 	}) {
 		const offset = (page - 1) * limit;
 
@@ -2320,7 +2321,7 @@ export class AdminService {
 	}: {
 		page: number;
 		limit: number;
-		status?: "pending" | "completed" | "canceled";
+		status?: "completed" | "cancelled";
 	}) {
 		const offset = (page - 1) * limit;
 
@@ -2338,7 +2339,7 @@ export class AdminService {
 	}: {
 		page: number;
 		limit: number;
-		status?: "pending" | "completed" | "canceled";
+		status?: "completed" | "cancelled";
 	}) {
 		const offset = (page - 1) * limit;
 
@@ -2356,7 +2357,7 @@ export class AdminService {
 	}: {
 		page: number;
 		limit: number;
-		status?: "pending" | "confirmed" | "cancelled" | "completed";
+		status?: "confirmed" | "cancelled" | "completed";
 	}) {
 		const offset = (page - 1) * limit;
 
@@ -2380,7 +2381,7 @@ export class AdminService {
 	}: {
 		page: number;
 		limit: number;
-		status?: "pending" | "preparing" | "delivered" | "cancelled";
+		status?: "preparing" | "delivered" | "cancelled";
 	}) {
 		const offset = (page - 1) * limit;
 

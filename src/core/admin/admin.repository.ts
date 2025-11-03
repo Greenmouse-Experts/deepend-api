@@ -12,7 +12,15 @@ import {
 	sql,
 } from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
-import { users } from "src/database/schema";
+import {
+	equipmentRentalBookings,
+	foodOrders,
+	hotelBookings,
+	movieTicketPurchases,
+	studioSessionBookings,
+	users,
+	vrgameTicketPurchases,
+} from "src/database/schema";
 import {
 	advertBanners,
 	cinemaMoviesGenres,
@@ -44,21 +52,18 @@ import {
 	CreateVRGame,
 	CreateVRGameAvailability,
 	equipmentRentals,
-	equipmentRentalsBookings,
 	foods,
 	FoodToAddonsCategories,
 	foodToAddonsCategories,
 	foodToAddonsItems,
 	FoodToAddonsItems,
 	hotelAmenities,
-	hotelBookings,
 	hotelRooms,
 	hotels,
 	hotelToAmenities,
 	moviesSnacks,
 	snacks,
 	studioAvailability,
-	studioBookings,
 	studios,
 	vrgames,
 	vrgamesAvailability,
@@ -66,13 +71,12 @@ import {
 
 export type StudioBookingStatus =
 	| "pending"
-	| "confirmed"
+	| "scheduled"
 	| "cancelled"
 	| "completed";
 
 export type EquipmentRentalBookingStatus =
-	| "pending"
-	| "confirmed"
+	| "ongoing"
 	| "cancelled"
 	| "completed";
 
@@ -1636,22 +1640,21 @@ export class AdminRepository {
 	}: {
 		offset: number;
 		limit: number;
-		status?: StudioBookingStatus;
+		status?: "scheduled" | "completed" | "cancelled";
 	}) {
 		const bookings =
-			await this.databaseService.db.query.studioBookings.findMany({
-				where: status ? eq(studioBookings.status, status) : undefined,
+			await this.databaseService.db.query.studioSessionBookings.findMany({
+				where: status ? eq(studioSessionBookings.status, status) : undefined,
 				columns: {
 					createdAt: false,
 					updatedAt: false,
 					studioId: false,
+					recieptBarcodeData: false,
+					qrcodeData: false,
 				},
 				limit,
 				offset,
-				orderBy: (booking) => [
-					desc(booking.bookingDate),
-					desc(booking.startTime),
-				],
+				orderBy: (booking) => [desc(booking.createdAt)],
 			});
 
 		return bookings;
@@ -1667,16 +1670,18 @@ export class AdminRepository {
 		status?: EquipmentRentalBookingStatus;
 	}) {
 		const bookings =
-			await this.databaseService.db.query.equipmentRentalsBookings.findMany({
-				where: status ? eq(equipmentRentalsBookings.status, status) : undefined,
+			await this.databaseService.db.query.equipmentRentalBookings.findMany({
+				where: status
+					? eq(equipmentRentalBookings.status, status)
+					: eq(equipmentRentalBookings.status, "ongoing"),
 				columns: {
 					createdAt: false,
 					updatedAt: false,
-					equipmentRentalId: false,
+					recieptBarcodeData: false,
 				},
 				limit,
 				offset,
-				orderBy: (booking) => [desc(booking.rentalStartDate)],
+				orderBy: (booking) => [desc(booking.createdAt)],
 			});
 
 		return bookings;
@@ -1689,16 +1694,18 @@ export class AdminRepository {
 	}: {
 		offset: number;
 		limit: number;
-		status?: "pending" | "completed" | "canceled";
+		status?: "completed" | "cancelled";
 	}) {
 		const purchases =
-			await this.databaseService.db.query.vrgamesTicketPurchases.findMany({
-				where: (ticketPurchase) =>
-					status ? eq(ticketPurchase.status, status) : undefined,
+			await this.databaseService.db.query.vrgameTicketPurchases.findMany({
+				where: status
+					? eq(vrgameTicketPurchases.status, status)
+					: eq(vrgameTicketPurchases.status, "completed"),
 				columns: {
 					createdAt: false,
 					updatedAt: false,
-					vrgameId: false,
+					qrcodeData: false,
+					recieptBarcodeData: false,
 				},
 				limit,
 				offset,
@@ -1715,43 +1722,22 @@ export class AdminRepository {
 	}: {
 		offset: number;
 		limit: number;
-		status?: "pending" | "completed" | "canceled";
+		status?: "completed" | "cancelled";
 	}) {
-		const purchases =
-			await this.databaseService.db.query.moviesTicketPurchases.findMany({
-				where: (table) => (status ? eq(table.status, status) : undefined),
-				limit,
-				offset,
-				with: {
-					orderedSnacks: {
-						columns: {
-							createdAt: false,
-							updatedAt: false,
-						},
-						with: {
-							snack: {
-								columns: {
-									createdAt: false,
-									updatedAt: false,
-								},
-							},
-						},
-					},
-				},
-			});
-
-		const ticketsWithSnacks = purchases.map((purchase) => {
-			const { orderedSnacks, ...rest } = purchase;
-			return {
-				...rest,
-				orderedSnacks: orderedSnacks.map((orderedSnack) => ({
-					...orderedSnack,
-					snack: orderedSnack.snack,
-				})),
-			};
+		return await this.databaseService.db.query.movieTicketPurchases.findMany({
+			where: status
+				? eq(movieTicketPurchases.status, status)
+				: eq(movieTicketPurchases.status, "completed"),
+			columns: {
+				createdAt: false,
+				updatedAt: false,
+				qrcodeData: false,
+				recieptBarcodeData: false,
+			},
+			limit,
+			offset,
+			orderBy: (purchase) => [desc(purchase.purchaseDate)],
 		});
-
-		return ticketsWithSnacks;
 	}
 
 	async getHotelBookings({
@@ -1761,15 +1747,19 @@ export class AdminRepository {
 	}: {
 		offset: number;
 		limit: number;
-		status?: "pending" | "confirmed" | "cancelled" | "completed";
+		status?: "confirmed" | "cancelled" | "completed";
 	}) {
+		console.log("Fetching hotel bookings with status:", status);
 		const bookings = await this.databaseService.db.query.hotelBookings.findMany(
 			{
-				where: status ? eq(hotelBookings.status, status) : undefined,
+				where: status
+					? eq(hotelBookings.status, status)
+					: eq(hotelBookings.status, "confirmed"),
 				columns: {
 					createdAt: false,
 					updatedAt: false,
-					hotelRoomId: false,
+					qrcodeData: false,
+					recieptBarcodeData: false,
 				},
 				limit,
 				offset,
@@ -1805,50 +1795,22 @@ export class AdminRepository {
 	}: {
 		offset: number;
 		limit: number;
-		status?: "pending" | "preparing" | "delivered" | "cancelled";
+		status?: "preparing" | "delivered" | "cancelled";
 	}) {
 		const orders = await this.databaseService.db.query.foodOrders.findMany({
-			where: (table) => (status ? eq(table.status, status) : undefined),
+			where: status
+				? eq(foodOrders.status, status)
+				: eq(foodOrders.status, "preparing"),
+			columns: {
+				createdAt: false,
+				updatedAt: false,
+				recieptBarcodeData: false,
+			},
 			limit,
 			offset,
-			with: {
-				food: {
-					columns: {
-						createdAt: false,
-						updatedAt: false,
-					},
-				},
-				foodAddons: {
-					columns: {
-						id: false,
-						foodOrderId: false,
-						addonCategoryId: false,
-						addonItemId: false,
-						createdAt: false,
-						updatedAt: false,
-					},
-					with: {
-						addonItem: {
-							columns: {
-								createdAt: false,
-								updatedAt: false,
-							},
-						},
-					},
-				},
-			},
+			orderBy: (order) => [desc(order.createdAt)],
 		});
 
-		const ordersWithDetails = orders.map((order) => {
-			const { foodAddons, ...rest } = order;
-			return {
-				...rest,
-				foodAddons: foodAddons.map((foodAddon) => ({
-					...foodAddon.addonItem,
-				})),
-			};
-		});
-
-		return ordersWithDetails;
+		return orders;
 	}
 }

@@ -20,35 +20,37 @@ import {
 	cinemaMovies,
 	cinemaMoviesShowtimes,
 	cinemaMoviesToGenres,
-	CreateEquipmentRentalBooking,
-	CreateHotelBooking,
-	CreateMovieTicketPurchase,
-	CreateStudioBooking,
-	CreateVRGameTicketPurchase,
+	CreateEquipmentRentalCart,
+	CreateFoodCart,
+	CreateFoodCartAddon,
+	CreateHotelCart,
+	CreateMovieTicketCart,
+	CreateStudioSessionCart,
+	CreateVRGameTicketCart,
 	equipmentCategories,
 	equipmentRentals,
-	equipmentRentalsBookings,
+	equipmentRentalsCart,
 	foodAddonCategories,
 	foodAddonsItems,
+	foodCart,
+	foodCartAddons,
 	foodCategories,
 	foods,
 	foodToAddonsCategories,
-	hotelRooms,
 	hotelBookings,
+	hotelCart,
+	hotelRooms,
 	hotels,
-	moviesTicketPurchases,
-	moviesTicketSnacksPurchases,
+	moviesTicketCart,
+	moviesTicketSnacksCart,
 	studioAvailability,
-	studioBookings,
 	studios,
+	studioSessionBookings,
+	studioSessionCart,
 	vrgames,
 	vrgamesAvailability,
 	vrgamesCategories,
-	vrgamesTicketPurchases,
-	CreateFoodOrder,
-	foodOrders,
-	CreateFoodOrderAddon,
-	foodOrderAddons,
+	vrgamesTicketCart,
 } from "src/database/schema";
 
 @Injectable()
@@ -795,19 +797,22 @@ END`.as("addons"),
 	async getBookedStudioSessionsByDate(studioId: number, date: string) {
 		const bookings = await this.databaseService.db
 			.select({
-				bookingDate: studioBookings.bookingDate,
-				startTime: studioBookings.startTime,
-				endTime: studioBookings.endTime,
+				bookingDate: studioSessionBookings.sessionDate,
+				startTime: studioSessionBookings.sessionStartTime,
+				endTime: studioSessionBookings.sessionEndTime,
 			})
-			.from(studioBookings)
+			.from(studioSessionBookings)
 			.where(
 				and(
-					eq(studioBookings.studioId, studioId),
-					eq(studioBookings.status, "pending"),
-					eq(sql`DATE(${studioBookings.bookingDate})`, sql`DATE(${date})`),
+					eq(studioSessionBookings.studioId, studioId),
+					eq(studioSessionBookings.status, "scheduled"),
+					eq(
+						sql`DATE(${studioSessionBookings.sessionDate})`,
+						sql`DATE(${date})`,
+					),
 				),
 			)
-			.orderBy(asc(studioBookings.startTime));
+			.orderBy(asc(studioSessionBookings.sessionStartTime));
 
 		return bookings;
 	}
@@ -819,35 +824,38 @@ END`.as("addons"),
 	) {
 		const bookings = await this.databaseService.db
 			.select({
-				bookingDate: studioBookings.bookingDate,
-				startTime: studioBookings.startTime,
-				endTime: studioBookings.endTime,
+				bookingDate: studioSessionBookings.sessionDate,
+				startTime: studioSessionBookings.sessionStartTime,
+				endTime: studioSessionBookings.sessionEndTime,
 			})
-			.from(studioBookings)
+			.from(studioSessionBookings)
 			.where(
 				and(
-					eq(studioBookings.studioId, studioId),
-					eq(studioBookings.status, "pending"),
-					between(studioBookings.bookingDate, startDate, endDate),
+					eq(studioSessionBookings.studioId, studioId),
+					eq(studioSessionBookings.status, "scheduled"),
+					between(studioSessionBookings.sessionDate, startDate, endDate),
 				),
 			)
-			.orderBy(asc(studioBookings.bookingDate), asc(studioBookings.startTime));
+			.orderBy(
+				asc(studioSessionBookings.sessionDate),
+				asc(studioSessionBookings.sessionStartTime),
+			);
 
 		return bookings;
 	}
 
-	async bookStudioSession(bookingData: CreateStudioBooking) {
+	async bookStudioSession(bookingData: CreateStudioSessionCart) {
 		const booking = await this.databaseService.db
-			.insert(studioBookings)
+			.insert(studioSessionCart)
 			.values(bookingData)
 			.$returningId();
 
 		return booking[0];
 	}
 
-	async bookEquipmentRental(bookingData: CreateEquipmentRentalBooking) {
+	async bookEquipmentRental(bookingData: CreateEquipmentRentalCart) {
 		const booking = await this.databaseService.db
-			.insert(equipmentRentalsBookings)
+			.insert(equipmentRentalsCart)
 			.values(bookingData)
 			.$returningId();
 
@@ -866,24 +874,24 @@ END`.as("addons"),
 		totalPrice: string;
 	}) {
 		const updatedBooking = await this.databaseService.db
-			.update(equipmentRentalsBookings)
+			.update(equipmentRentalsCart)
 			.set({
 				quantity,
 				totalPrice,
 			})
 			.where(
 				and(
-					eq(equipmentRentalsBookings.id, bookingId),
-					eq(equipmentRentalsBookings.userId, userId),
+					eq(equipmentRentalsCart.id, bookingId),
+					eq(equipmentRentalsCart.userId, userId),
 				),
 			);
 
 		return updatedBooking[0];
 	}
 
-	async createVrgameTicketOrder(orderData: CreateVRGameTicketPurchase) {
+	async createVrgameTicketOrder(orderData: CreateVRGameTicketCart) {
 		const order = await this.databaseService.db
-			.insert(vrgamesTicketPurchases)
+			.insert(vrgamesTicketCart)
 			.values(orderData)
 			.$returningId();
 
@@ -902,15 +910,15 @@ END`.as("addons"),
 		totalPrice: string;
 	}) {
 		const updatedOrder = await this.databaseService.db
-			.update(vrgamesTicketPurchases)
+			.update(vrgamesTicketCart)
 			.set({
 				ticketQuantity,
 				totalPrice,
 			})
 			.where(
 				and(
-					eq(vrgamesTicketPurchases.id, orderId),
-					eq(vrgamesTicketPurchases.userId, userId),
+					eq(vrgamesTicketCart.id, orderId),
+					eq(vrgamesTicketCart.userId, userId),
 				),
 			);
 
@@ -918,7 +926,7 @@ END`.as("addons"),
 	}
 
 	async createMovieTicketOrder(
-		movieOrderData: CreateMovieTicketPurchase,
+		movieOrderData: CreateMovieTicketCart,
 		movieSnackOrderData: {
 			snackId: number;
 			quantity: number;
@@ -926,19 +934,17 @@ END`.as("addons"),
 	) {
 		const movieOrder = await this.databaseService.db.transaction(async (tx) => {
 			const order = await tx
-				.insert(moviesTicketPurchases)
+				.insert(moviesTicketCart)
 				.values(movieOrderData)
 				.$returningId();
 
 			if (movieSnackOrderData.length > 0) {
 				const snacksDataWithOrderId = movieSnackOrderData.map((snack) => ({
 					...snack,
-					ticketPurchaseId: order[0].id,
+					ticketCartId: order[0].id,
 				}));
 
-				await tx
-					.insert(moviesTicketSnacksPurchases)
-					.values(snacksDataWithOrderId);
+				await tx.insert(moviesTicketSnacksCart).values(snacksDataWithOrderId);
 			}
 
 			return order[0];
@@ -959,24 +965,24 @@ END`.as("addons"),
 		totalPrice: string;
 	}) {
 		const updatedOrder = await this.databaseService.db
-			.update(moviesTicketPurchases)
+			.update(moviesTicketCart)
 			.set({
 				ticketQuantity,
 				totalPrice,
 			})
 			.where(
 				and(
-					eq(moviesTicketPurchases.id, orderId),
-					eq(moviesTicketPurchases.userId, userId),
+					eq(moviesTicketCart.id, orderId),
+					eq(moviesTicketCart.userId, userId),
 				),
 			);
 
 		return updatedOrder[0];
 	}
 
-	async createHotelBooking(createHotelBookingData: CreateHotelBooking) {
+	async createHotelBooking(createHotelBookingData: CreateHotelCart) {
 		const booking = await this.databaseService.db
-			.insert(hotelBookings)
+			.insert(hotelCart)
 			.values(createHotelBookingData)
 			.$returningId();
 
@@ -1027,7 +1033,7 @@ END`.as("addons"),
 	}
 
 	async createFoodOrder(
-		foodOrderData: CreateFoodOrder,
+		foodOrderData: CreateFoodCart,
 		foodOrderAddonData: {
 			addonCategoryId: number;
 			addonItemIds: number[];
@@ -1035,21 +1041,21 @@ END`.as("addons"),
 	) {
 		const foodOrder = await this.databaseService.db.transaction(async (tx) => {
 			const order = await tx
-				.insert(foodOrders)
+				.insert(foodCart)
 				.values(foodOrderData)
 				.$returningId();
 
 			if (foodOrderAddonData.length > 0) {
-				const addonsDataWithOrderId: CreateFoodOrderAddon[] =
+				const addonsDataWithOrderId: CreateFoodCartAddon[] =
 					foodOrderAddonData.flatMap((addon) =>
 						addon.addonItemIds.map((itemId) => ({
-							foodOrderId: order[0].id,
+							foodCartId: order[0].id,
 							addonCategoryId: addon.addonCategoryId,
 							addonItemId: itemId,
 						})),
 					);
 
-				await tx.insert(foodOrderAddons).values(addonsDataWithOrderId);
+				await tx.insert(foodCartAddons).values(addonsDataWithOrderId);
 			}
 
 			return order[0];
@@ -1070,12 +1076,12 @@ END`.as("addons"),
 		totalPrice: string;
 	}) {
 		const updatedOrder = await this.databaseService.db
-			.update(foodOrders)
+			.update(foodCart)
 			.set({
 				quantity,
 				totalPrice,
 			})
-			.where(and(eq(foodOrders.id, orderId), eq(foodOrders.userId, userId)));
+			.where(and(eq(foodCart.id, orderId), eq(foodCart.userId, userId)));
 
 		return updatedOrder[0];
 	}
