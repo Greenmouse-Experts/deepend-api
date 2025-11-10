@@ -25,10 +25,15 @@ import {
 	FoodOrderPaginationQuerySchema,
 	ItemTypeQueryDto,
 	ItemTypeQuerySchema,
-	StudioPaginationQueryDto,
+	PaginationQueryDto,
+	PaginationQuerySchema,
+	ReceiptTypeQueryDto,
+	ReceiptTypeQuerySchema,
 	StudioSessionPaginationQueryDto,
 	TicketPaginationQueryDto,
 	TicketPaginationQuerySchema,
+	TicketTypeQueryDto,
+	TicketTypeQuerySchema,
 	UpdateCartItemQuantityBodyDto,
 	UpdateCartItemQuantityBodySchema,
 } from "src/common/dto/requestQuery.dto";
@@ -199,5 +204,77 @@ export class UserController {
 	@ApiOperation({ summary: "Checkout user's cart" })
 	async checkoutUserCart(@GetUser("userId") userId: string) {
 		return await this.userService.checkoutUserCart(userId);
+	}
+
+	@Get("tickets")
+	@ApiOperation({ summary: "Get all tickets of the user" })
+	async getUserTickets(
+		@GetUser("userId") userId: string,
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.userService.getUserTickets({
+			userId,
+			page,
+			limit,
+		});
+	}
+
+	@Get("tickets/:ticketId")
+	@ApiOperation({ summary: "Get details of a specific ticket of the user" })
+	async getUserTicketDetails(
+		@GetUser("userId") userId: string,
+		@Param("ticketId") ticketId: string,
+		@Query(new QueryJoiValidationPipe(TicketTypeQuerySchema))
+		query: TicketTypeQueryDto,
+	) {
+		return await this.userService.getUserTicketDetailsById({
+			userId,
+			ticketId,
+			ticketType: query.ticketType,
+		});
+	}
+
+	@Get("receipts")
+	@ApiOperation({ summary: "Get all receipts of the user" })
+	async getUserReceipts(
+		@GetUser("userId") userId: string,
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.userService.getUserReciepts({
+			userId,
+			page,
+			limit,
+		});
+	}
+
+	@Get("receipts/:receiptId")
+	@ApiOperation({ summary: "Get details of a specific receipt of the user" })
+	async getUserReceiptDetails(
+		@GetUser("userId") userId: string,
+		@Param("receiptId") receiptId: string,
+		@Query(new QueryJoiValidationPipe(ReceiptTypeQuerySchema))
+		query: ReceiptTypeQueryDto,
+	) {
+		return await this.userService.getUserRecieptDetailsById({
+			userId,
+			receiptId,
+			receiptType: query.receiptType,
+		});
+	}
+
+	@Get("orders")
+	@ApiOperation({ summary: "Get all orders of the user" })
+	async getUserOrders(
+		@GetUser("userId") userId: string,
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.userService.getUserOrders({
+			userId,
+			page,
+			limit,
+		});
 	}
 }
