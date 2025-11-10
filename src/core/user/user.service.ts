@@ -953,4 +953,111 @@ export class UserService {
 			transactions,
 		);
 	}
+
+	async getUserTickets({
+		userId,
+		page,
+		limit,
+	}: {
+		userId: string;
+		page: number;
+		limit: number;
+	}) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		const tickets = await this.userRepository.getUserTickets({
+			userId,
+			offset,
+			limit,
+		});
+
+		return {
+			tickets,
+			prevPage: Number(page) > 1 ? Number(page) - 1 : null,
+			nextPage: tickets.length === Number(limit) ? Number(page) + 1 : null,
+			perPage: Number(limit),
+		};
+	}
+
+	async getUserTicketDetailsById({
+		ticketId,
+		userId,
+		ticketType,
+	}: {
+		ticketId: string;
+		userId: string;
+		ticketType: "studio" | "vrgame" | "movie";
+	}) {
+		return await this.userRepository.getUserTicketDetailsById({
+			ticketId,
+			userId,
+			ticketType,
+		});
+	}
+
+	async getUserReciepts({
+		userId,
+		page,
+		limit,
+	}: {
+		userId: string;
+		page: number;
+		limit: number;
+	}) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		const receipts = await this.userRepository.getUserReciepts({
+			userId,
+			offset,
+			limit,
+		});
+
+		return {
+			receipts,
+			prevPage: Number(page) > 1 ? Number(page) - 1 : null,
+			nextPage: receipts.length === Number(limit) ? Number(page) + 1 : null,
+			perPage: Number(limit),
+		};
+	}
+
+	async getUserRecieptDetailsById({
+		receiptId,
+		userId,
+		receiptType,
+	}: {
+		receiptId: string;
+		userId: string;
+		receiptType: "studio" | "equipment" | "hotel" | "food";
+	}) {
+		return await this.userRepository.getUserRecieptDetailsById({
+			receiptId,
+			userId,
+			receiptType,
+		});
+	}
+
+	async getUserOrders({
+		userId,
+		page,
+		limit,
+	}: {
+		userId: string;
+		page: number;
+		limit: number;
+	}) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		const orders = await this.userRepository.getUserOrders({
+			userId,
+			offset,
+			limit,
+		});
+
+		return {
+			orders,
+			prevPage: Number(page) > 1 ? Number(page) - 1 : null,
+			nextPage: orders.length === Number(limit) ? Number(page) + 1 : null,
+			perPage: Number(limit),
+		};
+	}
 }

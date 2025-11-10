@@ -372,3 +372,32 @@ export const UpdateCartItemQuantityBodySchema = Joi.object({
 		.valid("food", "movie", "vrgame", "equipment")
 		.required(),
 });
+
+export class TicketTypeQueryDto {
+	@ApiProperty({
+		example: "movie",
+		description: 'Type of ticket ("movie", "vrgame", "studio")',
+		required: true,
+	})
+	ticketType: "movie" | "vrgame" | "studio";
+}
+
+export const TicketTypeQuerySchema = Joi.object({
+	ticketType: Joi.string().valid("movie", "vrgame", "studio").required(),
+});
+
+export class ReceiptTypeQueryDto {
+	@ApiProperty({
+		example: "food",
+		description:
+			'Type of receipt ("food", "movie", "vrgame", "studio", "equipment", "hotel")',
+		required: true,
+	})
+	receiptType: "food" | "studio" | "equipment" | "hotel";
+}
+
+export const ReceiptTypeQuerySchema = Joi.object({
+  receiptType: Joi.string()
+    .valid("food", "studio", "equipment", "hotel")
+    .required(),
+});

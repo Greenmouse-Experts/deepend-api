@@ -1677,7 +1677,7 @@ export class AdminRepository {
 				columns: {
 					createdAt: false,
 					updatedAt: false,
-					recieptBarcodeData: false,
+					receiptBarcodeData: false,
 				},
 				limit,
 				offset,
@@ -1759,7 +1759,7 @@ export class AdminRepository {
 					createdAt: false,
 					updatedAt: false,
 					qrcodeData: false,
-					recieptBarcodeData: false,
+					receiptBarcodeData: false,
 				},
 				limit,
 				offset,
@@ -1804,7 +1804,7 @@ export class AdminRepository {
 			columns: {
 				createdAt: false,
 				updatedAt: false,
-				recieptBarcodeData: false,
+				receiptBarcodeData: false,
 			},
 			limit,
 			offset,

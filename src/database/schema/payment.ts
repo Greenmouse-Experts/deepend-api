@@ -174,7 +174,7 @@ export const hotelBookings = mysqlTable(
 		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
 		currency: varchar("currency", { length: 10 }).notNull().default("NGN"),
 		qrcodeData: json("qrcode_data"),
-		recieptBarcodeData: varchar("reciept_barcode_data", { length: 1000 }),
+		receiptBarcodeData: varchar("receipt_barcode_data", { length: 500 }),
 		status: varchar("status", { length: 50 })
 			.notNull()
 			.default("pending")
@@ -221,7 +221,7 @@ export const foodOrders = mysqlTable(
 		specialInstructions: varchar("special_instructions", {
 			length: 500,
 		}).default(""),
-		recieptBarcodeData: varchar("reciept_barcode_data", { length: 1000 }),
+		receiptBarcodeData: varchar("reciept_barcode_data", { length: 500 }),
 		status: varchar("status", { length: 50 })
 			.notNull()
 			.default("pending")
@@ -273,7 +273,7 @@ export const movieTicketPurchases = mysqlTable(
 		purchaseDate: timestamp("purchase_date", { fsp: 6 }).defaultNow().notNull(),
 		isUsed: boolean("is_used").default(false).notNull(),
 		qrcodeData: json("qrcode_data"),
-		recieptBarcodeData: varchar("reciept_barcode_data", { length: 1000 }),
+		recieptBarcodeData: varchar("reciept_barcode_data", { length: 500 }),
 		verifiedAt: timestamp("verified_at", { mode: "string" }),
 		verifiedBy: varchar("verified_by", { length: ID_GENERATOR_LENGTH }),
 		snackAddOns: json("snack_add_ons")
@@ -331,7 +331,7 @@ export const vrgameTicketPurchases = mysqlTable(
 		currency: varchar("currency", { length: 10 }).notNull().default("NGN"),
 		isUsed: boolean("is_used").default(false).notNull(),
 		qrcodeData: json("qrcode_data"),
-		recieptBarcodeData: varchar("reciept_barcode_data", { length: 1000 }),
+		recieptBarcodeData: varchar("reciept_barcode_data", { length: 500 }),
 		verifiedAt: timestamp("verified_at", { mode: "string" }),
 		verifiedBy: varchar("verified_by", { length: ID_GENERATOR_LENGTH }),
 		status: varchar("status", { length: 50 })
@@ -376,7 +376,7 @@ export const equipmentRentalBookings = mysqlTable(
 		rentalEndDate: date("rental_end_date", { mode: "string" }).notNull(),
 		quantity: int("quantity").notNull(),
 		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
-		recieptBarcodeData: varchar("reciept_barcode_data", { length: 1000 }),
+		receiptBarcodeData: varchar("reciept_barcode_data", { length: 500 }),
 		currency: varchar("currency", { length: 10 }).notNull().default("NGN"),
 		status: varchar("status", { length: 50 })
 			.default("pending")
@@ -418,7 +418,7 @@ export const studioSessionBookings = mysqlTable(
 		totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
 		currency: varchar("currency", { length: 10 }).notNull().default("NGN"),
 		qrcodeData: json("qrcode_data"),
-		recieptBarcodeData: varchar("reciept_barcode_data", { length: 1000 }),
+		recieptBarcodeData: varchar("reciept_barcode_data", { length: 500 }),
 		verifiedAt: timestamp("verified_at", { mode: "string" }),
 		verifiedBy: varchar("verified_by", { length: ID_GENERATOR_LENGTH }),
 		status: varchar("status", { length: 50 })
