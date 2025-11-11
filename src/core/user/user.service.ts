@@ -23,6 +23,7 @@ import {
 } from "src/database/schema/payment";
 import Decimal from "decimal.js";
 import { MysqlDatabaseTransaction } from "src/common/helpers";
+import { getDistanceInKm } from "src/common/geospatial";
 
 @Injectable()
 export class UserService {
@@ -486,7 +487,47 @@ export class UserService {
 			const paymentReference =
 				await this.paymentService.generatePaymentReference();
 
-			const deliveryFee = new Decimal(0);
+			const deliverySettings =
+				await this.paymentService.getDeliveryFeeSettings(tx);
+
+			const foodOrderCoordinates = await this.userRepository.getUserFoodOrders({
+				userId,
+				offset: 0,
+				limit: 1,
+				status: "pending",
+			});
+
+			if (!deliverySettings) {
+				throw new BadRequestException(
+					"Delivery settings not configured, please contact support",
+				);
+			}
+
+			if (!deliverySettings?.originLat || !deliverySettings?.originLng) {
+				throw new BadRequestException(
+					"Delivery origin coordinates not configured, please contact support",
+				);
+			}
+
+			if (
+				!foodOrderCoordinates[0].deliveryLat ||
+				!foodOrderCoordinates[0].deliveryLng
+			) {
+				throw new BadRequestException(
+					"Food order delivery coordinates not found",
+				);
+			}
+
+			const distance = getDistanceInKm(
+				Number(deliverySettings?.originLat),
+				Number(deliverySettings?.originLng),
+				Number(foodOrderCoordinates[0]?.deliveryLat),
+				Number(foodOrderCoordinates[0]?.deliveryLng),
+			);
+
+			const deliveryFee = new Decimal(deliverySettings.pricePerKm)
+				.mul(new Decimal(distance))
+				.toNearest(0.01);
 
 			const taxAmount = new Decimal(0);
 
@@ -501,7 +542,7 @@ export class UserService {
 				{
 					userId,
 					paymentMethod: "paystack",
-					deliveryFee: "0",
+					deliveryFee: deliveryFee.toString(),
 					taxAmount: "0",
 					subtotalAmount: subtotalAmount.toString(),
 					totalAmount: totalAmount.toString(),
@@ -571,6 +612,8 @@ export class UserService {
 							foodPrice: String(foodOrder.food.price),
 							quantity: foodOrder.quantity,
 							deliveryAddress: foodOrder.deliveryAddress,
+							deliveryLng: foodOrder.deliveryLng,
+							deliveryLat: foodOrder.deliveryLat,
 							deliveryType: foodOrder.deliveryType,
 							totalPrice: String(foodOrder.totalPrice),
 							foodAddons:
