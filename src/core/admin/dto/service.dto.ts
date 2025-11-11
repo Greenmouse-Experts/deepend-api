@@ -1736,6 +1736,22 @@ export class CreateFoodOrderDto {
 	deliveryAddress?: string;
 
 	@ApiProperty({
+		example: -73.935242,
+		description:
+			"Longitude coordinate for the delivery location (required if deliveryType is 'delivery')",
+		required: false,
+	})
+	deliveryLng?: number;
+
+	@ApiProperty({
+		example: 40.73061,
+		description:
+			"Latitude coordinate for the delivery location (required if deliveryType is 'delivery')",
+		required: false,
+	})
+	deliveryLat?: number;
+
+	@ApiProperty({
 		example: "Please make it extra spicy.",
 		description: "Any special instructions for the food order",
 		required: false,
@@ -1770,6 +1786,16 @@ export const CreateFoodOrderSchema = Joi.object({
 	deliveryAddress: Joi.when("deliveryType", {
 		is: "delivery",
 		then: Joi.string().max(512).trim().required(),
+		otherwise: Joi.forbidden(),
+	}),
+	deliveryLng: Joi.when("deliveryType", {
+		is: "delivery",
+		then: Joi.number().min(-180).max(180).required(),
+		otherwise: Joi.forbidden(),
+	}),
+	deliveryLat: Joi.when("deliveryType", {
+		is: "delivery",
+		then: Joi.number().min(-90).max(90).required(),
 		otherwise: Joi.forbidden(),
 	}),
 	specialInstructions: Joi.string().max(1024).trim().optional(),
