@@ -993,6 +993,14 @@ export const foodCart = mysqlTable(
 			.$type<"pickup" | "delivery">()
 			.notNull(),
 		deliveryAddress: varchar("delivery_address", { length: 512 }),
+		deliveryLng: decimal("delivery_longitude", {
+			precision: 10,
+			scale: 2,
+		}),
+		deliveryLat: decimal("delivery_latitude", {
+			precision: 10,
+			scale: 2,
+		}),
 		specialInstructions: varchar("special_instructions", { length: 1024 }),
 		status: varchar("status", { length: 50 })
 			.default("pending")
