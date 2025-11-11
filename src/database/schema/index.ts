@@ -4,3 +4,4 @@ export * from "./verification";
 export * from "./categories";
 export * from "./services";
 export * from "./payment";
+export * from "./admin";
