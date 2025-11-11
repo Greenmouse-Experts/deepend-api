@@ -218,6 +218,8 @@ export const foodOrders = mysqlTable(
 			.notNull()
 			.$type<"pickup" | "delivery">(),
 		deliveryAddress: varchar("delivery_address", { length: 500 }),
+		deliveryLng: decimal("delivery_longitude", { precision: 10, scale: 7 }),
+		deliveryLat: decimal("delivery_latitude", { precision: 10, scale: 7 }),
 		specialInstructions: varchar("special_instructions", {
 			length: 500,
 		}).default(""),
