@@ -5,6 +5,7 @@ import { PaymentModule } from "../payment/payment.module";
 import { BullModule } from "@nestjs/bullmq";
 import { WEBHOOKS_QUEUE } from "src/common/constants";
 import { UserModule } from "../user/user.module";
+import { MailModule } from "src/mail/mail.module";
 
 @Module({
 	imports: [
@@ -13,6 +14,7 @@ import { UserModule } from "../user/user.module";
 		}),
 		PaymentModule,
 		UserModule,
+    MailModule
 	],
 	providers: [WebhooksConsumer, WebhooksListener],
 	exports: [BullModule],
