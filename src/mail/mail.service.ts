@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { MailerService as NodemailerService } from "@nestjs-modules/mailer";
 import * as path from "path";
+import { PaymentSuccessData } from "./mail.dto";
 
 @Injectable()
 export class MailService {
@@ -70,5 +71,20 @@ export class MailService {
 		const context = { firstName, code };
 
 		return await this.sendMail({ email, context, subject, templatePath });
+	}
+
+	async sendSuccessfulPayment({
+		email,
+		paymentData,
+	}: { email: string; paymentData: PaymentSuccessData }) {
+		try {
+			const subject = "Payment Successful";
+			const templatePath = "successfulPayment"; // Assuming you have a template named 'successfulPayment'
+			const context = { ...paymentData };
+
+			return await this.sendMail({ email, context, subject, templatePath });
+		} catch (err) {
+			throw err;
+		}
 	}
 }
