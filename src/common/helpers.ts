@@ -18,6 +18,7 @@ import { ExtractTablesWithRelations, sql } from "drizzle-orm";
 import * as databaseSchema from "../database/schema";
 import { AxiosError } from "axios";
 import { AnyColumn } from "drizzle-orm";
+import Decimal from "decimal.js";
 
 export const generateId = init({
 	length: ID_GENERATOR_LENGTH,
@@ -90,9 +91,9 @@ export function calculateStudioTotalPrice(
 ): number {
 	const hours = getHoursBetween(startTime, endTime);
 
-	const total = hourlyRate * hours;
+	const total = new Decimal(hourlyRate).mul(hours);
 
-	return Math.round(total * 100) / 100;
+	return total.mul(100).div(100).toNumber();
 }
 
 export function calculateEquipmentTotalPrice(
@@ -102,9 +103,9 @@ export function calculateEquipmentTotalPrice(
 ): number {
 	const days = getDaysBetween(startDate, endDate);
 
-	const total = dailyRate * days;
+	const total = new Decimal(dailyRate).mul(days);
 
-	return Math.round(total * 100) / 100;
+	return total.mul(100).div(100).toNearest(0.01).toNumber();
 }
 
 export function timeToMinutes(timeString: string): number {
@@ -206,3 +207,40 @@ export const generateReceiptBarcodeData = (
 
 	return barcodeData;
 };
+
+export function generateOrderDescription(
+	cartItemType: string,
+	quantity: number,
+	itemName: string,
+): string {
+	let description = "";
+
+	switch (cartItemType) {
+		case "studio":
+			description = `Studio Booking: ${itemName}`;
+			break;
+		case "food":
+			description = `Food Order: ${itemName}`;
+			break;
+		case "equipment":
+			description = `Equipment Rental: ${itemName}`;
+			break;
+		case "hotel":
+			description = `Hotel Booking: ${itemName}`;
+			break;
+		case "movie":
+			description = `Movie Ticket: ${itemName}`;
+			break;
+		case "vrgame":
+			description = `VR Game Session: ${itemName}`;
+			break;
+		default:
+			description = `Order Item: ${itemName}`;
+	}
+
+	if (quantity > 1) {
+		description += ` (x${quantity})`;
+	}
+
+	return description;
+}
