@@ -24,6 +24,7 @@ import {
 import { isDatabaseError, mysqlErrorCodes } from "src/common/mysql.error";
 import { format, isWithinInterval, parse } from "date-fns";
 import { UserService } from "../user/user.service";
+import Decimal from "decimal.js";
 
 @Injectable()
 export class ServicesService {
@@ -871,8 +872,10 @@ export class ServicesService {
 			);
 		}
 
-		const vrgameTotalPrice =
-			Number(vrgame.ticketPrice) * Number(order.ticketQuantity);
+		const vrgameTotalPrice = new Decimal(vrgame.ticketPrice)
+			.mul(order.ticketQuantity)
+			.toNearest(0.01)
+			.toNumber();
 
 		return { ...order, totalPrice: vrgameTotalPrice };
 	}
@@ -908,8 +911,10 @@ export class ServicesService {
 			throw new NotFoundException("VR game not found");
 		}
 
-		const vrgameTotalPrice =
-			Number(vrgame.ticketPrice) * Number(order.ticketQuantity);
+		const vrgameTotalPrice = new Decimal(vrgame.ticketPrice)
+			.mul(order.ticketQuantity)
+			.toNearest(0.01)
+			.toNumber();
 
 		return { totalPrice: vrgameTotalPrice };
 	}
@@ -1014,14 +1019,20 @@ export class ServicesService {
 		const movieSnacksTotalPrice = movieShowtime.snacks.reduce(
 			(total, snack) =>
 				total +
-				Number(snack.price) *
-					(order.orderedSnacks.find((s) => s.snackId === snack.id)?.quantity ||
-						0),
+				new Decimal(snack.price)
+					.mul(
+						order.orderedSnacks.find((s) => s.snackId === snack.id)?.quantity ||
+							0,
+					)
+					.toNearest(0.01)
+					.toNumber(),
 			0,
 		);
-		const movieTotalPrice =
-			Number(movieShowtime.ticketPrice) * Number(order.ticketQuantity) +
-			movieSnacksTotalPrice;
+		const movieTotalPrice = new Decimal(movieShowtime.ticketPrice)
+			.mul(order.ticketQuantity)
+			.plus(movieSnacksTotalPrice)
+			.toNearest(0.01)
+			.toNumber();
 
 		return { ...order, totalPrice: movieTotalPrice };
 	}
@@ -1047,14 +1058,20 @@ export class ServicesService {
 		const movieSnacksTotalPrice = movieShowtime.snacks.reduce(
 			(total, snack) =>
 				total +
-				Number(snack.price) *
-					(order.orderedSnacks.find((s) => s.snackId === snack.id)?.quantity ||
-						0),
+				new Decimal(snack.price)
+					.mul(
+						order.orderedSnacks.find((s) => s.snackId === snack.id)?.quantity ||
+							0,
+					)
+					.toNearest(0.01)
+					.toNumber(),
 			0,
 		);
-		const movieTotalPrice =
-			Number(movieShowtime.ticketPrice) * Number(order.ticketQuantity) +
-			movieSnacksTotalPrice;
+		const movieTotalPrice = new Decimal(movieShowtime.ticketPrice)
+			.mul(order.ticketQuantity)
+			.plus(movieSnacksTotalPrice)
+			.toNearest(0.01)
+			.toNumber();
 
 		return { totalPrice: movieTotalPrice };
 	}
@@ -1152,7 +1169,10 @@ export class ServicesService {
 			) /
 			(1000 * 60 * 60 * 24);
 
-		const totalPrice = Number(hotelRoom.pricePerNight) * Number(numberOfNights);
+		const totalPrice = new Decimal(hotelRoom.pricePerNight)
+			.mul(numberOfNights)
+			.toNearest(0.01)
+			.toNumber();
 
 		return { ...booking, totalPrice };
 	}
@@ -1182,7 +1202,10 @@ export class ServicesService {
 			) /
 			(1000 * 60 * 60 * 24);
 
-		const totalPrice = Number(hotelRoom.pricePerNight) * Number(numberOfNights);
+		const totalPrice = new Decimal(hotelRoom.pricePerNight)
+			.mul(numberOfNights)
+			.toNearest(0.01)
+			.toNumber();
 
 		return { totalPrice };
 	}
@@ -1280,7 +1303,10 @@ export class ServicesService {
 			throw new NotFoundException("Food item not found");
 		}
 
-		let foodPrice = Number(foodItem.price) * Number(order.quantity);
+		let foodPrice = new Decimal(foodItem.price || 0)
+			.mul(order.quantity)
+			.toNearest(0.01)
+			.toNumber();
 
 		if (order.foodAddons && order.foodAddons.length > 0) {
 			const foodAddOnsPrice = order.foodAddons.reduce((total, addon) => {
@@ -1331,7 +1357,10 @@ export class ServicesService {
 			throw new NotFoundException("Food item not found");
 		}
 
-		let foodPrice = Number(foodItem.price) * Number(order.quantity);
+		let foodPrice = new Decimal(foodItem.price || 0)
+			.mul(order.quantity)
+			.toNearest(0.01)
+			.toNumber();
 
 		if (order.foodAddons && order.foodAddons.length > 0) {
 			const foodAddOnsPrice = order.foodAddons.reduce((total, addon) => {
@@ -1350,11 +1379,18 @@ export class ServicesService {
 				}
 
 				const sumAddOnPrice = matchingAddOn.reduce(
-					(sum, item) => sum + Number(item.price || 0),
+					(sum, item) =>
+						new Decimal(sum)
+							.plus(item.price || 0)
+							.toNearest(0.01)
+							.toNumber(),
 					0,
 				);
 
-				return total + sumAddOnPrice;
+				return new Decimal(total)
+					.plus(sumAddOnPrice)
+					.toNearest(0.01)
+					.toNumber();
 			}, 0);
 
 			if (foodAddOnsPrice === 0) {
