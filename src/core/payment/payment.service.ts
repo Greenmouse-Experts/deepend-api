@@ -5,7 +5,11 @@ import { HttpService } from "@nestjs/axios";
 import { catchError, firstValueFrom } from "rxjs";
 import { AxiosError } from "axios";
 import { HandleAxiosError, MysqlDatabaseTransaction } from "src/common/helpers";
-import { CreatePaymentRecord, Payments } from "src/database/schema";
+import {
+	CreatePaymentRecord,
+	Payments,
+	adminDeliverySettings,
+} from "src/database/schema";
 
 @Injectable()
 export class PaymentService {
@@ -74,5 +78,12 @@ export class PaymentService {
 			.$returningId();
 
 		return paymentRecord;
+	}
+
+	async getDeliveryFeeSettings(transactions: MysqlDatabaseTransaction) {
+		const deliveryFeeSettings =
+			await transactions.query.adminDeliverySettings.findFirst();
+
+		return deliveryFeeSettings;
 	}
 }

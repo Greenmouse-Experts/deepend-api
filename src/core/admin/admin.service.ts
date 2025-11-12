@@ -6,7 +6,6 @@ import {
 import {
 	AdminRepository,
 	EquipmentRentalBookingStatus,
-	StudioBookingStatus,
 } from "./admin.repository";
 import { CreateFood, CreateHotelAmenity } from "src/database/schema/services";
 import { isDatabaseError, mysqlErrorCodes } from "src/common/mysql.error";
@@ -39,7 +38,10 @@ import {
 	UpdateEquipmentCategoryDto,
 	UpdateMovieGenreDto,
 } from "./dto/category.dto";
-import { StudioSessionBookingStatus } from "src/database/schema";
+import {
+	CreateDeliverySettingsDto,
+	UpdateDeliverySettingsDto,
+} from "./dto/admin.dto";
 
 @Injectable()
 export class AdminService {
@@ -2390,5 +2392,57 @@ export class AdminService {
 			limit,
 			status,
 		});
+	}
+
+	async getDashboardStats() {
+		return await this.adminRepository.getDashboardStats();
+	}
+
+	async createAdminDeliverySetting(
+		deliverySettingData: CreateDeliverySettingsDto,
+	) {
+		try {
+			const existingSetting = await this.adminRepository.getDeliverySetting();
+
+			if (existingSetting) {
+				throw new BadRequestException("Delivery setting already exists");
+			}
+
+			return await this.adminRepository.createDeliverySetting(
+				deliverySettingData,
+			);
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async updateAdminDeliverySetting(
+		id: number,
+		deliverySettingData: UpdateDeliverySettingsDto,
+	) {
+		try {
+			const updatedSetting = await this.adminRepository.updateDeliverySetting(
+				id,
+				deliverySettingData,
+			);
+
+			if (updatedSetting[0].affectedRows === 0) {
+				throw new BadRequestException("Delivery setting not found");
+			}
+
+			return { message: "Delivery setting updated successfully" };
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async getAdminDeliverySetting() {
+		const setting = await this.adminRepository.getDeliverySetting();
+
+		if (!setting) {
+			throw new BadRequestException("Delivery setting not found");
+		}
+
+		return setting;
 	}
 }

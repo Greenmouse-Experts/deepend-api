@@ -5,6 +5,7 @@ import {
 	Get,
 	Param,
 	ParseIntPipe,
+	Patch,
 	Post,
 	Put,
 	Query,
@@ -142,6 +143,12 @@ import {
 	UpdateVRGameDto,
 	UpdateVRGameSchema,
 } from "./dto/service.dto";
+import {
+	CreateDeliverySettingsDto,
+	DeliverySettingsSchema,
+	UpdateDeliverySettingsDto,
+	UpdateDeliverySettingsSchema,
+} from "./dto/admin.dto";
 
 @ApiTags("Admin")
 @Controller({ path: "admins", version: "1" })
@@ -1302,5 +1309,36 @@ export class AdminController {
 		{ page, limit, search }: UserPaginationQueryDto,
 	) {
 		return await this.adminService.getAllUsers(+page, +limit, search);
+	}
+
+	@Get("dashboard/stats")
+	@ApiOperation({ summary: "Get dashboard stats" })
+	async getDashboardStats() {
+		return await this.adminService.getDashboardStats();
+	}
+
+	@Post("delivery-settings")
+	@ApiOperation({ summary: "Create or update delivery settings" })
+	@ApiBody({ type: CreateDeliverySettingsDto })
+	@UsePipes(new JoiValidationPipe(DeliverySettingsSchema))
+	async upsertDeliverySettings(@Body() body: CreateDeliverySettingsDto) {
+		return await this.adminService.createAdminDeliverySetting(body);
+	}
+
+	@Patch("delivery-settings/:id")
+	@ApiOperation({ summary: "Update delivery settings" })
+	@ApiBody({ type: UpdateDeliverySettingsDto })
+	@UsePipes(new JoiValidationPipe(UpdateDeliverySettingsSchema))
+	async updateDeliverySettings(
+		@Param("id", ParseIntPipe) id: number,
+		@Body() body: UpdateDeliverySettingsDto,
+	) {
+		return await this.adminService.updateAdminDeliverySetting(id, body);
+	}
+
+	@Get("delivery-settings")
+	@ApiOperation({ summary: "Get delivery settings" })
+	async getDeliverySettings() {
+		return await this.adminService.getAdminDeliverySetting();
 	}
 }

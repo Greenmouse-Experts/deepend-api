@@ -1246,6 +1246,8 @@ export class ServicesService {
 					totalPrice: String(foodPrice),
 					deliveryType: foodData.deliveryType,
 					deliveryAddress: foodData.deliveryAddress,
+					deliveryLng: String(foodData.deliveryLng),
+					deliveryLat: String(foodData.deliveryLat),
 					specialInstructions: foodData.specialInstructions,
 				},
 				foodData.addons,

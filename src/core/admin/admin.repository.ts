@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import {
 	and,
 	asc,
+	count,
 	desc,
 	eq,
 	gt,
@@ -13,6 +14,8 @@ import {
 } from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
 import {
+	adminDeliverySettings,
+	CreateDeliverySettings,
 	equipmentRentalBookings,
 	foodOrders,
 	hotelBookings,
@@ -1812,5 +1815,91 @@ export class AdminRepository {
 		});
 
 		return orders;
+	}
+
+	async getDashboardStats() {
+		const result = await Promise.all([
+			this.databaseService.db
+				.select({ userTotal: count(users.id) })
+				.from(users),
+			this.databaseService.db
+				.select({
+					vrgameSubscribersTotal: count(vrgameTicketPurchases.ticketId),
+				})
+				.from(vrgameTicketPurchases)
+				.where(eq(vrgameTicketPurchases.status, "completed")),
+			this.databaseService.db
+				.select({ movieSubscribersTotal: count(movieTicketPurchases.ticketId) })
+				.from(movieTicketPurchases)
+				.where(eq(movieTicketPurchases.status, "completed")),
+			this.databaseService.db
+				.select({
+					equipmentSubscribersTotal: count(equipmentRentalBookings.id),
+				})
+				.from(equipmentRentalBookings)
+				.where(
+					or(
+						eq(equipmentRentalBookings.status, "ongoing"),
+						eq(equipmentRentalBookings.status, "completed"),
+					),
+				),
+			this.databaseService.db
+				.select({ hotelSubscribersTotal: count(hotelBookings.id) })
+				.from(hotelBookings)
+				.where(eq(hotelBookings.status, "confirmed")),
+			this.databaseService.db
+				.select({ studioSubscribersTotal: count(studioSessionBookings.id) })
+				.from(studioSessionBookings)
+				.where(eq(studioSessionBookings.status, "scheduled")),
+			this.databaseService.db
+				.select({ foodSubscribersTotal: count(foodOrders.id) })
+				.from(foodOrders)
+				.where(
+					and(
+						or(
+							eq(foodOrders.status, "preparing"),
+							eq(foodOrders.status, "delivered"),
+						),
+					),
+				),
+		]);
+
+		return {
+			userTotal: result[0][0]?.userTotal || 0,
+			vrgameSubscribersTotal: result[1][0]?.vrgameSubscribersTotal || 0,
+			movieSubscribersTotal: result[2][0]?.movieSubscribersTotal || 0,
+			equipmentSubscribersTotal: result[3][0]?.equipmentSubscribersTotal || 0,
+			hotelSubscribersTotal: result[4][0]?.hotelSubscribersTotal || 0,
+			studioSubscribersTotal: result[5][0]?.studioSubscribersTotal || 0,
+			foodSubscribersTotal: result[6][0]?.foodSubscribersTotal || 0,
+		};
+	}
+
+	async createDeliverySetting(settingData: CreateDeliverySettings) {
+		const result = await this.databaseService.db
+			.insert(adminDeliverySettings)
+			.values(settingData)
+			.$returningId();
+		return result[0];
+	}
+
+	async updateDeliverySetting(
+		id: number,
+		settingData: Partial<CreateDeliverySettings>,
+	) {
+		const result = await this.databaseService.db
+			.update(adminDeliverySettings)
+			.set(settingData)
+			.where(eq(adminDeliverySettings.id, id));
+		return result;
+	}
+
+	async getDeliverySetting() {
+		const setting = await this.databaseService.db
+			.select()
+			.from(adminDeliverySettings)
+			.limit(1)
+			.orderBy(desc(adminDeliverySettings.createdAt));
+		return setting[0];
 	}
 }
