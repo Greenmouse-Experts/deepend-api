@@ -1318,7 +1318,7 @@ export class AdminController {
 	}
 
 	@Post("delivery-settings")
-	@ApiOperation({ summary: "Create or update delivery settings" })
+	@ApiOperation({ summary: "Create delivery settings" })
 	@ApiBody({ type: CreateDeliverySettingsDto })
 	@UsePipes(new JoiValidationPipe(DeliverySettingsSchema))
 	async upsertDeliverySettings(@Body() body: CreateDeliverySettingsDto) {

@@ -510,20 +510,25 @@ export class UserService {
 			}
 
 			if (
-				!foodOrderCoordinates[0].deliveryLat ||
-				!foodOrderCoordinates[0].deliveryLng
+				foodOrderCoordinates.length > 0 &&
+				(!foodOrderCoordinates[0].deliveryLat ||
+					!foodOrderCoordinates[0].deliveryLng)
 			) {
 				throw new BadRequestException(
 					"Food order delivery coordinates not found",
 				);
 			}
 
-			const distance = getDistanceInKm(
-				Number(deliverySettings?.originLat),
-				Number(deliverySettings?.originLng),
-				Number(foodOrderCoordinates[0]?.deliveryLat),
-				Number(foodOrderCoordinates[0]?.deliveryLng),
-			);
+			let distance = 0;
+
+			if (foodOrderCoordinates.length > 0) {
+				distance = getDistanceInKm(
+					Number(deliverySettings?.originLat),
+					Number(deliverySettings?.originLng),
+					Number(foodOrderCoordinates[0]?.deliveryLat),
+					Number(foodOrderCoordinates[0]?.deliveryLng),
+				);
+			}
 
 			const deliveryFee = new Decimal(deliverySettings.pricePerKm)
 				.mul(new Decimal(distance))
@@ -532,11 +537,17 @@ export class UserService {
 			const taxAmount = new Decimal(0);
 
 			const subtotalAmount = cartItems.reduce(
-				(sum, item) => new Decimal(sum).plus(new Decimal(item.totalPrice || 0)),
+				(sum, item) =>
+					new Decimal(sum)
+						.plus(new Decimal(item.totalPrice || 0))
+						.toNearest(0.01),
 				new Decimal(0),
 			);
 
-			const totalAmount = subtotalAmount.plus(deliveryFee).plus(taxAmount);
+			const totalAmount = subtotalAmount
+				.plus(deliveryFee)
+				.plus(taxAmount)
+				.toNearest(0.01);
 
 			const createdOrder = await this.userRepository.createPendingOrder(
 				{

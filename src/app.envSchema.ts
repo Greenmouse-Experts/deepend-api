@@ -24,4 +24,6 @@ export const envSchema = joi.object({
 	RECEIPT_BARCODE_SECRET_KEY: joi.string().required(),
 	TICKET_QR_CODE_SECRET_KEY: joi.string().required(),
 	BULL_BOARD_ADMIN_PASSWORD: joi.string().required(),
+	DEEPEND_SUPPORT_EMAIL: joi.string().email().required(),
+	DEEPEND_SUPPORT_PHONE: joi.string().required(),
 });

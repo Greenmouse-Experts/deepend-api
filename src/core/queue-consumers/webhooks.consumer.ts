@@ -9,6 +9,7 @@ import Decimal from "decimal.js";
 import { PaymentService } from "../payment/payment.service";
 import { UserService } from "../user/user.service";
 import {
+	generateOrderDescription,
 	generateReceiptBarcodeData,
 	generateTicketQrCodeData,
 } from "src/common/helpers";
@@ -27,6 +28,7 @@ import {
 	VRGameTicketPurchaseStatus,
 } from "src/database/schema";
 import { bulkUpdateReciepts, bulkUpdateTickets } from "src/common/bulkupdates";
+import { MailService } from "src/mail/mail.service";
 
 const TICKET_QR_CODE_SECRET_KEY = process.env.TICKET_QR_CODE_SECRET_KEY;
 const RECEIPT_BARCODE_SECRET_KEY = process.env.RECEIPT_BARCODE_SECRET_KEY;
@@ -38,6 +40,7 @@ export class WebhooksConsumer extends WorkerHost {
 	constructor(
 		private readonly paymentService: PaymentService,
 		private readonly userService: UserService,
+		private readonly mailService: MailService,
 	) {
 		super();
 	}
@@ -371,9 +374,48 @@ export class WebhooksConsumer extends WorkerHost {
 								);
 							}
 
+							const orderItems = await this.userService.getUserCart(
+								order.userId,
+							);
+
 							await this.userService.decrementServicesAndClearUserCart(
 								order.userId,
 							);
+
+							await this.mailService.sendSuccessfulPayment({
+								email: webhookPayload.customer?.email as string,
+								paymentData: {
+									customer: {
+										firstName: webhookPayload.customer?.first_name as string,
+									},
+									order: {
+										orderNumber: order.id,
+										items: orderItems.map((order) => ({
+											icon: order.picture as string,
+											name: order.name as string,
+											description: generateOrderDescription(
+												order.cartItemType,
+												order.quantity,
+												order.name as string,
+											),
+											price: order.totalPrice,
+										})),
+										total: order.totalAmount,
+									},
+									payment: {
+										method: order.paymentMethod,
+										date: new Date(webhookPayload.paid_at as string)
+											.toISOString()
+											.slice(0, 19)
+											.replace("T", " "),
+										transactionId: webhookPayload.reference,
+									},
+									support: {
+										email: process.env.DEEPEND_SUPPORT_EMAIL as string,
+										phone: process.env.DEEPEND_SUPPORT_PHONE as string,
+									},
+								},
+							});
 
 							return { success: true };
 						}
