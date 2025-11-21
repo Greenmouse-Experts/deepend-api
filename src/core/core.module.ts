@@ -6,8 +6,9 @@ import { ServicesModule } from "./services/services.module";
 import { PaymentModule } from './payment/payment.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { QueueConsumersModule } from './queue-consumers/queue-consumers.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
-	imports: [UserModule, AuthModule, AdminModule, ServicesModule, PaymentModule, WebhooksModule, QueueConsumersModule],
+	imports: [UserModule, AuthModule, AdminModule, ServicesModule, PaymentModule, WebhooksModule, QueueConsumersModule, NotificationModule],
 })
 export class CoreModule {}
