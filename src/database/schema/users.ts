@@ -5,11 +5,12 @@ import {
 	text,
 	mysqlEnum,
 	int,
+	varchar,
 } from "drizzle-orm/mysql-core";
 import { countries } from "./countries";
-import { varchar } from "drizzle-orm/mysql-core";
 import { generateId } from "../../common/helpers";
 import { ID_GENERATOR_LENGTH } from "../../common/constants";
+import { index } from "drizzle-orm/mysql-core";
 
 export type CreateUser = typeof users.$inferInsert;
 
@@ -30,9 +31,27 @@ export const users = mysqlTable("users", {
 		.notNull()
 		.default("user"),
 	emailVerified: boolean("email_verified").default(false),
+	fcmToken: text("fcm_token"),
 	refreshToken: text("refresh_token"),
 	createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { fsp: 6 })
 		.$onUpdateFn(() => new Date())
 		.notNull(),
 });
+
+export const notifications = mysqlTable(
+	"notifications",
+	{
+		id: varchar("id", { length: ID_GENERATOR_LENGTH })
+			.$defaultFn(() => generateId())
+			.primaryKey(),
+		userId: varchar("user_id", { length: ID_GENERATOR_LENGTH })
+			.notNull()
+			.references(() => users.id),
+		title: varchar("title", { length: 255 }).notNull(),
+		message: text("message").notNull(),
+		isRead: boolean("is_read").default(false).notNull(),
+		createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
+	},
+	(table) => [index("user_id_index").on(table.userId)],
+);
