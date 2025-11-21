@@ -23,6 +23,7 @@ import {
 	cinemas,
 	cinemaHalls,
 	hotels,
+	notifications,
 } from "src/database/schema";
 import {
 	EquipmentRentalBookingStatus,
@@ -1452,5 +1453,44 @@ export class UserRepository {
 		});
 
 		return fetchedOrders;
+	}
+
+	async getUserNotifications({
+		userId,
+		offset,
+		limit,
+	}: { userId: string; offset: number; limit: number }) {
+		const userNotifications =
+			await this.databaseService.db.query.notifications.findMany({
+				where: eq(notifications.userId, userId),
+				limit,
+				offset,
+				orderBy: (notification, { desc }) => [desc(notification.createdAt)],
+			});
+
+		return userNotifications;
+	}
+
+	async markNotificationAsRead(notificationId: string, userId: string) {
+		const updatedNotificaton = await this.databaseService.db
+			.update(notifications)
+			.set({ isRead: true })
+			.where(
+				and(
+					eq(notifications.id, notificationId),
+					eq(notifications.userId, userId),
+				),
+			);
+
+		return updatedNotificaton;
+	}
+
+	async markAllNotificationsAsRead(userId: string) {
+		const updatedNotificaton = await this.databaseService.db
+			.update(notifications)
+			.set({ isRead: true })
+			.where(eq(notifications.userId, userId));
+
+		return updatedNotificaton;
 	}
 }
