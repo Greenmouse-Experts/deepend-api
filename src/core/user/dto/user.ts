@@ -67,11 +67,18 @@ export class LoginUserDto {
 		example: "strongPassword123!",
 	})
 	password: string;
+
+	@ApiProperty({
+		description: "User's fcmToken",
+		example: "fcm_jlajidfjiajdfiajsdjj",
+	})
+	fcmToken?: string;
 }
 
 export const LoginUserSchema = joi.object({
 	email: joi.string().email().trim().required(),
 	password: joi.string().min(8).max(100).trim().required(),
+	fcmToken: joi.string().optional(),
 });
 
 export class VerifyEmailDto {
