@@ -7,6 +7,7 @@ import {
 	Param,
 	Patch,
 	Post,
+	Put,
 	Query,
 	UseGuards,
 } from "@nestjs/common";
@@ -276,5 +277,37 @@ export class UserController {
 			page,
 			limit,
 		});
+	}
+
+	@Get("notifications")
+	@ApiOperation({ summary: "Get all notifications of the user" })
+	async getUserNotifications(
+		@GetUser("userId") userId: string,
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.userService.getUserNotifications({
+			userId,
+			page,
+			limit,
+		});
+	}
+
+	@Put("notifications/:notificationId/read")
+	@ApiOperation({ summary: "Mark a notification as read" })
+	async markNotificationAsRead(
+		@GetUser("userId") userId: string,
+		@Param("notificationId") notificationId: string,
+	) {
+		return await this.userService.markNotificationAsRead(
+			notificationId,
+			userId,
+		);
+	}
+
+	@Put("notifications/read-all")
+	@ApiOperation({ summary: "Mark all notifications as read" })
+	async markAllNotificationsAsRead(@GetUser("userId") userId: string) {
+		return await this.userService.markAllNotificationsAsRead(userId);
 	}
 }
