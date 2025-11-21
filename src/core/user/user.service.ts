@@ -1114,4 +1114,46 @@ export class UserService {
 			perPage: Number(limit),
 		};
 	}
+
+	async getUserNotifications({
+		userId,
+		page,
+		limit,
+	}: {
+		userId: string;
+		page: number;
+		limit: number;
+	}) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		const notifications = await this.userRepository.getUserNotifications({
+			userId,
+			offset,
+			limit,
+		});
+
+		return {
+			notifications,
+			prevPage: Number(page) > 1 ? Number(page) - 1 : null,
+			nextPage:
+				notifications.length === Number(limit) ? Number(page) + 1 : null,
+			perPage: Number(limit),
+		};
+	}
+
+	async markNotificationAsRead(notificationId: string, userId: string) {
+		await this.userRepository.markNotificationAsRead(notificationId, userId);
+
+		return {
+			message: "Notification marked as read successfully",
+		};
+	}
+
+	async markAllNotificationsAsRead(userId: string) {
+		await this.userRepository.markAllNotificationsAsRead(userId);
+
+		return {
+			message: "All notifications marked as read successfully",
+		};
+	}
 }
