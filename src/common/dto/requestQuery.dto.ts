@@ -328,11 +328,13 @@ export class FoodOrderPaginationQueryDto extends PaginationQueryDto {
 			'Filter food orders by status ("preparing", "delivered", "cancelled")',
 		required: false,
 	})
-	status?: "preparing" | "delivered" | "cancelled";
+	status?: "preparing" | "delivered" | "cancelled" | "confirmed" | "on-the-way";
 }
 
 export const FoodOrderPaginationQuerySchema = PaginationQuerySchema.keys({
-	status: Joi.string().valid("preparing", "delivered", "cancelled").optional(),
+	status: Joi.string()
+		.valid("preparing", "delivered", "cancelled", "confirmed", "on-the-way")
+		.optional(),
 });
 
 export class ItemTypeQueryDto {
@@ -397,7 +399,7 @@ export class ReceiptTypeQueryDto {
 }
 
 export const ReceiptTypeQuerySchema = Joi.object({
-  receiptType: Joi.string()
-    .valid("food", "studio", "equipment", "hotel")
-    .required(),
+	receiptType: Joi.string()
+		.valid("food", "studio", "equipment", "hotel")
+		.required(),
 });
