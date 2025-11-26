@@ -1005,7 +1005,14 @@ export const foodCart = mysqlTable(
 		status: varchar("status", { length: 50 })
 			.default("pending")
 			.notNull()
-			.$type<"pending" | "preparing" | "delivered" | "cancelled">(),
+			.$type<
+				| "pending"
+				| "preparing"
+				| "delivered"
+				| "cancelled"
+				| "confirmed"
+				| "on-the-way"
+			>(),
 		createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
 		updatedAt: timestamp("updated_at", { fsp: 6 })
 			.$onUpdateFn(() => new Date())
