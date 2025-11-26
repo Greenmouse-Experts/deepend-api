@@ -56,3 +56,17 @@ export const UpdateDeliverySettingsSchema =
 		originLng: Joi.number().optional().min(-180).max(180),
 		pricePerKm: Joi.number().optional(),
 	});
+
+export class UpdateFoodOrderStatusDto {
+	@ApiProperty({
+		example: "Preparing",
+		description: "New status for the food order",
+	})
+	status: "preparing" | "on-the-way";
+}
+
+export const UpdateFoodOrderStatusSchema = Joi.object<UpdateFoodOrderStatusDto>(
+	{
+		status: Joi.string().required().valid("preparing", "on-the-way"),
+	},
+);
