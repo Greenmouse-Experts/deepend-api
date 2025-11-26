@@ -1,0 +1,2 @@
+ALTER TABLE `food_orders` DROP CONSTRAINT `food_orders_status_check`;--> statement-breakpoint
+ALTER TABLE `food_orders` ADD CONSTRAINT `food_orders_status_check` CHECK (status IN ('pending', 'confirmed', 'preparing', 'on-the-way', 'delivered', 'cancelled'));
