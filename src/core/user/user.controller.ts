@@ -279,6 +279,20 @@ export class UserController {
 		});
 	}
 
+	@Get("transactions")
+	@ApiOperation({ summary: "Get all transactions of the user" })
+	async getUserTransactions(
+		@GetUser("userId") userId: string,
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.userService.getUserTransactions({
+			userId,
+			page,
+			limit,
+		});
+	}
+
 	@Get("notifications")
 	@ApiOperation({ summary: "Get all notifications of the user" })
 	async getUserNotifications(
