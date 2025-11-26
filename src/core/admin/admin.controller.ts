@@ -148,6 +148,8 @@ import {
 	DeliverySettingsSchema,
 	UpdateDeliverySettingsDto,
 	UpdateDeliverySettingsSchema,
+	UpdateFoodOrderStatusDto,
+	UpdateFoodOrderStatusSchema,
 } from "./dto/admin.dto";
 
 @ApiTags("Admin")
@@ -1340,5 +1342,16 @@ export class AdminController {
 	@ApiOperation({ summary: "Get delivery settings" })
 	async getDeliverySettings() {
 		return await this.adminService.getAdminDeliverySetting();
+	}
+
+	@Patch("orders/foods/:foodOrderId/status")
+	@ApiOperation({ summary: "Update food order status" })
+	@ApiBody({ type: UpdateFoodOrderStatusDto })
+	@UsePipes(new JoiValidationPipe(UpdateFoodOrderStatusSchema))
+	async updateFoodOrderStatus(
+		@Param("foodOrderId") orderId: string,
+		@Body() body: UpdateFoodOrderStatusDto,
+	) {
+		return await this.adminService.updateFoodOrderStatus(orderId, body.status);
 	}
 }
