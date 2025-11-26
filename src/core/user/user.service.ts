@@ -173,7 +173,13 @@ export class UserService {
 		userId: string;
 		page: number;
 		limit: number;
-		status?: "pending" | "preparing" | "delivered" | "cancelled";
+		status?:
+			| "pending"
+			| "preparing"
+			| "delivered"
+			| "cancelled"
+			| "confirmed"
+			| "on-the-way";
 	}) {
 		const offset = (Number(page) - 1) * Number(limit);
 
@@ -1111,6 +1117,31 @@ export class UserService {
 			orders,
 			prevPage: Number(page) > 1 ? Number(page) - 1 : null,
 			nextPage: orders.length === Number(limit) ? Number(page) + 1 : null,
+			perPage: Number(limit),
+		};
+	}
+
+	async getUserTransactions({
+		userId,
+		page,
+		limit,
+	}: {
+		userId: string;
+		page: number;
+		limit: number;
+	}) {
+		const offset = (Number(page) - 1) * Number(limit);
+
+		const transactions = await this.userRepository.getUserTransactions({
+			userId,
+			offset,
+			limit,
+		});
+
+		return {
+			transactions,
+			prevPage: Number(page) > 1 ? Number(page) - 1 : null,
+			nextPage: transactions.length === Number(limit) ? Number(page) + 1 : null,
 			perPage: Number(limit),
 		};
 	}
