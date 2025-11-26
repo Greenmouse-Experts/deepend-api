@@ -12,7 +12,15 @@ export class NotificationService {
 		private readonly databaseService: DatabaseService,
 	) {}
 
-	async sendNotification(userId: string, message: Message): Promise<string> {
+	async sendNotification({
+		userId,
+		message,
+		token,
+	}: {
+		userId: string;
+		message: Omit<Message, "token">;
+		token?: string | null;
+	}) {
 		await this.databaseService.db.insert(notifications).values({
 			// @ts-ignore
 			userId,
@@ -20,7 +28,11 @@ export class NotificationService {
 			message: message.notification?.body,
 		});
 
-		return this.messaging.send(message);
+		if (token) {
+			await this.messaging.send({ ...message, token });
+		}
+
+		return;
 	}
 
 	async getNotifications(userId: string, page: number, limit: number) {
