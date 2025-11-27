@@ -25,7 +25,9 @@ export type HotelBookingStatus =
 
 export type FoodOrderStatus =
 	| "pending"
+	| "confirmed"
 	| "preparing"
+	| "on-the-way"
 	| "delivered"
 	| "cancelled";
 
@@ -227,7 +229,14 @@ export const foodOrders = mysqlTable(
 		status: varchar("status", { length: 50 })
 			.notNull()
 			.default("pending")
-			.$type<"pending" | "preparing" | "delivered" | "cancelled">(),
+			.$type<
+				| "pending"
+				| "confirmed"
+				| "preparing"
+				| "on-the-way"
+				| "delivered"
+				| "cancelled"
+			>(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 	},
@@ -247,7 +256,7 @@ export const foodOrders = mysqlTable(
 		),
 		check(
 			"food_orders_status_check",
-			sql`status IN ('pending', 'preparing', 'delivered', 'cancelled')`,
+			sql`status IN ('pending', 'confirmed', 'preparing', 'on-the-way', 'delivered', 'cancelled')`,
 		),
 	],
 );

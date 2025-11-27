@@ -29,6 +29,7 @@ import {
 } from "src/database/schema";
 import { bulkUpdateReciepts, bulkUpdateTickets } from "src/common/bulkupdates";
 import { MailService } from "src/mail/mail.service";
+import { NotificationService } from "../notification/notification.service";
 
 const TICKET_QR_CODE_SECRET_KEY = process.env.TICKET_QR_CODE_SECRET_KEY;
 const RECEIPT_BARCODE_SECRET_KEY = process.env.RECEIPT_BARCODE_SECRET_KEY;
@@ -41,6 +42,7 @@ export class WebhooksConsumer extends WorkerHost {
 		private readonly paymentService: PaymentService,
 		private readonly userService: UserService,
 		private readonly mailService: MailService,
+		private readonly notificationService: NotificationService,
 	) {
 		super();
 	}
@@ -255,7 +257,7 @@ export class WebhooksConsumer extends WorkerHost {
 									case "food":
 										foodOrderRecieptUpdates.push({
 											id: item.itemId,
-											status: "preparing",
+											status: "confirmed",
 											recieptBarcodeData: generateReceiptBarcodeData(
 												item.itemId,
 												RECEIPT_BARCODE_SECRET_KEY || "",
@@ -416,6 +418,21 @@ export class WebhooksConsumer extends WorkerHost {
 									},
 								},
 							});
+
+							const user = await this.userService.getUserById(order.userId);
+
+							if (user) {
+								await this.notificationService.sendNotification({
+									userId: order.userId,
+									message: {
+										notification: {
+											title: "Payment Successful",
+											body: `Your payment of N${order.totalAmount} for order ${order.id} was successful.`,
+										},
+									},
+									token: user.fcmToken,
+								});
+							}
 
 							return { success: true };
 						}

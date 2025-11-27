@@ -76,7 +76,7 @@ export class AuthService {
 		}
 	}
 
-	async loginUser({ email, password }: LoginUserDto) {
+	async loginUser({ email, password, fcmToken }: LoginUserDto) {
 		const user = await this.userService.getUserByEmail(email);
 
 		if (!user) {
@@ -112,7 +112,10 @@ export class AuthService {
 			user.role,
 		);
 
-		await this.userService.updateUser(user.id, { refreshToken: refresh_token });
+		await this.userService.updateUser(user.id, {
+			refreshToken: refresh_token,
+			fcmToken,
+		});
 
 		const {
 			password: pwd,

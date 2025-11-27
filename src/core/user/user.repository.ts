@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { and, eq, inArray, or, sql } from "drizzle-orm";
+import { and, eq, getTableColumns, inArray, or, sql } from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
 import {
 	// AddToCartType,
@@ -23,6 +23,7 @@ import {
 	cinemas,
 	cinemaHalls,
 	hotels,
+	notifications,
 } from "src/database/schema";
 import {
 	EquipmentRentalBookingStatus,
@@ -43,6 +44,7 @@ import {
 	hotelBookings,
 	movieTicketPurchases,
 	orders,
+	Payments,
 	studioSessionBookings,
 	vrgameTicketPurchases,
 } from "src/database/schema/payment";
@@ -506,7 +508,13 @@ export class UserRepository {
 		userId: string;
 		offset: number;
 		limit: number;
-		status?: "pending" | "preparing" | "delivered" | "cancelled";
+		status?:
+			| "pending"
+			| "preparing"
+			| "delivered"
+			| "cancelled"
+			| "confirmed"
+			| "on-the-way";
 	}) {
 		const orders = await this.databaseService.db.query.foodCart.findMany({
 			where: (table, { and }) =>
@@ -1452,5 +1460,65 @@ export class UserRepository {
 		});
 
 		return fetchedOrders;
+	}
+
+	async getUserTransactions({
+		userId,
+		offset,
+		limit,
+	}: { userId: string; offset: number; limit: number }) {
+		const { paymentDetails, ...payments } = getTableColumns(Payments);
+
+		const userTransactions = await this.databaseService.db
+			.select({ ...payments })
+			.from(Payments)
+			.leftJoin(orders, eq(Payments.orderId, orders.id))
+			.where(and(eq(orders.userId, userId)))
+			.limit(limit)
+			.offset(offset);
+
+		return userTransactions;
+	}
+
+	async getUserNotifications({
+		userId,
+		offset,
+		limit,
+	}: { userId: string; offset: number; limit: number }) {
+		const userNotifications =
+			await this.databaseService.db.query.notifications.findMany({
+				where: and(
+					eq(notifications.userId, userId),
+					eq(notifications.isRead, false),
+				),
+				limit,
+				offset,
+				orderBy: (notification, { desc }) => [desc(notification.createdAt)],
+			});
+
+		return userNotifications;
+	}
+
+	async markNotificationAsRead(notificationId: string, userId: string) {
+		const updatedNotificaton = await this.databaseService.db
+			.update(notifications)
+			.set({ isRead: true })
+			.where(
+				and(
+					eq(notifications.id, notificationId),
+					eq(notifications.userId, userId),
+				),
+			);
+
+		return updatedNotificaton;
+	}
+
+	async markAllNotificationsAsRead(userId: string) {
+		const updatedNotificaton = await this.databaseService.db
+			.update(notifications)
+			.set({ isRead: true })
+			.where(eq(notifications.userId, userId));
+
+		return updatedNotificaton;
 	}
 }

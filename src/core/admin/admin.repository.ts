@@ -1798,12 +1798,17 @@ export class AdminRepository {
 	}: {
 		offset: number;
 		limit: number;
-		status?: "preparing" | "delivered" | "cancelled";
+		status?:
+			| "preparing"
+			| "delivered"
+			| "confirmed"
+			| "cancelled"
+			| "on-the-way";
 	}) {
 		const orders = await this.databaseService.db.query.foodOrders.findMany({
 			where: status
 				? eq(foodOrders.status, status)
-				: eq(foodOrders.status, "preparing"),
+				: eq(foodOrders.status, "confirmed"),
 			columns: {
 				createdAt: false,
 				updatedAt: false,
@@ -1901,5 +1906,23 @@ export class AdminRepository {
 			.limit(1)
 			.orderBy(desc(adminDeliverySettings.createdAt));
 		return setting[0];
+	}
+
+	async getFoodOrderById(id: string) {
+		const order = await this.databaseService.db
+			.select()
+			.from(foodOrders)
+			.where(eq(foodOrders.id, id));
+
+		return order[0];
+	}
+
+	async updateFoodOrderStatus(id: string, status: "preparing" | "on-the-way") {
+		const result = await this.databaseService.db
+			.update(foodOrders)
+			.set({ status })
+			.where(eq(foodOrders.id, id));
+
+		return result;
 	}
 }

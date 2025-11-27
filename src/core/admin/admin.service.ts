@@ -2383,7 +2383,12 @@ export class AdminService {
 	}: {
 		page: number;
 		limit: number;
-		status?: "preparing" | "delivered" | "cancelled";
+		status?:
+			| "preparing"
+			| "delivered"
+			| "cancelled"
+			| "on-the-way"
+			| "confirmed";
 	}) {
 		const offset = (page - 1) * limit;
 
@@ -2444,5 +2449,45 @@ export class AdminService {
 		}
 
 		return setting;
+	}
+
+	async updateFoodOrderStatus(
+		orderId: string,
+		status: "preparing" | "on-the-way",
+	) {
+		const foodOrder = await this.adminRepository.getFoodOrderById(orderId);
+
+		if (!foodOrder) {
+			throw new BadRequestException("Food order not found");
+		}
+
+		if (foodOrder.status === "delivered" || foodOrder.status === "cancelled") {
+			throw new BadRequestException(
+				"Cannot update status of delivered or cancelled orders",
+			);
+		}
+
+		if (foodOrder.status === status) {
+			throw new BadRequestException(
+				`Food order is already marked as ${status}`,
+			);
+		}
+
+		if (foodOrder.status === "on-the-way" && status === "preparing") {
+			throw new BadRequestException(
+				`Cannot change status from on-the-way back to preparing`,
+			);
+		}
+
+		const updatedOrder = await this.adminRepository.updateFoodOrderStatus(
+			orderId,
+			status,
+		);
+
+		if (updatedOrder[0].affectedRows === 0) {
+			throw new BadRequestException("Food order not found or status unchanged");
+		}
+
+		return { message: "Food order status updated successfully" };
 	}
 }
