@@ -1395,6 +1395,17 @@ export class CreateStudioDto {
 	name: string;
 
 	@ApiProperty({
+		example: [
+			{ url: "http://example.com/image1.jpg", path: "/image1.jpeg" },
+			{ url: "http://example.com/image2.jpg", path: "/image2.jpeg" },
+		],
+		description: "List of image URLs for the room",
+		required: true,
+		type: [Images],
+	})
+	imageUrls: Images[];
+
+	@ApiProperty({
 		example: "200.00",
 		description: "Hourly rate for renting the studio",
 	})
@@ -1409,6 +1420,14 @@ export class CreateStudioDto {
 
 export const CreateStudioSchema = Joi.object({
 	name: Joi.string().max(255).trim().required(),
+	imageUrls: Joi.array()
+		.items(
+			Joi.object({
+				url: Joi.string().uri().required(),
+				path: Joi.string().required(),
+			}),
+		)
+		.optional(),
 	hourlyRate: Joi.number().precision(2).positive().required(),
 	location: Joi.string().max(512).trim().required(),
 });
@@ -1792,11 +1811,15 @@ export const CreateFoodOrderSchema = Joi.object({
 		is: "delivery",
 		then: Joi.number().min(-180).max(180).required(),
 		otherwise: Joi.forbidden(),
+	}).messages({
+		"any.required": "coordinates are required for delivery",
 	}),
 	deliveryLat: Joi.when("deliveryType", {
 		is: "delivery",
 		then: Joi.number().min(-90).max(90).required(),
 		otherwise: Joi.forbidden(),
+	}).messages({
+		"any.required": "coordinates are required for delivery",
 	}),
 	specialInstructions: Joi.string().max(1024).trim().optional(),
 	foodId: Joi.string().required(),
