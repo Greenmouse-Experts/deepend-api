@@ -42,6 +42,7 @@ import {
 	CreateDeliverySettingsDto,
 	UpdateDeliverySettingsDto,
 } from "./dto/admin.dto";
+import { CreateAdminNotification } from "src/database/schema";
 
 @Injectable()
 export class AdminService {
@@ -2489,5 +2490,100 @@ export class AdminService {
 		}
 
 		return { message: "Food order status updated successfully" };
+	}
+
+	async updateEquipmentRentalBookingStatus(
+		bookingId: string,
+		status: EquipmentRentalBookingStatus,
+	) {
+		try {
+			const booking =
+				await this.adminRepository.getEquipmentRentalBookingById(bookingId);
+
+			if (!booking) {
+				throw new BadRequestException("Equipment rental booking not found");
+			}
+
+			if (booking.status === status) {
+				throw new BadRequestException(
+					`Equipment rental booking is already marked as ${status}`,
+				);
+			}
+
+			const updatedBooking =
+				await this.adminRepository.updateEquipmentRentalBookingStatus(
+					bookingId,
+					status,
+				);
+
+			if (updatedBooking[0].affectedRows === 0) {
+				throw new BadRequestException(
+					"Equipment rental booking not found or status unchanged",
+				);
+			}
+
+			return {
+				message: "Equipment rental booking status updated successfully",
+			};
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async getAllOrders(page: number, limit: number) {
+		const offset = (page - 1) * limit;
+
+		const orders = await this.adminRepository.getAllOrders(offset, limit);
+
+		return {
+			orders,
+			prevPage: page > 1 ? page - 1 : null,
+			nextPage: orders.length === limit ? page + 1 : null,
+			perPage: limit,
+		};
+	}
+
+	async createAdminNotification(notificationData: CreateAdminNotification[]) {
+		return await this.adminRepository.createAdminNotification(notificationData);
+	}
+
+	async getReadAdminNotifications(page: number, limit: number) {
+		const offset = (page - 1) * limit;
+
+		const notifications = await this.adminRepository.getReadAdminNotifications(
+			offset,
+			limit,
+		);
+
+		return {
+			notifications,
+			prevPage: page > 1 ? page - 1 : null,
+			nextPage: notifications.length === limit ? page + 1 : null,
+			perPage: limit,
+		};
+	}
+
+	async getUnreadAdminNotifications(page: number, limit: number) {
+		const offset = (page - 1) * limit;
+		const notifications =
+			await this.adminRepository.getUnreadAdminNotifications(offset, limit);
+
+		return {
+			notifications,
+			prevPage: page > 1 ? page - 1 : null,
+			nextPage: notifications.length === limit ? page + 1 : null,
+			perPage: limit,
+		};
+	}
+
+	async markNotificationAsRead(notificationId: number) {
+		const result =
+			await this.adminRepository.markNotificationAsRead(notificationId);
+
+		if (result[0].affectedRows === 0) {
+			throw new BadRequestException("Notification not found or already read");
+		}
+
+		return { message: "Notification marked as read successfully" };
 	}
 }
