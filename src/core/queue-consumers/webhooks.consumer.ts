@@ -30,6 +30,7 @@ import {
 import { bulkUpdateReciepts, bulkUpdateTickets } from "src/common/bulkupdates";
 import { MailService } from "src/mail/mail.service";
 import { NotificationService } from "../notification/notification.service";
+import { AdminService } from "../admin/admin.service";
 
 const TICKET_QR_CODE_SECRET_KEY = process.env.TICKET_QR_CODE_SECRET_KEY;
 const RECEIPT_BARCODE_SECRET_KEY = process.env.RECEIPT_BARCODE_SECRET_KEY;
@@ -43,6 +44,7 @@ export class WebhooksConsumer extends WorkerHost {
 		private readonly userService: UserService,
 		private readonly mailService: MailService,
 		private readonly notificationService: NotificationService,
+		private readonly adminService: AdminService,
 	) {
 		super();
 	}
@@ -433,6 +435,17 @@ export class WebhooksConsumer extends WorkerHost {
 									token: user.fcmToken,
 								});
 							}
+
+							await this.adminService.createAdminNotification([
+								{
+									title: "New Payment Received",
+									message: `A payment of N${order.totalAmount} has been received for order ${order.id}.`,
+								},
+								{
+									title: "New Order Completed",
+									message: `Order ${order.id} has been completed Successfully by user ${order.userId}.`,
+								},
+							]);
 
 							return { success: true };
 						}
