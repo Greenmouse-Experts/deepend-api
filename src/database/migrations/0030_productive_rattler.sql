@@ -1,0 +1,1 @@
+ALTER TABLE `studios` ADD `image_urls` json DEFAULT ('[]') NOT NULL;
