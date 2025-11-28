@@ -148,6 +148,8 @@ import {
 	DeliverySettingsSchema,
 	UpdateDeliverySettingsDto,
 	UpdateDeliverySettingsSchema,
+	UpdateEquipmentOrderStatusDto,
+	UpdateEquipmentOrderStatusSchema,
 	UpdateFoodOrderStatusDto,
 	UpdateFoodOrderStatusSchema,
 } from "./dto/admin.dto";
@@ -1353,5 +1355,54 @@ export class AdminController {
 		@Body() body: UpdateFoodOrderStatusDto,
 	) {
 		return await this.adminService.updateFoodOrderStatus(orderId, body.status);
+	}
+
+	@Patch("orders/equipments/:equipmentOrderId/status")
+	@ApiOperation({ summary: "Update equipment order status" })
+	@ApiBody({ type: UpdateEquipmentOrderStatusDto })
+	@UsePipes(new JoiValidationPipe(UpdateEquipmentOrderStatusSchema))
+	async updateEquipmentOrderStatus(
+		@Param("equipmentOrderId") orderId: string,
+		@Body() body: UpdateEquipmentOrderStatusDto,
+	) {
+		return await this.adminService.updateEquipmentRentalBookingStatus(
+			orderId,
+			body.status,
+		);
+	}
+
+	@Get("orders")
+	@ApiOperation({ summary: "Get all orders with pagination" })
+	async getAllOrders(
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.adminService.getAllOrders(page, limit);
+	}
+
+	@Get("notifications/read")
+	@ApiOperation({ summary: "Get all notifications with pagination" })
+	async getAllNotifications(
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.adminService.getReadAdminNotifications(page, limit);
+	}
+
+	@Get("notifications/unread")
+	@ApiOperation({ summary: "Get all unread notifications with pagination" })
+	async getAllUnreadNotifications(
+		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
+		{ page, limit }: PaginationQueryDto,
+	) {
+		return await this.adminService.getUnreadAdminNotifications(page, limit);
+	}
+
+	@Put("notifications/:notificationId/read")
+	@ApiOperation({ summary: "Mark a notification as read" })
+	async markNotificationAsRead(
+		@Param("notificationId", ParseIntPipe) notificationId: number,
+	) {
+		return await this.adminService.markNotificationAsRead(notificationId);
 	}
 }
