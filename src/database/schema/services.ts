@@ -633,6 +633,10 @@ export const studios = mysqlTable("studios", {
 	id: int("id").autoincrement().primaryKey(),
 	name: varchar("name", { length: 255 }).unique().notNull(),
 	location: varchar("location", { length: 512 }).notNull(),
+	imageUrls: json("image_urls")
+		.$type<{ url: string; path: string }[]>()
+		.default([])
+		.notNull(),
 	hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }).notNull(),
 	isAvailable: boolean("is_available").default(false).notNull(),
 	createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),

@@ -13,8 +13,6 @@ import { QueryJoiValidationPipe } from "src/common/pipes/query-validation.pipe";
 import {
 	CalculateEquipmentRentalPriceQueryDto,
 	CalculateEquipmentRentalPriceQuerySchema,
-	DateRangeQueryDto,
-	DateRangeQuerySchema,
 	GetBookedStudiosSessionsByRangeQueryDto,
 	GetBookedStudiosSessionsByRangeQuerySchema,
 	GetBookedStudiosSessionsQueryDto,

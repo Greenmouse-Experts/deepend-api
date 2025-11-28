@@ -217,7 +217,8 @@ export class AdminRepository {
 			.select()
 			.from(foods)
 			.limit(limit)
-			.offset(offset);
+			.offset(offset)
+			.orderBy(desc(foods.createdAt));
 		return foodsList;
 	}
 
@@ -1587,7 +1588,9 @@ export class AdminRepository {
 			.select()
 			.from(studios)
 			.limit(limit)
-			.offset(offset);
+			.offset(offset)
+			.orderBy(desc(studios.createdAt));
+
 		return studiosList;
 	}
 
