@@ -7,6 +7,7 @@ import { WEBHOOKS_QUEUE } from "src/common/constants";
 import { UserModule } from "../user/user.module";
 import { MailModule } from "src/mail/mail.module";
 import { NotificationModule } from "../notification/notification.module";
+import { AdminModule } from "../admin/admin.module";
 
 @Module({
 	imports: [
@@ -17,6 +18,7 @@ import { NotificationModule } from "../notification/notification.module";
 		UserModule,
 		MailModule,
 		NotificationModule,
+		AdminModule,
 	],
 	providers: [WebhooksConsumer, WebhooksListener],
 	exports: [BullModule],
