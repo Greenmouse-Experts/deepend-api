@@ -20,6 +20,9 @@ export class JoiValidationPipe implements PipeTransform {
 				(value instanceof Object && metadata.type === "body") ||
 				(typeof value === "object" && metadata.type === "body")
 			) {
+				console.log("Validating value:", value);
+				console.log("JSON Body:", JSON.stringify(value, null, 2));
+
 				await this.schema.validateAsync(value, {
 					abortEarly: false,
 				});
