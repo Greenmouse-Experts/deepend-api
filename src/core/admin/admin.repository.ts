@@ -197,6 +197,9 @@ export class AdminRepository {
 						},
 					},
 				},
+				orderBy: (foodToAddonsCategories) => [
+					asc(foodToAddonsCategories.createdAt),
+				],
 			});
 
 		return result.map((item) => ({
@@ -269,7 +272,8 @@ export class AdminRepository {
 		const category = await this.databaseService.db
 			.select()
 			.from(foodCategories)
-			.where(eq(foodCategories.id, id));
+			.where(eq(foodCategories.id, id))
+			.orderBy(asc(foodCategories.createdAt));
 
 		return category;
 	}
@@ -370,7 +374,8 @@ export class AdminRepository {
 			.from(foodAddonsItems)
 			.where(eq(foodAddonsItems.categoryId, categoryId))
 			.limit(limit)
-			.offset(offset);
+			.offset(offset)
+			.orderBy(asc(foodAddonsItems.createdAt));
 	}
 
 	async makeFoodAvailable(id: string) {
@@ -1973,16 +1978,16 @@ export class AdminRepository {
 		return notifications;
 	}
 
-  async getUnreadAdminNotifications(offset: number, limit: number) {
-    const notifications = await this.databaseService.db
-      .select()
-      .from(adminNotifications)
-      .limit(limit)
-      .offset(offset)
-      .where(eq(adminNotifications.isRead, false))
-      .orderBy(desc(adminNotifications.createdAt));
-    return notifications;
-  }
+	async getUnreadAdminNotifications(offset: number, limit: number) {
+		const notifications = await this.databaseService.db
+			.select()
+			.from(adminNotifications)
+			.limit(limit)
+			.offset(offset)
+			.where(eq(adminNotifications.isRead, false))
+			.orderBy(desc(adminNotifications.createdAt));
+		return notifications;
+	}
 
 	async markNotificationAsRead(id: number) {
 		const result = await this.databaseService.db
