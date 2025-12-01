@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import * as Joi from "joi";
+import { EquipmentRentalBookingStatus } from "../admin.repository";
 
 export class CreateDeliverySettingsDto {
 	@ApiProperty({
@@ -59,7 +60,7 @@ export const UpdateDeliverySettingsSchema =
 
 export class UpdateFoodOrderStatusDto {
 	@ApiProperty({
-		example: "Preparing",
+		example: "preparing",
 		description: "New status for the food order",
 	})
 	status: "preparing" | "on-the-way";
@@ -70,3 +71,16 @@ export const UpdateFoodOrderStatusSchema = Joi.object<UpdateFoodOrderStatusDto>(
 		status: Joi.string().required().valid("preparing", "on-the-way"),
 	},
 );
+
+export class UpdateEquipmentOrderStatusDto {
+	@ApiProperty({
+		example: "completed",
+		description: "New status for the equipment order",
+	})
+	status: "completed" | "cancelled";
+}
+
+export const UpdateEquipmentOrderStatusSchema =
+	Joi.object<UpdateEquipmentOrderStatusDto>({
+		status: Joi.string().required().valid("completed", "cancelled"),
+	});

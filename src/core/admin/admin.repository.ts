@@ -5,6 +5,7 @@ import {
 	count,
 	desc,
 	eq,
+	getTableColumns,
 	gt,
 	gte,
 	inArray,
@@ -15,11 +16,14 @@ import {
 import { DatabaseService } from "src/database/database.service";
 import {
 	adminDeliverySettings,
+	adminNotifications,
+	CreateAdminNotification,
 	CreateDeliverySettings,
 	equipmentRentalBookings,
 	foodOrders,
 	hotelBookings,
 	movieTicketPurchases,
+	orders,
 	studioSessionBookings,
 	users,
 	vrgameTicketPurchases,
@@ -193,6 +197,9 @@ export class AdminRepository {
 						},
 					},
 				},
+				orderBy: (foodToAddonsCategories) => [
+					asc(foodToAddonsCategories.createdAt),
+				],
 			});
 
 		return result.map((item) => ({
@@ -265,7 +272,8 @@ export class AdminRepository {
 		const category = await this.databaseService.db
 			.select()
 			.from(foodCategories)
-			.where(eq(foodCategories.id, id));
+			.where(eq(foodCategories.id, id))
+			.orderBy(asc(foodCategories.createdAt));
 
 		return category;
 	}
@@ -366,7 +374,8 @@ export class AdminRepository {
 			.from(foodAddonsItems)
 			.where(eq(foodAddonsItems.categoryId, categoryId))
 			.limit(limit)
-			.offset(offset);
+			.offset(offset)
+			.orderBy(asc(foodAddonsItems.createdAt));
 	}
 
 	async makeFoodAvailable(id: string) {
@@ -1693,6 +1702,15 @@ export class AdminRepository {
 		return bookings;
 	}
 
+	async getEquipmentRentalBookingById(id: string) {
+		const booking =
+			await this.databaseService.db.query.equipmentRentalBookings.findFirst({
+				where: eq(equipmentRentalBookings.id, id),
+			});
+
+		return booking;
+	}
+
 	async getVrgamesTicketPurchases({
 		offset,
 		limit,
@@ -1927,5 +1945,71 @@ export class AdminRepository {
 			.where(eq(foodOrders.id, id));
 
 		return result;
+	}
+
+	async updateEquipmentRentalBookingStatus(
+		id: string,
+		status: EquipmentRentalBookingStatus,
+	) {
+		const result = await this.databaseService.db
+			.update(equipmentRentalBookings)
+			.set({ status })
+			.where(eq(equipmentRentalBookings.id, id));
+
+		return result;
+	}
+
+	async createAdminNotification(notificationData: CreateAdminNotification[]) {
+		const result = await this.databaseService.db
+			.insert(adminNotifications)
+			.values(notificationData)
+			.$returningId();
+		return result[0];
+	}
+
+	async getReadAdminNotifications(offset: number, limit: number) {
+		const notifications = await this.databaseService.db
+			.select()
+			.from(adminNotifications)
+			.limit(limit)
+			.offset(offset)
+			.where(eq(adminNotifications.isRead, true))
+			.orderBy(desc(adminNotifications.createdAt));
+		return notifications;
+	}
+
+	async getUnreadAdminNotifications(offset: number, limit: number) {
+		const notifications = await this.databaseService.db
+			.select()
+			.from(adminNotifications)
+			.limit(limit)
+			.offset(offset)
+			.where(eq(adminNotifications.isRead, false))
+			.orderBy(desc(adminNotifications.createdAt));
+		return notifications;
+	}
+
+	async markNotificationAsRead(id: number) {
+		const result = await this.databaseService.db
+			.update(adminNotifications)
+			.set({ isRead: true })
+			.where(eq(adminNotifications.id, id));
+		return result;
+	}
+
+	async getAllOrders(offset: number, limit: number) {
+		const { status, ...OrderColumns } = getTableColumns(orders);
+
+		const userOrders = await this.databaseService.db
+			.select({
+				...OrderColumns,
+			})
+			.from(orders)
+			.limit(limit)
+			.offset(offset)
+			.where(eq(orders.status, "completed"))
+			.orderBy(desc(orders.createdAt));
+
+		return userOrders;
 	}
 }
