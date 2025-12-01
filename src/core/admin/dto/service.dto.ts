@@ -1739,6 +1739,20 @@ export const BookHotelSchema = Joi.object({
 	"date.greater": "checkOutDate must be the same as or after checkInDate",
 });
 
+class FoodOrderAddonsDto {
+	@ApiProperty({
+		example: 1,
+		description: "The ID of the addon category",
+	})
+	addonCategoryId: number;
+
+	@ApiProperty({
+		example: [1, 2],
+		description: "List of addon item IDs selected from the category",
+	})
+	addonItemIds: number[];
+}
+
 export class CreateFoodOrderDto {
 	@ApiProperty({
 		example: "delivery",
@@ -1796,6 +1810,7 @@ export class CreateFoodOrderDto {
 		],
 		description: "Optional addons for the food item",
 		required: false,
+		type: [FoodOrderAddonsDto],
 	})
 	addons?: { addonCategoryId: number; addonItemIds: number[] }[];
 }

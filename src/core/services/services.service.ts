@@ -1268,10 +1268,18 @@ export class ServicesService {
 					quantity: foodData.quantity,
 					totalPrice: String(foodPrice),
 					deliveryType: foodData.deliveryType,
-					deliveryAddress: foodData.deliveryAddress,
-					deliveryLng: String(foodData.deliveryLng),
-					deliveryLat: String(foodData.deliveryLat),
-					specialInstructions: foodData.specialInstructions,
+					...(foodData.deliveryType === "delivery"
+						? { deliveryAddress: foodData.deliveryAddress }
+						: {}),
+					...(foodData.deliveryType === "delivery" && foodData.deliveryLat
+						? { deliveryLat: String(foodData.deliveryLat) }
+						: {}),
+					...(foodData.deliveryType === "delivery" && foodData.deliveryLng
+						? { deliveryLng: String(foodData.deliveryLng) }
+						: {}),
+					...(foodData.specialInstructions
+						? { specialInstructions: foodData.specialInstructions }
+						: {}),
 				},
 				foodData.addons,
 			);
