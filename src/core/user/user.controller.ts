@@ -324,4 +324,10 @@ export class UserController {
 	async markAllNotificationsAsRead(@GetUser("userId") userId: string) {
 		return await this.userService.markAllNotificationsAsRead(userId);
 	}
+
+	@Get("delivery-address")
+	@ApiOperation({ summary: "Get user's delivery address" })
+	async getUserDeliveryAddress(@GetUser("userId") userId: string) {
+		return await this.userService.getUserDeliveryAddress(userId);
+	}
 }
