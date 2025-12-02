@@ -6,11 +6,12 @@ import {
 	mysqlEnum,
 	int,
 	varchar,
+	decimal,
+	index,
 } from "drizzle-orm/mysql-core";
 import { countries } from "./countries";
 import { generateId } from "../../common/helpers";
 import { ID_GENERATOR_LENGTH } from "../../common/constants";
-import { index } from "drizzle-orm/mysql-core";
 
 export type CreateUser = typeof users.$inferInsert;
 
@@ -33,6 +34,15 @@ export const users = mysqlTable("users", {
 	emailVerified: boolean("email_verified").default(false),
 	fcmToken: text("fcm_token"),
 	refreshToken: text("refresh_token"),
+	deliveryAddress: varchar("delivery_address", { length: 512 }),
+	deliveryLng: decimal("delivery_longitude", {
+		precision: 10,
+		scale: 2,
+	}),
+	deliveryLat: decimal("delivery_latitude", {
+		precision: 10,
+		scale: 2,
+	}),
 	createdAt: timestamp("created_at", { fsp: 6 }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { fsp: 6 })
 		.$onUpdateFn(() => new Date())
