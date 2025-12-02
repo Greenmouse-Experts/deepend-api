@@ -1521,4 +1521,17 @@ export class UserRepository {
 
 		return updatedNotificaton;
 	}
+
+	async getUserDeliveryAddress(userId: string) {
+		const address = await this.databaseService.db.query.users.findFirst({
+			where: eq(users.id, userId),
+			columns: {
+				id: true,
+				deliveryAddress: true,
+				deliveryLng: true,
+				deliveryLat: true,
+			},
+		});
+		return address;
+	}
 }
