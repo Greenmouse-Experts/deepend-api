@@ -1440,6 +1440,17 @@ export class UpdateStudioDto {
 	name?: string;
 
 	@ApiProperty({
+		example: [
+			{ url: "http://example.com/image1.jpg", path: "/image1.jpeg" },
+			{ url: "http://example.com/image2.jpg", path: "/image2.jpeg" },
+		],
+		description: "List of image URLs for the room",
+		required: true,
+		type: [Images],
+	})
+	imageUrls: Images[];
+
+	@ApiProperty({
 		example: "200.00",
 		description: "Hourly rate for renting the studio",
 	})
@@ -1454,6 +1465,14 @@ export class UpdateStudioDto {
 
 export const UpdateStudioSchema = Joi.object({
 	name: Joi.string().max(255).trim().optional(),
+	imageUrls: Joi.array()
+		.items(
+			Joi.object({
+				url: Joi.string().uri().required(),
+				path: Joi.string().required(),
+			}),
+		)
+		.optional(),
 	hourlyRate: Joi.number().precision(2).positive().optional(),
 	location: Joi.string().max(512).trim().optional(),
 });
@@ -1749,6 +1768,7 @@ class FoodOrderAddonsDto {
 	@ApiProperty({
 		example: [1, 2],
 		description: "List of addon item IDs selected from the category",
+		type: [Number],
 	})
 	addonItemIds: number[];
 }
@@ -1812,7 +1832,7 @@ export class CreateFoodOrderDto {
 		required: false,
 		type: [FoodOrderAddonsDto],
 	})
-	addons?: { addonCategoryId: number; addonItemIds: number[] }[];
+	addons?: FoodOrderAddonsDto[];
 }
 
 export const CreateFoodOrderSchema = Joi.object({
