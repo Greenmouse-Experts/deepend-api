@@ -226,6 +226,7 @@ export class AdminRepository {
 			.limit(limit)
 			.offset(offset)
 			.orderBy(desc(foods.createdAt));
+
 		return foodsList;
 	}
 
@@ -882,7 +883,8 @@ export class AdminRepository {
 			.select()
 			.from(equipmentCategories)
 			.limit(limit)
-			.offset(offset);
+			.offset(offset)
+			.orderBy(asc(equipmentCategories.createdAt));
 	}
 
 	async createEquipmentRental(equipmentData: CreateEquipmentRentals) {

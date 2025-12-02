@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { and, eq, getTableColumns, inArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, inArray, or, sql } from "drizzle-orm";
 import { DatabaseService } from "src/database/database.service";
 import {
 	// AddToCartType,
@@ -1475,7 +1475,8 @@ export class UserRepository {
 			.leftJoin(orders, eq(Payments.orderId, orders.id))
 			.where(and(eq(orders.userId, userId)))
 			.limit(limit)
-			.offset(offset);
+			.offset(offset)
+			.orderBy(desc(Payments.createdAt));
 
 		return userTransactions;
 	}
