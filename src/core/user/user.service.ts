@@ -515,10 +515,21 @@ export class UserService {
 				);
 			}
 
+			const hasDeliveryFoodOrders = foodOrderCoordinates.some(
+				(order) => order.deliveryType === "delivery",
+			);
+
+			const foodDeliveryOrder = foodOrderCoordinates.find(
+				(order) => order.deliveryType === "delivery",
+			);
+
+			if (hasDeliveryFoodOrders && !foodDeliveryOrder?.deliveryAddress) {
+				throw new BadRequestException("Food order delivery address not found");
+			}
+
 			if (
-				foodOrderCoordinates.length > 0 &&
-				(!foodOrderCoordinates[0].deliveryLat ||
-					!foodOrderCoordinates[0].deliveryLng)
+				hasDeliveryFoodOrders &&
+				(!foodDeliveryOrder?.deliveryLat || !foodDeliveryOrder?.deliveryLng)
 			) {
 				throw new BadRequestException(
 					"Food order delivery coordinates not found",
@@ -1186,5 +1197,9 @@ export class UserService {
 		return {
 			message: "All notifications marked as read successfully",
 		};
+	}
+
+	async getUserDeliveryAddress(userId: string) {
+		return await this.userRepository.getUserDeliveryAddress(userId);
 	}
 }
