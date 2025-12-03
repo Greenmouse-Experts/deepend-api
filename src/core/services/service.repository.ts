@@ -1058,14 +1058,16 @@ END`.as("addons"),
 
 				await tx.insert(foodCartAddons).values(addonsDataWithOrderId);
 
-				await tx
-					.update(users)
-					.set({
-						deliveryAddress: foodOrderData.deliveryAddress,
-						deliveryLat: foodOrderData.deliveryLat,
-						deliveryLng: foodOrderData.deliveryLng,
-					})
-					.where(eq(users.id, foodOrderData.userId));
+				if (foodOrderData.deliveryType === "delivery") {
+					await tx
+						.update(users)
+						.set({
+							deliveryAddress: foodOrderData.deliveryAddress,
+							deliveryLat: foodOrderData.deliveryLat,
+							deliveryLng: foodOrderData.deliveryLng,
+						})
+						.where(eq(users.id, foodOrderData.userId));
+				}
 			}
 
 			return order[0];
