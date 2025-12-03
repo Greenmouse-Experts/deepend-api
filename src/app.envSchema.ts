@@ -26,4 +26,5 @@ export const envSchema = joi.object({
 	BULL_BOARD_ADMIN_PASSWORD: joi.string().required(),
 	DEEPEND_SUPPORT_EMAIL: joi.string().email().required(),
 	DEEPEND_SUPPORT_PHONE: joi.string().required(),
+	FIREBASE_SERVICE_ACCOUNT: joi.string().base64().required(),
 });
