@@ -260,6 +260,7 @@ export class UserService {
 						).totalPrice || 0;
 
 					item.totalPrice = String(foodPrice);
+
 					break;
 				default:
 					throw new BadRequestException("Invalid item type in cart");
@@ -538,18 +539,19 @@ export class UserService {
 
 			let distance = 0;
 
-			if (foodOrderCoordinates.length > 0) {
+			let deliveryFee = new Decimal(0);
+			if (hasDeliveryFoodOrders) {
 				distance = getDistanceInKm(
 					Number(deliverySettings?.originLat),
 					Number(deliverySettings?.originLng),
 					Number(foodOrderCoordinates[0]?.deliveryLat),
 					Number(foodOrderCoordinates[0]?.deliveryLng),
 				);
-			}
 
-			const deliveryFee = new Decimal(deliverySettings.pricePerKm)
-				.mul(new Decimal(distance))
-				.toNearest(0.01);
+				deliveryFee = new Decimal(deliverySettings.pricePerKm)
+					.mul(new Decimal(distance))
+					.toNearest(0.01);
+			}
 
 			const taxAmount = new Decimal(0);
 
