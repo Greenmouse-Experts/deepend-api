@@ -513,7 +513,7 @@ export class AdminController {
 	}
 
 	@Delete("vrgames/:vrgameId/availability")
-	@ApiOperation({ summary: "Delete a studio availability" })
+	@ApiOperation({ summary: "Delete a vrgame availability" })
 	@UsePipes(new JoiValidationPipe(RemoveStudioAvailabilitySchema))
 	async vrgamesStudioAvailability(
 		@Param("vrgameId") vrgameId: string,
