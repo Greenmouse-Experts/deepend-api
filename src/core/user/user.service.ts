@@ -638,7 +638,7 @@ export class UserService {
 							orderId: createdOrder.id,
 							foodId: foodOrder.foodId,
 							foodName: foodOrder.food.name,
-							foodImageUrl: foodOrder.food.imageUrls[0].url,
+							foodImageUrl: foodOrder.food.imageUrls[0]?.url,
 							foodPrice: String(foodOrder.food.price),
 							quantity: foodOrder.quantity,
 							deliveryAddress: foodOrder.deliveryAddress,
@@ -674,7 +674,7 @@ export class UserService {
 							equipmentId: equipmentRental.equipmentRentalId as string,
 							equipmentName: equipmentRental.equipmentRental?.name as string,
 							equipmentImageUrl: equipmentRental.equipmentRental?.imageUrls[0]
-								.url as string,
+								?.url as string,
 							rentalPricePerDay: equipmentRental.equipmentRental
 								?.rentalPricePerDay as string,
 							rentalStartDate: equipmentRental.rentalStartDate,
@@ -702,7 +702,7 @@ export class UserService {
 							orderId: createdOrder.id,
 							vrgameId: vrgameOrder.vrgameId as string,
 							vrgameName: vrgameOrder.vrgame?.name as string,
-							vrgameImageUrl: vrgameOrder.vrgame?.imageUrls[0].url as string,
+							vrgameImageUrl: vrgameOrder.vrgame?.imageUrls[0]?.url as string,
 							vrgameCategory: vrgameOrder.vrgame.category.name as string,
 							ticketPrice: vrgameOrder.vrgame?.ticketPrice as string,
 							scheduledDate: vrgameOrder.scheduledDate,
@@ -765,7 +765,7 @@ export class UserService {
 							orderId: createdOrder.id,
 							hotelId: hotelBooking.hotelId as string,
 							hotelName: hotelBooking.hotel?.name as string,
-							hotelImageUrl: hotelBooking.hotel?.imageUrls[0].url as string,
+							hotelImageUrl: hotelBooking.hotel?.imageUrls[0]?.url as string,
 							hotelRoomId: hotelBooking.hotelRoom.id,
 							hotelRoomName: hotelBooking.hotelRoom.name as string,
 							hotelRoomPricePerNight: String(
