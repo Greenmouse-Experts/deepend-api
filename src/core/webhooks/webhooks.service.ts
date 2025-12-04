@@ -41,4 +41,12 @@ export class WebhooksService {
 
 		return;
 	}
+
+	async handleCallbackEvent(query: any): Promise<void> {
+		// Process the callback query parameters as needed
+		console.log("Callback query received:", query);
+		const paymentReference = query.reference;
+
+		return;
+	}
 }

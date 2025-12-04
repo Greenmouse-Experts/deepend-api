@@ -5,11 +5,7 @@ import { HttpService } from "@nestjs/axios";
 import { catchError, firstValueFrom } from "rxjs";
 import { AxiosError } from "axios";
 import { HandleAxiosError, MysqlDatabaseTransaction } from "src/common/helpers";
-import {
-	CreatePaymentRecord,
-	Payments,
-	adminDeliverySettings,
-} from "src/database/schema";
+import { CreatePaymentRecord, Payments } from "src/database/schema";
 
 @Injectable()
 export class PaymentService {
@@ -37,7 +33,13 @@ export class PaymentService {
 		email,
 		amount,
 		reference,
-	}: { email: string; amount: number; reference: string }): Promise<any> {
+		callback_url,
+	}: {
+		email: string;
+		amount: number;
+		reference: string;
+		callback_url: string;
+	}): Promise<any> {
 		const { data } = await firstValueFrom(
 			this.httpService
 				.post(
@@ -46,6 +48,7 @@ export class PaymentService {
 						email,
 						amount,
 						reference,
+						callback_url,
 					},
 					{
 						headers: {
@@ -85,5 +88,28 @@ export class PaymentService {
 			await transactions.query.adminDeliverySettings.findFirst();
 
 		return deliveryFeeSettings;
+	}
+
+	async verifyPayment(reference: string): Promise<any> {
+		const { data } = await firstValueFrom(
+			this.httpService
+				.get(`${this.paystackBaseUrl}/transaction/verify/${reference}`, {
+					headers: {
+						Authorization: `Bearer ${this.secretKey}`,
+					},
+				})
+				.pipe(
+					catchError((error: AxiosError) => {
+						const errorMessage = HandleAxiosError(error);
+
+						throw new HttpException(
+							errorMessage,
+							error.response?.status as number,
+						);
+					}),
+				),
+		);
+
+		return data;
 	}
 }
