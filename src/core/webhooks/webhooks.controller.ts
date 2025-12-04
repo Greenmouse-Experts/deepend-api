@@ -1,4 +1,4 @@
-import { Controller, Post, Req, Res } from "@nestjs/common";
+import { Controller, Get, Post, Req, Res } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { WebhooksService } from "./webhooks.service";
 
@@ -25,5 +25,14 @@ export class WebhooksController {
 		await this.webhooksService.handleWebhookEvent(paystackHeaderSign, body);
 
 		return response.status(200).send();
+	}
+
+	@Get("paystack/callback")
+	async handleCallback(@Req() request: Request, @Res() response: Response) {
+		const query = request.query;
+
+		await this.webhooksService.handleCallbackEvent(query);
+
+		return response.status(200).send("Callback received");
 	}
 }
