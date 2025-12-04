@@ -19,7 +19,7 @@ export interface PaymentSuccessData {
 }
 
 interface OrderItem {
-	icon: string;
+	iconUrl: string;
 	name: string;
 	description: string;
 	price: string;
