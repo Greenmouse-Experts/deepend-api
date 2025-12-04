@@ -2586,4 +2586,8 @@ export class AdminService {
 
 		return { message: "Notification marked as read successfully" };
 	}
+
+	async getAdminsEmails() {
+		return await this.adminRepository.getAdminsEmails();
+	}
 }

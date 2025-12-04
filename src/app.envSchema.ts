@@ -27,6 +27,7 @@ export const envSchema = joi.object({
 	DEEPEND_SUPPORT_EMAIL: joi.string().email().required(),
 	DEEPEND_SUPPORT_PHONE: joi.string().required(),
 	FIREBASE_SERVICE_ACCOUNT: joi.string().base64().required(),
-  PAYMENT_CALLBACK_URL: joi.string().uri().required(),
-  PAYMENT_STATUS_CALLBACK_URL: joi.string().uri().required(),
+	PAYMENT_CALLBACK_URL: joi.string().uri().required(),
+	PAYMENT_STATUS_CALLBACK_URL: joi.string().uri().required(),
+	DEEPEND_ADMIN_DASHBOARD_URL: joi.string().uri().required(),
 });

@@ -447,6 +447,47 @@ export class WebhooksConsumer extends WorkerHost {
 								},
 							]);
 
+							const adminEmails = await this.adminService.getAdminsEmails();
+
+							if (adminEmails.length > 0 && user) {
+								await this.mailService.sendAdminSuccessfulPayment(adminEmails, {
+									customer: {
+										id: user?.id,
+										firstName: user.firstName,
+										lastName: user.lastName,
+										email: user.email,
+										phone: user.phone as string,
+									},
+									order: {
+										orderNumber: order.id,
+										id: order.id,
+										status: "completed",
+										createdAt: new Date(order.createdAt).toLocaleDateString(
+											"en-US",
+										),
+										total: order.totalAmount,
+										items: orderItems.map((order) => ({
+											name: order.name as string,
+											description: generateOrderDescription(
+												order.cartItemType,
+												order.quantity,
+												order.name as string,
+											),
+											iconUrl: order.picture as string,
+											quantity: order.quantity,
+											price: order.totalPrice,
+										})),
+									},
+									payment: {
+										method: order.paymentMethod,
+										transactionId: webhookPayload.reference,
+										status: "Completed",
+									},
+									adminDashboardUrl:
+										process.env.DEEPEND_ADMIN_DASHBOARD_URL || "",
+								});
+							}
+
 							return { success: true };
 						}
 					});
