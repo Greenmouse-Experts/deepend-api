@@ -1874,7 +1874,12 @@ export class AdminRepository {
 			this.databaseService.db
 				.select({ hotelSubscribersTotal: count(hotelBookings.id) })
 				.from(hotelBookings)
-				.where(eq(hotelBookings.status, "confirmed")),
+				.where(
+					or(
+						eq(hotelBookings.status, "confirmed"),
+						eq(hotelBookings.status, "completed"),
+					),
+				),
 			this.databaseService.db
 				.select({ studioSubscribersTotal: count(studioSessionBookings.id) })
 				.from(studioSessionBookings)
@@ -1885,6 +1890,7 @@ export class AdminRepository {
 				.where(
 					and(
 						or(
+							eq(foodOrders.status, "on-the-way"),
 							eq(foodOrders.status, "confirmed"),
 							eq(foodOrders.status, "preparing"),
 							eq(foodOrders.status, "delivered"),
