@@ -1885,6 +1885,7 @@ export class AdminRepository {
 				.where(
 					and(
 						or(
+							eq(foodOrders.status, "confirmed"),
 							eq(foodOrders.status, "preparing"),
 							eq(foodOrders.status, "delivered"),
 						),
