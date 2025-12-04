@@ -1,0 +1,235 @@
+<! doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1. 0"/>
+  <title>New Order Received - Deepend</title>
+  <style>
+    @media only screen and (max-width:480px){
+      .container{ width:100% !important; max-width:100% !important; }
+      .content-padding{ padding:18px !important; }
+      . logo{ font-size:22px !important; }
+      . greeting{ font-size:20px !important; }
+    }
+  </style>
+</head>
+<body style="margin:0; padding:0; background: #f3f6fb; -webkit-text-size-adjust:none;">
+  <!-- Outer wrapper -->
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); width:100%; min-width:100%; padding:20px 0;">
+    <tr>
+      <td align="center" style="padding:20px;">
+        <!-- Main container -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px; background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.12);">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%); padding:30px 24px; color:#ffffff;">
+              <div style="display:inline-block; background:rgba(255,255,255,0.14); padding:8px 20px; border-radius:999px; font-weight:600; font-size:12px; letter-spacing:0.6px; text-transform:uppercase;">
+                New Order Alert
+              </div>
+              <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:28px; font-weight:800; margin-top:12px;">
+                DEEPEND New Order
+              </div>
+              <div style="font-size:14px; opacity:0.95; margin-top:6px;">
+                You have received a new order! 
+              </div>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding:28px 24px; text-align:left;">
+              <!-- Alert icon -->
+              <div style="width:72px; height:72px; margin:0 auto 18px; border-radius:50%; background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%); display:inline-block; box-shadow:0 12px 36px rgba(59,130,246,0.28); line-height:72px; color:#ffffff; font-size:34px; font-weight:700; text-align:center;">📦</div>
+
+              <div class="greeting" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:22px; color:#2d3748; font-weight:700; margin-bottom:8px; text-align:center;">
+                New Order From {{customer.firstName}} {{customer.lastName}}
+              </div>
+              <div style="color:#3b82f6; font-weight:600; margin-bottom:18px; text-align:center;">
+                Order #{{order.orderNumber}} - {{order.createdAt}}
+              </div>
+
+              <!-- Customer Info -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f9ff; border-radius:10px; padding:14px; border:1px solid #bfdbfe; margin-bottom:16px;">
+                <tr>
+                  <td style="padding:8px 12px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="font-weight:700; font-size:14px; color:#1e40af;">Customer Information</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 0;">
+                          <div style="font-size:13px; color:#1e40af; margin-bottom:4px;">
+                            <strong>Name:</strong> {{customer.firstName}} {{customer.lastName}}
+                          </div>
+                          <div style="font-size:13px; color:#1e40af; margin-bottom:4px;">
+                            <strong>Email:</strong> {{customer.email}}
+                          </div>
+                          <div style="font-size:13px; color:#1e40af; margin-bottom:4px;">
+                            <strong>Phone:</strong> {{customer.phone}}
+                          </div>
+                          <div style="font-size:13px; color:#1e40af;">
+                            <strong>Customer ID:</strong> {{customer.id}}
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Order summary block -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(180deg,#f8fafc,#eef2f7); border-radius:10px; padding:14px; border:1px solid #e2e8f0; margin-bottom:16px;">
+                <tr>
+                  <td style="padding:8px 12px 12px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="font-weight:700; font-size:16px; color:#2d3748;">Order Details</td>
+                        <td align="right" style="font-size:13px; color:#64748b; background:#ffffff; padding:6px 12px; border-radius:18px; font-weight:600;">{{order.status}}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Order items list -->
+                <tr>
+                  <td style="padding:0 12px 8px;">
+                    <!-- Start loop -->
+                    {{#each order.items}}
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; margin-bottom:6px; background:#ffffff; border-radius:8px; padding:10px;">
+                      <tr>
+                        <!-- icon cell -->
+                        <td width="60" valign="top" style="padding:0 8px 0 0;">
+                          {{#if this.iconUrl}}
+                            <img src="{{this.iconUrl}}"
+                                 alt="{{this.name}}"
+                                 width="48" height="48"
+                                 style="display:block; width:48px; height:48px; border-radius:8px; object-fit:cover; border:0; outline:none; text-decoration:none; box-shadow:0 2px 8px rgba(0,0,0,0.06);"/>
+                          {{else}}
+                            <div style="width:48px; height:48px; border-radius:8px; background:#e0e7ff; display:inline-block; text-align:center; line-height:48px; box-shadow:0 2px 8px rgba(0,0,0,0.06); font-size:18px; color:#4f46e5;">
+                              📦
+                            </div>
+                          {{/if}}
+                        </td>
+
+                        <!-- item info -->
+                        <td valign="top" style="padding:0 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width:360px;">
+                          <div style="font-weight:600; font-size:15px; color:#2d3748; margin-bottom:4px; word-break:break-word;">
+                            {{this.name}}
+                          </div>
+                          <div style="font-size:13px; color:#6b7280; line-height:1.2; word-break:break-word; max-width:360px;">
+                            {{{this.description}}}
+                          </div>
+                          {{#if this.quantity}}
+                          <div style="font-size:12px; color:#64748b; margin-top:4px;">
+                            <strong>Qty:</strong> {{this.quantity}}
+                          </div>
+                          {{/if}}
+                        </td>
+
+                        <!-- price cell -->
+                        <td width="110" valign="top" align="right" style="padding:0 0 0 8px; font-weight:700; color:#2d3748; white-space:nowrap;">
+                          ₦{{this.price}}
+                        </td>
+                      </tr>
+                    </table>
+                    {{/each}}
+                    <!-- End loop -->
+                  </td>
+                </tr>
+
+                <!-- Order Total -->
+                <tr>
+                  <td style="padding:10px 12px 14px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff; border-radius:8px; padding:10px;">
+                      <tr>
+                        <td style="font-weight:700; font-size:15px; color:#2d3748;">Total Amount</td>
+                        <td align="right" style="font-size:20px; font-weight:800; color:#3b82f6;">₦{{order.total}}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Payment Info -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff; border:1px solid #e6eaf0; border-radius:8px; padding:10px; margin-bottom:16px;">
+                <tr>
+                  <td style="padding:8px 10px; font-size:13px; color:#718096; font-weight:600;">Payment Method</td>
+                  <td align="right" style="padding:8px 10px; font-size:13px; color:#2d3748; font-weight:600;">{{payment.method}}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 10px; font-size:13px; color:#718096; font-weight:600;">Transaction ID</td>
+                  <td align="right" style="padding:8px 10px; font-size:13px; color:#2d3748; font-weight:600;">{{payment.transactionId}}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 10px; font-size:13px; color:#718096; font-weight:600;">Payment Status</td>
+                  <td align="right" style="padding:8px 10px; font-size:13px; color:#10b981; font-weight:600;">{{payment.status}}</td>
+                </tr>
+              </table>
+
+              <!-- Delivery Address (if applicable) -->
+              {{#if order.deliveryAddress}}
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3faf7; border-radius:10px; padding:14px; border:1px solid #d1fae5; margin-bottom:16px;">
+                <tr>
+                  <td style="padding:8px 12px;">
+                    <div style="font-weight:700; font-size:14px; color:#065f46; margin-bottom:8px;">📍 Delivery Address</div>
+                    <div style="font-size:13px; color:#047857; line-height:1. 6;">
+                      {{order.deliveryAddress}}
+                    </div>
+                  </td>
+                </tr>
+              </table>
+              {{/if}}
+
+              <!-- Action section -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(180deg,#fef3c7,#fde68a); padding:12px; border-left:4px solid #f59e0b; border-radius:8px; margin-bottom:16px;">
+                <tr>
+                  <td>
+                    <div style="font-weight:700; color:#92400e; margin-bottom:8px;">⚡ Action Required</div>
+                    <div style="font-size:14px; color:#92400e; line-height:1.5;">
+                      Please review and process this order in your admin dashboard.  Ensure the customer receives their booking confirmation and access to their tickets.
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- CTA Button -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="text-align:center; margin-bottom:16px;">
+                <tr>
+                  <td align="center">
+                    <a href="{{adminDashboardUrl}}/orders/{{order.orderNumber}}" style="display:inline-block; background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%); color:#ffffff; text-decoration:none; font-weight:600; padding:12px 32px; border-radius:8px; font-size:14px; box-shadow:0 4px 12px rgba(59,130,246,0.3);">
+                      View Order in Dashboard
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding:0 24px 18px;">
+              <div style="width:80px; height:4px; background:linear-gradient(135deg,#3b82f6,#2563eb); border-radius:2px; margin:20px auto;"></div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f7fafc; padding:18px 24px; text-align:center;">
+              <div style="font-size:13px; color:#718096; margin-bottom:12px;">
+                <strong>The Deepend Team</strong><br/>
+                Keep your orders on track
+              </div>
+              <div style="font-size:12px; color:#94a3b8; margin-top:12px;">
+                This is an automated message. Please do not reply to this email. 
+              </div>
+            </td>
+          </tr>
+
+        </table>
+        <!-- End main container -->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
