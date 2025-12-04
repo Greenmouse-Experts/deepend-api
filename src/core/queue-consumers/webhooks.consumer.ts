@@ -395,7 +395,7 @@ export class WebhooksConsumer extends WorkerHost {
 									order: {
 										orderNumber: order.id,
 										items: orderItems.map((order) => ({
-											icon: order.picture as string,
+											iconUrl: order.picture as string,
 											name: order.name as string,
 											description: generateOrderDescription(
 												order.cartItemType,
