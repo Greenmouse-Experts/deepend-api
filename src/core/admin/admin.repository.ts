@@ -1661,7 +1661,9 @@ export class AdminRepository {
 	}) {
 		const bookings =
 			await this.databaseService.db.query.studioSessionBookings.findMany({
-				where: status ? eq(studioSessionBookings.status, status) : undefined,
+				where: status
+					? eq(studioSessionBookings.status, status)
+					: eq(studioSessionBookings.status, "scheduled"),
 				columns: {
 					createdAt: false,
 					updatedAt: false,
