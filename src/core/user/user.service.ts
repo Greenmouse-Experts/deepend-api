@@ -906,6 +906,7 @@ export class UserService {
 			email,
 			amount: new Decimal(order.amount).mul(100).toNumber(),
 			reference: order.paymentReference,
+			callback_url: `${process.env.PAYMENT_CALLBACK_URL}`,
 		});
 
 		return {
