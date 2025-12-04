@@ -278,7 +278,7 @@ export class StudioSessionPaginationQueryDto extends PaginationQueryDto {
 }
 
 export const StudioSessionPaginationQuerySchema = PaginationQuerySchema.keys({
-	status: Joi.string().valid("confirmed", "completed", "cancelled").optional(),
+	status: Joi.string().valid("scheduled", "completed", "cancelled").optional(),
 });
 
 export class BookingPaginationQueryDto extends PaginationQueryDto {
