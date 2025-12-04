@@ -2023,4 +2023,14 @@ export class AdminRepository {
 
 		return userOrders;
 	}
+
+	async getAdminsEmails() {
+		const admins = await this.databaseService.db
+			.select({ email: users.email })
+			.from(users)
+			.where(eq(users.role, "admin"))
+			.limit(5);
+
+		return admins.map((admin) => admin.email);
+	}
 }
