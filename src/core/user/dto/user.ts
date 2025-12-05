@@ -173,6 +173,72 @@ export const RefreshTokenSchema = joi.object({
 	userId: joi.string().required(),
 });
 
+class UpdateUserProfilePictureDto {
+	@ApiProperty({
+		description: "URL of the new profile picture",
+		example: "https://example.com/profile-pic.jpg",
+	})
+	url: string;
+
+	@ApiProperty({
+		description: "Path where the profile picture is stored",
+		example: "/uploads/profile-pic.jpg",
+	})
+	path: string;
+}
+
+export class UpdateUserProfileDto {
+	@ApiProperty({
+		description: "User's email address",
+		example: "deepend@gmail.com",
+	})
+	email?: string;
+
+	@ApiProperty({
+		description: "User's profile picture",
+		type: UpdateUserProfilePictureDto,
+	})
+	profilePicture?: UpdateUserProfilePictureDto;
+
+	@ApiProperty({
+		description: "User's first name",
+		example: "John",
+	})
+	firstName?: string;
+
+	@ApiProperty({
+		description: "User's last name",
+		example: "Doe",
+	})
+	lastName?: string;
+
+	@ApiProperty({
+		description: "User's phone number",
+		example: "+1234567890",
+	})
+	phone?: string;
+
+	@ApiProperty({
+		description: "User's address",
+		example: "123 Main St, City, Country",
+	})
+	address?: string;
+}
+
+export const UpdateUserProfileSchema = joi.object({
+	email: joi.string().email().trim().optional(),
+	profilePicture: joi
+		.object({
+			url: joi.string().uri().required(),
+			path: joi.string().required(),
+		})
+		.optional(),
+	firstName: joi.string().min(2).max(30).trim().optional(),
+	lastName: joi.string().min(2).max(30).trim().optional(),
+	phone: joi.string().min(7).max(20).trim().optional(),
+	address: joi.string().max(255).trim().optional(),
+});
+
 class CartAddons {
 	@ApiProperty({
 		description: "Type of addon",
