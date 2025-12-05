@@ -232,6 +232,13 @@
       "when": 1764675694570,
       "tag": "0032_zippy_black_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "5",
+      "when": 1764936790655,
+      "tag": "0033_colorful_master_chief",
+      "breakpoints": true
     }
   ]
 }
