@@ -712,6 +712,8 @@ export class AdminController {
 		return await this.adminService.getAllHotels(+page, +limit, search);
 	}
 
+	@Get("hotels/bookings")
+	@ApiOperation({ summary: "Get all hotel bookings with pagination" })
 	async getAllHotelBookings(
 		@Query(new QueryJoiValidationPipe(BookingPaginationQuerySchema))
 		{ page, limit, status }: BookingPaginationQueryDto,

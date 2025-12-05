@@ -2292,11 +2292,18 @@ export class AdminService {
 	}) {
 		const offset = (page - 1) * limit;
 
-		return await this.adminRepository.getStudioBookings({
+		const studioBookings = await this.adminRepository.getStudioBookings({
 			offset,
 			limit,
 			status,
 		});
+
+		return {
+			studioBookings,
+			prevPage: page > 1 ? page - 1 : null,
+			nextPage: studioBookings.length === limit ? page + 1 : null,
+			perPage: limit,
+		};
 	}
 
 	async getEquipmentRentalBookings({
@@ -2310,11 +2317,19 @@ export class AdminService {
 	}) {
 		const offset = (page - 1) * limit;
 
-		return await this.adminRepository.getEquipmentRentalBookings({
-			offset,
-			limit,
-			status,
-		});
+		const equipmentRentalBookings =
+			await this.adminRepository.getEquipmentRentalBookings({
+				offset,
+				limit,
+				status,
+			});
+
+		return {
+			equipmentRentalBookings,
+			prevPage: page > 1 ? page - 1 : null,
+			nextPage: equipmentRentalBookings.length === limit ? page + 1 : null,
+			perPage: limit,
+		};
 	}
 
 	async getVrgamesTicketPurchases({
@@ -2328,11 +2343,18 @@ export class AdminService {
 	}) {
 		const offset = (page - 1) * limit;
 
-		return await this.adminRepository.getVrgamesTicketPurchases({
+		const vrgameTickets = await this.adminRepository.getVrgamesTicketPurchases({
 			offset,
 			limit,
 			status,
 		});
+
+		return {
+			vrgameTickets,
+			prevPage: page > 1 ? page - 1 : null,
+			nextPage: vrgameTickets.length === limit ? page + 1 : null,
+			perPage: limit,
+		};
 	}
 
 	async getMovieTicketPurchases({
@@ -2346,11 +2368,18 @@ export class AdminService {
 	}) {
 		const offset = (page - 1) * limit;
 
-		return await this.adminRepository.getMovieTicketPurchases({
+		const movieTickets = await this.adminRepository.getMovieTicketPurchases({
 			offset,
 			limit,
 			status,
 		});
+
+		return {
+			movieTickets,
+			prevPage: page > 1 ? page - 1 : null,
+			nextPage: movieTickets.length === limit ? page + 1 : null,
+			perPage: limit,
+		};
 	}
 
 	async getHotelBookings({
@@ -2364,11 +2393,18 @@ export class AdminService {
 	}) {
 		const offset = (page - 1) * limit;
 
-		return await this.adminRepository.getHotelBookings({
+		const hotelBookings = await this.adminRepository.getHotelBookings({
 			offset,
 			limit,
 			status,
 		});
+
+		return {
+			hotelBookings,
+			prevPage: page > 1 ? page - 1 : null,
+			nextPage: hotelBookings.length === limit ? page + 1 : null,
+			perPage: limit,
+		};
 	}
 
 	async getAllUsers(page: number, limit = 10, search?: string) {
@@ -2393,11 +2429,18 @@ export class AdminService {
 	}) {
 		const offset = (page - 1) * limit;
 
-		return await this.adminRepository.getAllFoodOrders({
+		const foodOrders = await this.adminRepository.getAllFoodOrders({
 			offset,
 			limit,
 			status,
 		});
+
+		return {
+			foodOrders,
+			prevPage: page > 1 ? page - 1 : null,
+			nextPage: foodOrders.length === limit ? page + 1 : null,
+			perPage: limit,
+		};
 	}
 
 	async getDashboardStats() {
