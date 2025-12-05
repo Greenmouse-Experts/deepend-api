@@ -12,6 +12,7 @@ import {
 import { countries } from "./countries";
 import { generateId } from "../../common/helpers";
 import { ID_GENERATOR_LENGTH } from "../../common/constants";
+import { json } from "drizzle-orm/mysql-core";
 
 export type CreateUser = typeof users.$inferInsert;
 
@@ -22,6 +23,10 @@ export const users = mysqlTable("users", {
 	firstName: varchar("first_name", { length: 255 }).notNull(),
 	lastName: varchar("last_name", { length: 255 }).notNull(),
 	email: varchar("email", { length: 254 }).notNull().unique(),
+	profilePicture: json("profile_picture").$type<{
+		url: string;
+		path: string;
+	}>(),
 	password: text("password").notNull(),
 	countryId: int("country_id")
 		.notNull()
