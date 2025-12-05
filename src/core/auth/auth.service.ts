@@ -14,7 +14,7 @@ import { getHashedString } from "src/common/hash";
 import { VerificationService } from "../verification/verification.service";
 import { MailService } from "src/mail/mail.service";
 import { JwtService } from "../jwt/jwt.service";
-import { LoginUserDto } from "../user/dto/user";
+import { LoginUserDto, UpdateUserProfileDto } from "../user/dto/user";
 
 @Injectable()
 export class AuthService {
@@ -157,6 +157,28 @@ export class AuthService {
 		} = user;
 
 		return { ...userWithoutPassword, access_token, refresh_token };
+	}
+
+	async updateUserProfile(userId: string, updateData: UpdateUserProfileDto) {
+		const user = await this.userService.getUserById(userId);
+
+		if (!user) {
+			throw new NotFoundException("User not found");
+		}
+
+		await this.userService.updateUserProfile(userId, updateData);
+
+		return { message: "Profile updated successfully" };
+	}
+
+	async getUserProfile(userId: string) {
+		const userProfile = await this.userService.getUserProfile(userId);
+
+		if (!userProfile) {
+			throw new NotFoundException("User not found");
+		}
+
+		return userProfile;
 	}
 
 	async getVerificationOtpCode(userId: string) {
