@@ -95,6 +95,22 @@ export class UserRepository {
 			.where(eq(users.id, id));
 	}
 
+	async getUserProfile(userId: string) {
+		const user = await this.databaseService.db.query.users.findFirst({
+			where: eq(users.id, userId),
+			columns: {
+				email: true,
+				phone: true,
+				firstName: true,
+				lastName: true,
+				address: true,
+				profilePicture: true,
+			},
+		});
+
+		return user;
+	}
+
 	async getUserStudioBookings({
 		userId,
 		offset,
