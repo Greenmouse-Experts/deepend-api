@@ -2590,4 +2590,12 @@ export class AdminService {
 	async getAdminsEmails() {
 		return await this.adminRepository.getAdminsEmails();
 	}
+
+	async servicesSubscriptionMonthlyStats(year: number) {
+		return await this.adminRepository.servicesSubscriptionMonthlyStats(year);
+	}
+
+	async getMonthlyRevenueStats(year: number) {
+		return await this.adminRepository.getMonthlyRevenueStats(year);
+	}
 }

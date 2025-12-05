@@ -24,6 +24,8 @@ import {
 import Decimal from "decimal.js";
 import { MysqlDatabaseTransaction } from "src/common/helpers";
 import { getDistanceInKm } from "src/common/geospatial";
+import { UpdateUserProfileDto } from "./dto/user";
+import { isDatabaseError, mysqlErrorCodes } from "src/common/mysql.error";
 
 @Injectable()
 export class UserService {
@@ -57,6 +59,44 @@ export class UserService {
 		updateData: Partial<Omit<CreateUser, " id" | "createdAt" | "updatedAt">>,
 	) {
 		return await this.userRepository.updateUser(id, updateData);
+	}
+
+	async updateUserProfile(
+		userId: string,
+		{
+			email,
+			phone,
+			firstName,
+			lastName,
+			address,
+			profilePicture,
+		}: UpdateUserProfileDto,
+	) {
+		try {
+			return await this.userRepository.updateUser(userId, {
+				email,
+				phone,
+				firstName,
+				lastName,
+				address,
+				profilePicture,
+			});
+		} catch (error) {
+			const databaseError = isDatabaseError(error);
+
+			if (
+				databaseError.isDatabaseError &&
+				databaseError.code === mysqlErrorCodes.DUPLICATE_ENTRY
+			) {
+				throw new BadRequestException("Email or phone number already in use");
+			}
+
+			throw error;
+		}
+	}
+
+	async getUserProfile(userId: string) {
+		return await this.userRepository.getUserProfile(userId);
 	}
 
 	async getUserStudioBookings({

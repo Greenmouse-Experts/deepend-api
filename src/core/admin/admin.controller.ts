@@ -36,6 +36,8 @@ import {
 	TicketPaginationQuerySchema,
 	UserPaginationQueryDto,
 	UserPaginationQuerySchema,
+	YearQueryDto,
+	YearQuerySchema,
 } from "src/common/dto/requestQuery.dto";
 import { AuthGuard } from "src/common/guards/auth.guard";
 import { QueryJoiValidationPipe } from "src/common/pipes/query-validation.pipe";
@@ -1404,5 +1406,21 @@ export class AdminController {
 		@Param("notificationId", ParseIntPipe) notificationId: number,
 	) {
 		return await this.adminService.markNotificationAsRead(notificationId);
+	}
+
+	@Get("services-subscriptions/monthly-stats")
+	@ApiOperation({ summary: "Get services monthly subscription stats" })
+	async servicesSubscriptionMonthlyStats(
+		@Query(new QueryJoiValidationPipe(YearQuerySchema)) query: YearQueryDto,
+	) {
+		return await this.adminService.servicesSubscriptionMonthlyStats(query.year);
+	}
+
+	@Get("revenue/monthly-stats")
+	@ApiOperation({ summary: "Get monthly revenue stats" })
+	async getMonthlyRevenueStats(
+		@Query(new QueryJoiValidationPipe(YearQuerySchema)) query: YearQueryDto,
+	) {
+		return await this.adminService.getMonthlyRevenueStats(query.year);
 	}
 }

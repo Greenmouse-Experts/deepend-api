@@ -403,3 +403,16 @@ export const ReceiptTypeQuerySchema = Joi.object({
 		.valid("food", "studio", "equipment", "hotel")
 		.required(),
 });
+
+export class YearQueryDto {
+	@ApiProperty({
+		example: 2023,
+		description: "Year to filter data",
+		required: true,
+	})
+	year: number;
+}
+
+export const YearQuerySchema = Joi.object({
+  year: Joi.number().integer().min(2000).max(2100).required(),
+});
