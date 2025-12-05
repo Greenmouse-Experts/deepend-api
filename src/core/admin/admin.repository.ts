@@ -2033,4 +2033,134 @@ export class AdminRepository {
 
 		return admins.map((admin) => admin.email);
 	}
+
+	async servicesSubscriptionMonthlyStats(year: number) {
+		const stats = Promise.all([
+			this.databaseService.db
+				.select({
+					month: sql`MONTH(${vrgameTicketPurchases.purchaseDate})`,
+					totalSubscriptions: sql`COUNT(${vrgameTicketPurchases.ticketId})`,
+				})
+				.from(vrgameTicketPurchases)
+				.where(
+					and(
+						eq(vrgameTicketPurchases.status, "completed"),
+						sql`YEAR(${vrgameTicketPurchases.purchaseDate}) = ${year}`,
+					),
+				)
+				.groupBy(sql`MONTH(${vrgameTicketPurchases.purchaseDate})`)
+				.orderBy(sql`MONTH(${vrgameTicketPurchases.purchaseDate})`),
+			this.databaseService.db
+				.select({
+					month: sql`MONTH(${movieTicketPurchases.purchaseDate})`,
+					totalSubscriptions: sql`COUNT(${movieTicketPurchases.ticketId})`,
+				})
+				.from(movieTicketPurchases)
+				.where(
+					and(
+						eq(movieTicketPurchases.status, "completed"),
+						sql`YEAR(${movieTicketPurchases.purchaseDate}) = ${year}`,
+					),
+				)
+				.groupBy(sql`MONTH(${movieTicketPurchases.purchaseDate})`)
+				.orderBy(sql`MONTH(${movieTicketPurchases.purchaseDate})`),
+			this.databaseService.db
+				.select({
+					month: sql`MONTH(${equipmentRentalBookings.createdAt})`,
+					totalSubscriptions: sql`COUNT(${equipmentRentalBookings.id})`,
+				})
+				.from(equipmentRentalBookings)
+				.where(
+					and(
+						or(
+							eq(equipmentRentalBookings.status, "ongoing"),
+							eq(equipmentRentalBookings.status, "completed"),
+						),
+						sql`YEAR(${equipmentRentalBookings.createdAt}) = ${year}`,
+					),
+				)
+				.groupBy(sql`MONTH(${equipmentRentalBookings.createdAt})`)
+				.orderBy(sql`MONTH(${equipmentRentalBookings.createdAt})`),
+			this.databaseService.db
+				.select({
+					month: sql`MONTH(${hotelBookings.createdAt})`,
+					totalSubscriptions: sql`COUNT(${hotelBookings.id})`,
+				})
+				.from(hotelBookings)
+				.where(
+					and(
+						or(
+							eq(hotelBookings.status, "confirmed"),
+							eq(hotelBookings.status, "completed"),
+						),
+						sql`YEAR(${hotelBookings.createdAt}) = ${year}`,
+					),
+				)
+				.groupBy(sql`MONTH(${hotelBookings.createdAt})`)
+				.orderBy(sql`MONTH(${hotelBookings.createdAt})`),
+			this.databaseService.db
+				.select({
+					month: sql`MONTH(${studioSessionBookings.createdAt})`,
+					totalSubscriptions: sql`COUNT(${studioSessionBookings.id})`,
+				})
+				.from(studioSessionBookings)
+				.where(
+					and(
+						eq(studioSessionBookings.status, "scheduled"),
+						sql`YEAR(${studioSessionBookings.createdAt}) = ${year}`,
+					),
+				)
+				.groupBy(sql`MONTH(${studioSessionBookings.createdAt})`)
+				.orderBy(sql`MONTH(${studioSessionBookings.createdAt})`),
+			this.databaseService.db
+				.select({
+					month: sql`MONTH(${foodOrders.createdAt})`,
+					totalSubscriptions: sql`COUNT(${foodOrders.id})`,
+				})
+				.from(foodOrders)
+				.where(
+					and(
+						or(
+							eq(foodOrders.status, "on-the-way"),
+							eq(foodOrders.status, "confirmed"),
+							eq(foodOrders.status, "preparing"),
+							eq(foodOrders.status, "delivered"),
+						),
+						sql`YEAR(${foodOrders.createdAt}) = ${year}`,
+					),
+				)
+				.groupBy(sql`MONTH(${foodOrders.createdAt})`)
+				.orderBy(sql`MONTH(${foodOrders.createdAt})`),
+		]);
+
+		const statsByService = await stats;
+
+		return {
+			vrgameSubscriptions: statsByService[0],
+			movieSubscriptions: statsByService[1],
+			equipmentSubscriptions: statsByService[2],
+			hotelSubscriptions: statsByService[3],
+			studioSubscriptions: statsByService[4],
+			foodSubscriptions: statsByService[5],
+		};
+	}
+
+	async getMonthlyRevenueStats(year: number) {
+		const revenueStats = await this.databaseService.db
+			.select({
+				month: sql`MONTH(${orders.createdAt})`,
+				totalRevenue: sql`SUM(${orders.totalAmount})`,
+			})
+			.from(orders)
+			.where(
+				and(
+					eq(orders.status, "completed"),
+					sql`YEAR(${orders.createdAt}) = ${year}`,
+				),
+			)
+			.groupBy(sql`MONTH(${orders.createdAt})`)
+			.orderBy(sql`MONTH(${orders.createdAt})`);
+
+		return revenueStats;
+	}
 }
