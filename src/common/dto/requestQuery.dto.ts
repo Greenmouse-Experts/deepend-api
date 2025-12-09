@@ -261,10 +261,19 @@ export class EquipmentPaginationQueryDto extends PaginationQueryDto {
 		required: false,
 	})
 	status?: "ongoing" | "completed" | "cancelled";
+
+	@ApiProperty({
+		example: "search term",
+		description:
+			"Search term to filter equipment rentals by equipment name or user name",
+		required: false,
+	})
+	search?: string;
 }
 
 export const EquipmentPaginationQuerySchema = PaginationQuerySchema.keys({
 	status: Joi.string().valid("ongoing", "completed", "cancelled").optional(),
+	search: Joi.string().max(100).optional(),
 });
 
 export class StudioSessionPaginationQueryDto extends PaginationQueryDto {
@@ -275,10 +284,19 @@ export class StudioSessionPaginationQueryDto extends PaginationQueryDto {
 		required: false,
 	})
 	status?: "scheduled" | "completed" | "cancelled";
+
+  @ApiProperty({
+    example: "search term",
+    description:
+      "Search term to filter studio sessions by session reference or user name",
+    required: false,
+  })
+  search?: string;
 }
 
 export const StudioSessionPaginationQuerySchema = PaginationQuerySchema.keys({
 	status: Joi.string().valid("scheduled", "completed", "cancelled").optional(),
+  search: Joi.string().max(100).optional(),
 });
 
 export class BookingPaginationQueryDto extends PaginationQueryDto {
@@ -289,10 +307,19 @@ export class BookingPaginationQueryDto extends PaginationQueryDto {
 		required: false,
 	})
 	status?: "confirmed" | "cancelled" | "completed";
+
+	@ApiProperty({
+		example: "search term",
+		description:
+			"Search term to filter bookings by booking reference or user name",
+		required: false,
+	})
+	search?: string;
 }
 
 export const BookingPaginationQuerySchema = PaginationQuerySchema.keys({
 	status: Joi.string().valid("confirmed", "cancelled", "completed").optional(),
+	search: Joi.string().max(100).optional(),
 });
 
 export class TicketPaginationQueryDto extends PaginationQueryDto {
@@ -302,10 +329,18 @@ export class TicketPaginationQueryDto extends PaginationQueryDto {
 		required: false,
 	})
 	status?: "completed" | "cancelled";
+
+	@ApiProperty({
+		example: "search term",
+		description: "Search term to filter tickets by ticket number or user name",
+		required: false,
+	})
+	search?: string;
 }
 
 export const TicketPaginationQuerySchema = PaginationQuerySchema.keys({
 	status: Joi.string().valid("completed", "cancelled").optional(),
+	search: Joi.string().max(100).optional(),
 });
 
 export class UserPaginationQueryDto extends PaginationQueryDto {
@@ -329,12 +364,21 @@ export class FoodOrderPaginationQueryDto extends PaginationQueryDto {
 		required: false,
 	})
 	status?: "preparing" | "delivered" | "cancelled" | "confirmed" | "on-the-way";
+
+	@ApiProperty({
+		example: "Food Order",
+		description:
+			"Search term to filter food orders by order number or food item names",
+		required: false,
+	})
+	search?: string;
 }
 
 export const FoodOrderPaginationQuerySchema = PaginationQuerySchema.keys({
 	status: Joi.string()
 		.valid("preparing", "delivered", "cancelled", "confirmed", "on-the-way")
 		.optional(),
+	search: Joi.string().max(100).optional(),
 });
 
 export class ItemTypeQueryDto {
@@ -414,5 +458,5 @@ export class YearQueryDto {
 }
 
 export const YearQuerySchema = Joi.object({
-  year: Joi.number().integer().min(2000).max(2100).required(),
+	year: Joi.number().integer().min(2000).max(2100).required(),
 });
