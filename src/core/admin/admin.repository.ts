@@ -1654,16 +1654,34 @@ export class AdminRepository {
 		offset,
 		limit,
 		status,
+		search,
 	}: {
 		offset: number;
 		limit: number;
 		status?: "scheduled" | "completed" | "cancelled";
+		search?: string;
 	}) {
 		const bookings =
 			await this.databaseService.db.query.studioSessionBookings.findMany({
-				where: status
-					? eq(studioSessionBookings.status, status)
-					: eq(studioSessionBookings.status, "scheduled"),
+				where:
+					status && search
+						? and(
+								eq(studioSessionBookings.status, status),
+								or(
+									like(studioSessionBookings.userId, `%${search}%`),
+									like(studioSessionBookings.orderId, `%${search}%`),
+									like(studioSessionBookings.studioName, `%${search}%`),
+								),
+							)
+						: status
+							? eq(studioSessionBookings.status, status)
+							: search
+								? or(
+										like(studioSessionBookings.userId, `%${search}%`),
+										like(studioSessionBookings.orderId, `%${search}%`),
+										like(studioSessionBookings.studioName, `%${search}%`),
+									)
+								: eq(studioSessionBookings.status, "scheduled"),
 				columns: {
 					createdAt: false,
 					updatedAt: false,
@@ -1683,16 +1701,34 @@ export class AdminRepository {
 		offset,
 		limit,
 		status,
+		search,
 	}: {
 		offset: number;
 		limit: number;
 		status?: EquipmentRentalBookingStatus;
+		search?: string;
 	}) {
 		const bookings =
 			await this.databaseService.db.query.equipmentRentalBookings.findMany({
-				where: status
-					? eq(equipmentRentalBookings.status, status)
-					: eq(equipmentRentalBookings.status, "ongoing"),
+				where:
+					status && search
+						? and(
+								eq(equipmentRentalBookings.status, status),
+								or(
+									like(equipmentRentalBookings.userId, `%${search}%`),
+									like(equipmentRentalBookings.orderId, `%${search}%`),
+									like(equipmentRentalBookings.equipmentName, `%${search}%`),
+								),
+							)
+						: status
+							? eq(equipmentRentalBookings.status, status)
+							: search
+								? or(
+										like(equipmentRentalBookings.userId, `%${search}%`),
+										like(equipmentRentalBookings.orderId, `%${search}%`),
+										like(equipmentRentalBookings.equipmentName, `%${search}%`),
+									)
+								: eq(equipmentRentalBookings.status, "ongoing"),
 				columns: {
 					createdAt: false,
 					updatedAt: false,
@@ -1747,15 +1783,33 @@ export class AdminRepository {
 		offset,
 		limit,
 		status,
+		search,
 	}: {
 		offset: number;
 		limit: number;
 		status?: "completed" | "cancelled";
+		search?: string;
 	}) {
 		return await this.databaseService.db.query.movieTicketPurchases.findMany({
-			where: status
-				? eq(movieTicketPurchases.status, status)
-				: eq(movieTicketPurchases.status, "completed"),
+			where:
+				status && search
+					? and(
+							eq(movieTicketPurchases.status, status),
+							or(
+								like(movieTicketPurchases.userId, `%${search}%`),
+								like(movieTicketPurchases.orderId, `%${search}%`),
+								like(movieTicketPurchases.movieName, `%${search}%`),
+							),
+						)
+					: status
+						? eq(movieTicketPurchases.status, status)
+						: search
+							? or(
+									like(movieTicketPurchases.userId, `%${search}%`),
+									like(movieTicketPurchases.orderId, `%${search}%`),
+									like(movieTicketPurchases.movieName, `%${search}%`),
+								)
+							: eq(movieTicketPurchases.status, "completed"),
 			columns: {
 				createdAt: false,
 				updatedAt: false,
@@ -1772,17 +1826,34 @@ export class AdminRepository {
 		offset,
 		limit,
 		status,
+		search,
 	}: {
 		offset: number;
 		limit: number;
 		status?: "confirmed" | "cancelled" | "completed";
+		search?: string;
 	}) {
-		console.log("Fetching hotel bookings with status:", status);
 		const bookings = await this.databaseService.db.query.hotelBookings.findMany(
 			{
-				where: status
-					? eq(hotelBookings.status, status)
-					: eq(hotelBookings.status, "confirmed"),
+				where:
+					status && search
+						? and(
+								eq(hotelBookings.status, status),
+								or(
+									like(hotelBookings.hotelName, `%${search}%`),
+									like(hotelBookings.userId, `%${search}%`),
+									like(hotelBookings.orderId, `%${search}%`),
+								),
+							)
+						: status
+							? eq(hotelBookings.status, status)
+							: search
+								? or(
+										like(hotelBookings.hotelName, `%${search}%`),
+										like(hotelBookings.userId, `%${search}%`),
+										like(hotelBookings.orderId, `%${search}%`),
+									)
+								: eq(hotelBookings.status, "confirmed"),
 				columns: {
 					createdAt: false,
 					updatedAt: false,
@@ -1820,6 +1891,7 @@ export class AdminRepository {
 		offset,
 		limit,
 		status,
+		search,
 	}: {
 		offset: number;
 		limit: number;
@@ -1829,11 +1901,28 @@ export class AdminRepository {
 			| "confirmed"
 			| "cancelled"
 			| "on-the-way";
+		search?: string;
 	}) {
 		const orders = await this.databaseService.db.query.foodOrders.findMany({
-			where: status
-				? eq(foodOrders.status, status)
-				: eq(foodOrders.status, "confirmed"),
+			where:
+				status && search
+					? and(
+							eq(foodOrders.status, status),
+							or(
+								like(foodOrders.orderId, `%${search}%`),
+								like(foodOrders.userId, `%${search}%`),
+								like(foodOrders.foodName, `%${search}%`),
+							),
+						)
+					: status
+						? eq(foodOrders.status, status)
+						: search
+							? or(
+									like(foodOrders.orderId, `%${search}%`),
+									like(foodOrders.userId, `%${search}%`),
+									like(foodOrders.foodName, `%${search}%`),
+								)
+							: eq(foodOrders.status, "confirmed"),
 			columns: {
 				createdAt: false,
 				updatedAt: false,
@@ -1949,7 +2038,10 @@ export class AdminRepository {
 		return order[0];
 	}
 
-	async updateFoodOrderStatus(id: string, status: "preparing" | "on-the-way") {
+	async updateFoodOrderStatus(
+		id: string,
+		status: "preparing" | "on-the-way" | "delivered",
+	) {
 		const result = await this.databaseService.db
 			.update(foodOrders)
 			.set({ status })
