@@ -198,12 +198,13 @@ export class AdminController {
 	@ApiOperation({ summary: "Get all food orders with pagination" })
 	async getAllFoodOrders(
 		@Query(new QueryJoiValidationPipe(FoodOrderPaginationQuerySchema))
-		{ page, limit, status }: FoodOrderPaginationQueryDto,
+		{ page, limit, status, search }: FoodOrderPaginationQueryDto,
 	) {
 		return await this.adminService.getAllFoodOrders({
 			page,
 			limit,
 			status,
+			search,
 		});
 	}
 
@@ -1301,12 +1302,13 @@ export class AdminController {
 	@ApiOperation({ summary: "Get all studio bookings with pagination" })
 	async getAllStudioBookings(
 		@Query(new QueryJoiValidationPipe(StudioSessionPaginationQuerySchema))
-		{ page, limit, status }: StudioSessionPaginationQueryDto,
+		{ page, limit, status, search }: StudioSessionPaginationQueryDto,
 	) {
 		return await this.adminService.getStudioBookings({
 			page,
 			limit,
 			status,
+			search,
 		});
 	}
 

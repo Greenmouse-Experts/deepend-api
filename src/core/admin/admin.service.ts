@@ -2285,10 +2285,12 @@ export class AdminService {
 		page,
 		limit,
 		status,
+		search,
 	}: {
 		page: number;
 		limit: number;
 		status?: "scheduled" | "cancelled" | "completed";
+		search?: string;
 	}) {
 		const offset = (page - 1) * limit;
 
@@ -2296,6 +2298,7 @@ export class AdminService {
 			offset,
 			limit,
 			status,
+			search,
 		});
 
 		return {
@@ -2310,10 +2313,12 @@ export class AdminService {
 		page,
 		limit,
 		status,
+		search,
 	}: {
 		page: number;
 		limit: number;
 		status?: EquipmentRentalBookingStatus;
+		search?: string;
 	}) {
 		const offset = (page - 1) * limit;
 
@@ -2322,6 +2327,7 @@ export class AdminService {
 				offset,
 				limit,
 				status,
+				search,
 			});
 
 		return {
@@ -2361,10 +2367,12 @@ export class AdminService {
 		page,
 		limit,
 		status,
+		search,
 	}: {
 		page: number;
 		limit: number;
 		status?: "completed" | "cancelled";
+		search?: string;
 	}) {
 		const offset = (page - 1) * limit;
 
@@ -2372,6 +2380,7 @@ export class AdminService {
 			offset,
 			limit,
 			status,
+			search,
 		});
 
 		return {
@@ -2386,10 +2395,12 @@ export class AdminService {
 		page,
 		limit,
 		status,
+		search,
 	}: {
 		page: number;
 		limit: number;
 		status?: "confirmed" | "cancelled" | "completed";
+		search?: string;
 	}) {
 		const offset = (page - 1) * limit;
 
@@ -2397,6 +2408,7 @@ export class AdminService {
 			offset,
 			limit,
 			status,
+			search,
 		});
 
 		return {
@@ -2417,6 +2429,7 @@ export class AdminService {
 		page,
 		limit,
 		status,
+		search,
 	}: {
 		page: number;
 		limit: number;
@@ -2426,6 +2439,7 @@ export class AdminService {
 			| "cancelled"
 			| "on-the-way"
 			| "confirmed";
+		search?: string;
 	}) {
 		const offset = (page - 1) * limit;
 
@@ -2433,6 +2447,7 @@ export class AdminService {
 			offset,
 			limit,
 			status,
+			search,
 		});
 
 		return {
@@ -2497,7 +2512,7 @@ export class AdminService {
 
 	async updateFoodOrderStatus(
 		orderId: string,
-		status: "preparing" | "on-the-way",
+		status: "preparing" | "on-the-way" | "delivered",
 	) {
 		const foodOrder = await this.adminRepository.getFoodOrderById(orderId);
 
