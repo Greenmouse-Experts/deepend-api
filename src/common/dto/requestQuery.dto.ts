@@ -18,11 +18,18 @@ export class PaginationQueryDto {
 		required: false,
 	})
 	limit: number;
+
+	@ApiProperty({
+		example: "search term",
+		description: "Search term to filter results",
+	})
+	search?: string;
 }
 
 export const PaginationQuerySchema = Joi.object({
 	page: Joi.number().integer().min(1).default(1),
 	limit: Joi.number().integer().min(1).max(100).default(10),
+	search: Joi.string().max(100).optional(),
 });
 
 export class ServicePaginationQueryDto extends PaginationQueryDto {
@@ -32,13 +39,6 @@ export class ServicePaginationQueryDto extends PaginationQueryDto {
 		required: false,
 	})
 	categoryId?: number;
-
-	@ApiProperty({
-		example: "pizza",
-		description: "Search term to filter foods by name or description",
-		required: false,
-	})
-	search?: string;
 }
 
 export const ServicePaginationQuerySchema = PaginationQuerySchema.keys({
@@ -47,13 +47,6 @@ export const ServicePaginationQuerySchema = PaginationQuerySchema.keys({
 });
 
 export class HotelPaginationQueryDto extends PaginationQueryDto {
-	@ApiProperty({
-		example: "Hilton",
-		description: "Search term to filter hotels by name or description",
-		required: false,
-	})
-	search?: string;
-
 	@ApiProperty({
 		example: 103.8198,
 		description: "Longitude to filter hotels by proximity",
@@ -85,13 +78,6 @@ export const hotelPaginationQuerySchema = PaginationQuerySchema.keys({
 
 export class MoviePaginationQueryDto extends PaginationQueryDto {
 	@ApiProperty({
-		example: "Inception",
-		description: "Search term to filter movies by title or description",
-		required: false,
-	})
-	search?: string;
-
-	@ApiProperty({
 		example: 1,
 		description: "Genre ID to filter movies",
 		required: false,
@@ -118,14 +104,7 @@ export const MovieShowtimePaginationQuerySchema =
 		date: Joi.date().iso().required(),
 	});
 
-export class StudioPaginationQueryDto extends PaginationQueryDto {
-	@ApiProperty({
-		example: "yoga",
-		description: "Search term to filter studios by name or description",
-		required: false,
-	})
-	search?: string;
-}
+export class StudioPaginationQueryDto extends PaginationQueryDto {}
 
 export const StudioPaginationQuerySchema = PaginationQuerySchema.keys({
 	search: Joi.string().max(100).optional(),
@@ -261,14 +240,6 @@ export class EquipmentPaginationQueryDto extends PaginationQueryDto {
 		required: false,
 	})
 	status?: "ongoing" | "completed" | "cancelled";
-
-	@ApiProperty({
-		example: "search term",
-		description:
-			"Search term to filter equipment rentals by equipment name or user name",
-		required: false,
-	})
-	search?: string;
 }
 
 export const EquipmentPaginationQuerySchema = PaginationQuerySchema.keys({
@@ -284,19 +255,11 @@ export class StudioSessionPaginationQueryDto extends PaginationQueryDto {
 		required: false,
 	})
 	status?: "scheduled" | "completed" | "cancelled";
-
-  @ApiProperty({
-    example: "search term",
-    description:
-      "Search term to filter studio sessions by session reference or user name",
-    required: false,
-  })
-  search?: string;
 }
 
 export const StudioSessionPaginationQuerySchema = PaginationQuerySchema.keys({
 	status: Joi.string().valid("scheduled", "completed", "cancelled").optional(),
-  search: Joi.string().max(100).optional(),
+	search: Joi.string().max(100).optional(),
 });
 
 export class BookingPaginationQueryDto extends PaginationQueryDto {
@@ -307,14 +270,6 @@ export class BookingPaginationQueryDto extends PaginationQueryDto {
 		required: false,
 	})
 	status?: "confirmed" | "cancelled" | "completed";
-
-	@ApiProperty({
-		example: "search term",
-		description:
-			"Search term to filter bookings by booking reference or user name",
-		required: false,
-	})
-	search?: string;
 }
 
 export const BookingPaginationQuerySchema = PaginationQuerySchema.keys({
@@ -329,13 +284,6 @@ export class TicketPaginationQueryDto extends PaginationQueryDto {
 		required: false,
 	})
 	status?: "completed" | "cancelled";
-
-	@ApiProperty({
-		example: "search term",
-		description: "Search term to filter tickets by ticket number or user name",
-		required: false,
-	})
-	search?: string;
 }
 
 export const TicketPaginationQuerySchema = PaginationQuerySchema.keys({
@@ -343,14 +291,7 @@ export const TicketPaginationQuerySchema = PaginationQuerySchema.keys({
 	search: Joi.string().max(100).optional(),
 });
 
-export class UserPaginationQueryDto extends PaginationQueryDto {
-	@ApiProperty({
-		example: "john.doe",
-		description: "Search term to filter users by username or email",
-		required: false,
-	})
-	search?: string;
-}
+export class UserPaginationQueryDto extends PaginationQueryDto {}
 
 export const UserPaginationQuerySchema = PaginationQuerySchema.keys({
 	search: Joi.string().max(100).optional(),
@@ -364,14 +305,6 @@ export class FoodOrderPaginationQueryDto extends PaginationQueryDto {
 		required: false,
 	})
 	status?: "preparing" | "delivered" | "cancelled" | "confirmed" | "on-the-way";
-
-	@ApiProperty({
-		example: "Food Order",
-		description:
-			"Search term to filter food orders by order number or food item names",
-		required: false,
-	})
-	search?: string;
 }
 
 export const FoodOrderPaginationQuerySchema = PaginationQuerySchema.keys({
