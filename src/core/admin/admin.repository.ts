@@ -219,10 +219,11 @@ export class AdminRepository {
 		return food;
 	}
 
-	async getAllFoods(offset: number, limit: number) {
+	async getAllFoods(offset: number, limit: number, search?: string) {
 		const foodsList = await this.databaseService.db
 			.select()
 			.from(foods)
+			.where(search ? like(foods.name, `%${search}%`) : undefined)
 			.limit(limit)
 			.offset(offset)
 			.orderBy(desc(foods.createdAt));
@@ -500,10 +501,11 @@ export class AdminRepository {
 		return category;
 	}
 
-	async getAllVRGameCategories(offset: number, limit: number) {
+	async getAllVRGameCategories(offset: number, limit: number, search?: string) {
 		const categories = await this.databaseService.db
 			.select()
 			.from(vrgamesCategories)
+			.where(search ? like(vrgamesCategories.name, `%${search}%`) : undefined)
 			.limit(limit)
 			.offset(offset);
 		return categories;
@@ -544,10 +546,11 @@ export class AdminRepository {
 		return vrgame;
 	}
 
-	async getAllVrGames(offset: number, limit: number) {
+	async getAllVrGames(offset: number, limit: number, search?: string) {
 		const vrgamesList = await this.databaseService.db
 			.select()
 			.from(vrgames)
+			.where(search ? like(vrgames.name, `%${search}%`) : undefined)
 			.limit(limit)
 			.offset(offset);
 		return vrgamesList;
@@ -878,10 +881,15 @@ export class AdminRepository {
 			.where(eq(equipmentCategories.id, id));
 	}
 
-	async getAllEquipmentRentalCategories(offset: number, limit: number) {
+	async getAllEquipmentRentalCategories(
+		offset: number,
+		limit: number,
+		search?: string,
+	) {
 		return await this.databaseService.db
 			.select()
 			.from(equipmentCategories)
+			.where(search ? like(equipmentCategories.name, `%${search}%`) : undefined)
 			.limit(limit)
 			.offset(offset)
 			.orderBy(asc(equipmentCategories.createdAt));
@@ -937,12 +945,14 @@ export class AdminRepository {
 		offset,
 		limit,
 		categoryId,
-	}: { offset: number; limit: number; categoryId?: number }) {
+		search,
+	}: { offset: number; limit: number; categoryId?: number; search?: string }) {
 		const equipmentList =
 			await this.databaseService.db.query.equipmentRentals.findMany({
-				where: categoryId
-					? eq(equipmentRentals.categoryId, categoryId)
-					: undefined,
+				where: and(
+					categoryId ? eq(equipmentRentals.categoryId, categoryId) : undefined,
+					search ? like(equipmentRentals.name, `%${search}%`) : undefined,
+				),
 				columns: {
 					categoryId: false,
 					createdAt: false,
@@ -1047,10 +1057,11 @@ export class AdminRepository {
 		return cinema;
 	}
 
-	async getAllCinemas(offset: number, limit: number) {
+	async getAllCinemas(offset: number, limit: number, search?: string) {
 		const cinemasList = await this.databaseService.db
 			.select()
 			.from(cinemas)
+			.where(search ? like(cinemas.name, `%${search}%`) : undefined)
 			.limit(limit)
 			.offset(offset);
 		return cinemasList;
@@ -1113,10 +1124,11 @@ export class AdminRepository {
 		return hallsList;
 	}
 
-	async getAllCinemaHalls(offset: number, limit: number) {
+	async getAllCinemaHalls(offset: number, limit: number, search?: string) {
 		const hallsList = await this.databaseService.db
 			.select()
 			.from(cinemaHalls)
+			.where(search ? like(cinemaHalls.name, `%${search}%`) : undefined)
 			.limit(limit)
 			.offset(offset);
 		return hallsList;
@@ -1173,10 +1185,11 @@ export class AdminRepository {
 		return result;
 	}
 
-	async getAllSnacks(offset: number, limit: number) {
+	async getAllSnacks(offset: number, limit: number, search?: string) {
 		const snacksList = await this.databaseService.db
 			.select()
 			.from(snacks)
+			.where(search ? like(snacks.name, `%${search}%`) : undefined)
 			.limit(limit)
 			.offset(offset);
 
@@ -1249,12 +1262,16 @@ export class AdminRepository {
 		offset,
 		limit,
 		genreId,
-	}: { offset: number; limit: number; genreId?: number }) {
+		search,
+	}: { offset: number; limit: number; genreId?: number; search?: string }) {
 		const moviesList =
 			await this.databaseService.db.query.cinemaMovies.findMany({
-				where: genreId
-					? sql`EXISTS (SELECT 1 FROM cinema_movies_genres cmg WHERE cmg.movie_id = cinema_movies.id AND cmg.genre_id = ${genreId})`
-					: undefined,
+				where: and(
+					genreId
+						? sql`EXISTS (SELECT 1 FROM cinema_movies_genres cmg WHERE cmg.id = ${genreId})`
+						: undefined,
+					search ? like(cinemaMovies.title, `%${search}%`) : undefined,
+				),
 				columns: {
 					createdAt: false,
 					updatedAt: false,
@@ -1594,10 +1611,11 @@ export class AdminRepository {
 		return studio;
 	}
 
-	async getAllStudios(offset: number, limit: number) {
+	async getAllStudios(offset: number, limit: number, search?: string) {
 		const studiosList = await this.databaseService.db
 			.select()
 			.from(studios)
+			.where(search ? like(studios.name, `%${search}%`) : undefined)
 			.limit(limit)
 			.offset(offset)
 			.orderBy(desc(studios.createdAt));
@@ -1755,16 +1773,37 @@ export class AdminRepository {
 		offset,
 		limit,
 		status,
+		search,
 	}: {
 		offset: number;
 		limit: number;
 		status?: "completed" | "cancelled";
+		search?: string;
 	}) {
 		const purchases =
 			await this.databaseService.db.query.vrgameTicketPurchases.findMany({
-				where: status
-					? eq(vrgameTicketPurchases.status, status)
-					: eq(vrgameTicketPurchases.status, "completed"),
+				where:
+					status && search
+						? and(
+								eq(vrgameTicketPurchases.status, status),
+								or(
+									like(vrgameTicketPurchases.userId, `%${search}%`),
+									like(vrgameTicketPurchases.ticketId, `%${search}%`),
+									like(vrgameTicketPurchases.orderId, `%${search}%`),
+									like(vrgameTicketPurchases.vrgameName, `%${search}%`),
+								),
+							)
+						: status
+							? eq(vrgameTicketPurchases.status, status)
+							: search
+								? or(
+										like(vrgameTicketPurchases.userId, `%${search}%`),
+										like(vrgameTicketPurchases.ticketId, `%${search}%`),
+										like(vrgameTicketPurchases.orderId, `%${search}%`),
+										like(vrgameTicketPurchases.vrgameName, `%${search}%`),
+									)
+								: eq(vrgameTicketPurchases.status, "completed"),
+
 				columns: {
 					createdAt: false,
 					updatedAt: false,
@@ -1797,6 +1836,7 @@ export class AdminRepository {
 							eq(movieTicketPurchases.status, status),
 							or(
 								like(movieTicketPurchases.userId, `%${search}%`),
+								like(movieTicketPurchases.ticketId, `%${search}%`),
 								like(movieTicketPurchases.orderId, `%${search}%`),
 								like(movieTicketPurchases.movieName, `%${search}%`),
 							),
@@ -1806,6 +1846,7 @@ export class AdminRepository {
 						: search
 							? or(
 									like(movieTicketPurchases.userId, `%${search}%`),
+									like(movieTicketPurchases.ticketId, `%${search}%`),
 									like(movieTicketPurchases.orderId, `%${search}%`),
 									like(movieTicketPurchases.movieName, `%${search}%`),
 								)
@@ -2040,7 +2081,7 @@ export class AdminRepository {
 
 	async updateFoodOrderStatus(
 		id: string,
-		status: "preparing" | "on-the-way" | "delivered",
+		status: "preparing" | "on-the-way" | "delivered" | "cancelled",
 	) {
 		const result = await this.databaseService.db
 			.update(foodOrders)
