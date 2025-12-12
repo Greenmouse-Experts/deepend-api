@@ -218,9 +218,9 @@ export class AdminController {
 	@ApiOperation({ summary: "Get all food items with pagination" })
 	async getAllFoods(
 		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
-		{ page, limit }: PaginationQueryDto,
+		{ page, limit, search }: PaginationQueryDto,
 	) {
-		return await this.adminService.getAllFoods(+page, limit);
+		return await this.adminService.getAllFoods(+page, limit, search);
 	}
 
 	@Post("foods/categories")
@@ -488,9 +488,13 @@ export class AdminController {
 	@ApiOperation({ summary: "Get all VR game categories" })
 	async getAllVRGameCategories(
 		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
-		{ page, limit }: PaginationQueryDto,
+		{ page, limit, search }: PaginationQueryDto,
 	) {
-		return await this.adminService.getAllVRGameCategories(+page, +limit);
+		return await this.adminService.getAllVRGameCategories(
+			+page,
+			+limit,
+			search,
+		);
 	}
 
 	@Get("vrgames/categories/:id")
@@ -552,21 +556,22 @@ export class AdminController {
 	@ApiOperation({ summary: "Get all VR games with pagination" })
 	async getAllVRGames(
 		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
-		{ page, limit }: PaginationQueryDto,
+		{ page, limit, search }: PaginationQueryDto,
 	) {
-		return await this.adminService.getAllVRGames(+page, +limit);
+		return await this.adminService.getAllVRGames(+page, +limit, search);
 	}
 
 	@Get("vrgames/purchases")
 	@ApiOperation({ summary: "Get all VR game purchases with pagination" })
 	async getAllVRGamePurchases(
 		@Query(new QueryJoiValidationPipe(TicketPaginationQuerySchema))
-		{ page, limit, status }: TicketPaginationQueryDto,
+		{ page, limit, status, search }: TicketPaginationQueryDto,
 	) {
 		return await this.adminService.getVrgamesTicketPurchases({
 			page,
 			limit,
 			status,
+			search,
 		});
 	}
 
@@ -717,12 +722,13 @@ export class AdminController {
 	@ApiOperation({ summary: "Get all hotel bookings with pagination" })
 	async getAllHotelBookings(
 		@Query(new QueryJoiValidationPipe(BookingPaginationQuerySchema))
-		{ page, limit, status }: BookingPaginationQueryDto,
+		{ page, limit, status, search }: BookingPaginationQueryDto,
 	) {
 		return await this.adminService.getHotelBookings({
 			page,
 			limit,
 			status,
+			search,
 		});
 	}
 
@@ -791,11 +797,12 @@ export class AdminController {
 	@ApiOperation({ summary: "Get all equipment categories" })
 	async getAllEquipmentCategories(
 		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
-		{ page, limit }: PaginationQueryDto,
+		{ page, limit, search }: PaginationQueryDto,
 	) {
 		return await this.adminService.getAllEquipmentRentalCategories(
 			+page,
 			+limit,
+			search,
 		);
 	}
 
@@ -830,12 +837,13 @@ export class AdminController {
 	})
 	async getAllEquipmentRentalBookings(
 		@Query(new QueryJoiValidationPipe(EquipmentPaginationQuerySchema))
-		{ page, limit, status }: EquipmentPaginationQueryDto,
+		{ page, limit, status, search }: EquipmentPaginationQueryDto,
 	) {
 		return await this.adminService.getEquipmentRentalBookings({
 			page,
 			limit,
 			status,
+			search,
 		});
 	}
 
@@ -849,12 +857,13 @@ export class AdminController {
 	@ApiOperation({ summary: "Get all equipment rental items with pagination" })
 	async getAllEquipmentRentals(
 		@Query(new QueryJoiValidationPipe(ServicePaginationQuerySchema))
-		{ page, limit, categoryId }: ServicePaginationQueryDto,
+		{ page, limit, categoryId, search }: ServicePaginationQueryDto,
 	) {
 		return await this.adminService.getAllEquipmentRentals({
 			page,
 			limit,
 			categoryId,
+			search,
 		});
 	}
 
@@ -937,9 +946,9 @@ export class AdminController {
 	@ApiOperation({ summary: "Get all movie snack combos with pagination" })
 	async getAllSnacks(
 		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
-		{ page, limit }: PaginationQueryDto,
+		{ page, limit, search }: PaginationQueryDto,
 	) {
-		return await this.adminService.getAllSnacks(+page, +limit);
+		return await this.adminService.getAllSnacks(+page, +limit, search);
 	}
 
 	@Post("movies/:movieId/snacks")
@@ -976,12 +985,13 @@ export class AdminController {
 	@ApiOperation({ summary: "Get all movie bookings with pagination" })
 	async getAllMovieBookings(
 		@Query(new QueryJoiValidationPipe(TicketPaginationQuerySchema))
-		{ page, limit, status }: TicketPaginationQueryDto,
+		{ page, limit, status, search }: TicketPaginationQueryDto,
 	) {
 		return await this.adminService.getMovieTicketPurchases({
 			page,
 			limit,
 			status,
+			search,
 		});
 	}
 
@@ -1011,9 +1021,9 @@ export class AdminController {
 	@ApiOperation({ summary: "Get all cinema halls with pagination" })
 	async getAllCinemaHallsGeneral(
 		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
-		{ page, limit }: PaginationQueryDto,
+		{ page, limit, search }: PaginationQueryDto,
 	) {
-		return await this.adminService.getAllCinemaHalls(+page, +limit);
+		return await this.adminService.getAllCinemaHalls(+page, +limit, search);
 	}
 
 	@Get("cinemas/:id")
@@ -1026,9 +1036,9 @@ export class AdminController {
 	@ApiOperation({ summary: "Get all cinemas with pagination" })
 	async getAllCinemas(
 		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
-		{ page, limit }: PaginationQueryDto,
+		{ page, limit, search }: PaginationQueryDto,
 	) {
-		return await this.adminService.getAllCinemas(+page, +limit);
+		return await this.adminService.getAllCinemas(+page, +limit, search);
 	}
 
 	@Post("cinemas/halls")
@@ -1124,12 +1134,13 @@ export class AdminController {
 	@ApiOperation({ summary: "Get all movie cinemas with pagination" })
 	async getAllCinemaMovies(
 		@Query(new QueryJoiValidationPipe(MoviePaginationQuerySchema))
-		{ page, limit, genreId }: MoviePaginationQueryDto,
+		{ page, limit, genreId, search }: MoviePaginationQueryDto,
 	) {
 		return await this.adminService.getAllCinemaMovies({
 			page,
 			limit,
 			genreId,
+			search,
 		});
 	}
 
@@ -1264,9 +1275,9 @@ export class AdminController {
 	@ApiOperation({ summary: "Get all studios with pagination" })
 	async getAllStudios(
 		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
-		{ page, limit }: PaginationQueryDto,
+		{ page, limit, search }: PaginationQueryDto,
 	) {
-		return await this.adminService.getAllStudios(+page, +limit);
+		return await this.adminService.getAllStudios(+page, +limit, search);
 	}
 
 	@Post("studios/availability")
