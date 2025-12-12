@@ -2103,6 +2103,35 @@ export class AdminRepository {
 		return result;
 	}
 
+	async markMovieTicketPurchaseAsUsed(ticketId: string) {
+		const result = await this.databaseService.db
+			.update(movieTicketPurchases)
+			.set({ isUsed: true })
+			.where(eq(movieTicketPurchases.ticketId, ticketId));
+
+		return result;
+	}
+
+  async getHotelBookingById(id: string) {
+    const booking = await this.databaseService.db
+      .select()
+      .from(hotelBookings)
+      .where(eq(hotelBookings.id, id));
+    return booking[0];
+  }
+
+	async updateHotelBookingStatus(
+		id: string,
+		status: "cancelled" | "completed",
+	) {
+		const result = await this.databaseService.db
+			.update(hotelBookings)
+			.set({ status })
+			.where(eq(hotelBookings.id, id));
+
+		return result;
+	}
+
 	async createAdminNotification(notificationData: CreateAdminNotification[]) {
 		const result = await this.databaseService.db
 			.insert(adminNotifications)
