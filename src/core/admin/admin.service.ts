@@ -2672,4 +2672,49 @@ export class AdminService {
 	async getMonthlyRevenueStats(year: number) {
 		return await this.adminRepository.getMonthlyRevenueStats(year);
 	}
+
+	async markMovieTicketPurchaseAsUsed(ticketId: string) {
+		const result =
+			await this.adminRepository.markMovieTicketPurchaseAsUsed(ticketId);
+
+		if (result[0].affectedRows === 0) {
+			throw new BadRequestException(
+				"Movie ticket purchase not found or already used",
+			);
+		}
+
+		return { message: "Movie ticket purchase marked as used successfully" };
+	}
+
+	async updateHotelBookingStatus(
+		bookingId: string,
+		status: "cancelled" | "completed",
+	) {
+		try {
+			const booking = await this.adminRepository.getHotelBookingById(bookingId);
+
+			if (!booking) {
+				throw new BadRequestException("Hotel booking not found");
+			}
+
+			if (booking.status === status) {
+				throw new BadRequestException(
+					`Hotel booking is already marked as ${status}`,
+				);
+			}
+
+			const updatedBooking =
+				await this.adminRepository.updateHotelBookingStatus(bookingId, status);
+
+			if (updatedBooking[0].affectedRows === 0) {
+				throw new BadRequestException(
+					"Hotel booking not found or status unchanged",
+				);
+			}
+
+			return { message: "Hotel booking status updated successfully" };
+		} catch (error) {
+			throw error;
+		}
+	}
 }
