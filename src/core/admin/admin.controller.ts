@@ -154,6 +154,8 @@ import {
 	UpdateEquipmentOrderStatusSchema,
 	UpdateFoodOrderStatusDto,
 	UpdateFoodOrderStatusSchema,
+	UpdateHotelBookingStatusDto,
+	UpdateHotelBookingStatusSchema,
 } from "./dto/admin.dto";
 
 @ApiTags("Admin")
@@ -1372,6 +1374,26 @@ export class AdminController {
 		@Body() body: UpdateFoodOrderStatusDto,
 	) {
 		return await this.adminService.updateFoodOrderStatus(orderId, body.status);
+	}
+
+	@Patch("orders/hotel-bookings/:hotelBookingId/status")
+	@ApiOperation({ summary: "Update hotel booking status" })
+	@ApiBody({ type: UpdateHotelBookingStatusDto })
+	@UsePipes(new JoiValidationPipe(UpdateHotelBookingStatusSchema))
+	async updateHotelBookingStatus(
+		@Param("hotelBookingId") bookingId: string,
+		@Body() body: UpdateHotelBookingStatusDto,
+	) {
+		return await this.adminService.updateHotelBookingStatus(
+			bookingId,
+			body.status,
+		);
+	}
+
+	@Patch("orders/movie-tickets/:movieTicketOrderId/mark-as-used")
+	@ApiOperation({ summary: "Mark movie ticket as used" })
+	async markMovieTicketAsUsed(@Param("movieTicketOrderId") orderId: string) {
+		return await this.adminService.markMovieTicketPurchaseAsUsed(orderId);
 	}
 
 	@Patch("orders/equipments/:equipmentOrderId/status")
