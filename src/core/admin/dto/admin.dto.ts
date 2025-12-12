@@ -63,12 +63,14 @@ export class UpdateFoodOrderStatusDto {
 		example: "preparing",
 		description: "New status for the food order",
 	})
-	status: "preparing" | "on-the-way" | "delivered";
+	status: "preparing" | "on-the-way" | "delivered" | "cancelled";
 }
 
 export const UpdateFoodOrderStatusSchema = Joi.object<UpdateFoodOrderStatusDto>(
 	{
-		status: Joi.string().required().valid("preparing", "on-the-way","", "delivered"),
+		status: Joi.string()
+			.required()
+			.valid("preparing", "on-the-way", "", "delivered", "cancelled"),
 	},
 );
 
