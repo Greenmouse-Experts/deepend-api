@@ -239,10 +239,10 @@ export class AdminService {
 		return food[0];
 	}
 
-	async getAllFoods(page: number, limit: number) {
+	async getAllFoods(page: number, limit: number, search?: string) {
 		const offset = (page - 1) * limit;
 
-		return await this.adminRepository.getAllFoods(offset, limit);
+		return await this.adminRepository.getAllFoods(offset, limit, search);
 	}
 
 	async createFoodCategory(name: string, description?: string, icon?: string) {
@@ -640,9 +640,13 @@ export class AdminService {
 		return category[0];
 	}
 
-	async getAllVRGameCategories(page: number, limit: number) {
+	async getAllVRGameCategories(page: number, limit: number, search?: string) {
 		const offset = (page - 1) * limit;
-		return await this.adminRepository.getAllVRGameCategories(offset, limit);
+		return await this.adminRepository.getAllVRGameCategories(
+			offset,
+			limit,
+			search,
+		);
 	}
 
 	async createVRGame(gameData: CreateVRGameDto) {
@@ -802,10 +806,10 @@ export class AdminService {
 		);
 	}
 
-	async getAllVRGames(page: number, limit: number) {
+	async getAllVRGames(page: number, limit: number, search?: string) {
 		const offset = (page - 1) * limit;
 
-		return await this.adminRepository.getAllVrGames(offset, limit);
+		return await this.adminRepository.getAllVrGames(offset, limit, search);
 	}
 
 	async makeVRGameAvailable(id: string) {
@@ -1270,11 +1274,16 @@ export class AdminService {
 		return { message: "Equipment category deleted successfully" };
 	}
 
-	async getAllEquipmentRentalCategories(page: number, limit: number) {
+	async getAllEquipmentRentalCategories(
+		page: number,
+		limit: number,
+		search?: string,
+	) {
 		const offset = (page - 1) * limit;
 		return await this.adminRepository.getAllEquipmentRentalCategories(
 			offset,
 			limit,
+			search,
 		);
 	}
 
@@ -1371,13 +1380,15 @@ export class AdminService {
 		page,
 		limit,
 		categoryId,
-	}: { page: number; limit: number; categoryId?: number }) {
+		search,
+	}: { page: number; limit: number; categoryId?: number; search?: string }) {
 		const offset = (page - 1) * limit;
 
 		return await this.adminRepository.getAllEquipmentRentals({
 			offset,
 			limit,
 			categoryId,
+			search,
 		});
 	}
 
@@ -1549,10 +1560,10 @@ export class AdminService {
 		return cinema;
 	}
 
-	async getAllCinemas(page: number, limit: number) {
+	async getAllCinemas(page: number, limit: number, search?: string) {
 		const offset = (page - 1) * limit;
 
-		return await this.adminRepository.getAllCinemas(offset, limit);
+		return await this.adminRepository.getAllCinemas(offset, limit, search);
 	}
 
 	async createCinemaHall(hallData: CreateCinemaHallDto) {
@@ -1663,10 +1674,10 @@ export class AdminService {
 		);
 	}
 
-	async getAllCinemaHalls(page: number, limit: number) {
+	async getAllCinemaHalls(page: number, limit: number, search?: string) {
 		const offset = (page - 1) * limit;
 
-		return await this.adminRepository.getAllCinemaHalls(offset, limit);
+		return await this.adminRepository.getAllCinemaHalls(offset, limit, search);
 	}
 
 	async createCinemaMovie(movieData: CreateCinemaMovieDto) {
@@ -1802,10 +1813,10 @@ export class AdminService {
 		}
 	}
 
-	async getAllSnacks(page: number, limit: number) {
+	async getAllSnacks(page: number, limit: number, search?: string) {
 		const offset = (page - 1) * limit;
 
-		return await this.adminRepository.getAllSnacks(offset, limit);
+		return await this.adminRepository.getAllSnacks(offset, limit, search);
 	}
 
 	async addSnacksToMovie(movieId: string, snackIds: number[]) {
@@ -1887,13 +1898,15 @@ export class AdminService {
 		genreId,
 		page,
 		limit,
-	}: { genreId: number; page: number; limit: number }) {
+		search,
+	}: { genreId: number; page: number; limit: number; search?: string }) {
 		const offset = (page - 1) * limit;
 
 		return await this.adminRepository.getAllCinemaMovies({
 			offset,
 			limit,
 			genreId,
+			search,
 		});
 	}
 
@@ -2201,10 +2214,10 @@ export class AdminService {
 		return { message: "Studio is now unavailable" };
 	}
 
-	async getAllStudios(page: number, limit: number) {
+	async getAllStudios(page: number, limit: number, search?: string) {
 		const offset = (page - 1) * limit;
 
-		return await this.adminRepository.getAllStudios(offset, limit);
+		return await this.adminRepository.getAllStudios(offset, limit, search);
 	}
 
 	async createStudioAvailability(
@@ -2342,10 +2355,12 @@ export class AdminService {
 		page,
 		limit,
 		status,
+		search,
 	}: {
 		page: number;
 		limit: number;
 		status?: "completed" | "cancelled";
+		search?: string;
 	}) {
 		const offset = (page - 1) * limit;
 
@@ -2353,6 +2368,7 @@ export class AdminService {
 			offset,
 			limit,
 			status,
+			search,
 		});
 
 		return {
@@ -2512,7 +2528,7 @@ export class AdminService {
 
 	async updateFoodOrderStatus(
 		orderId: string,
-		status: "preparing" | "on-the-way" | "delivered",
+		status: "preparing" | "on-the-way" | "delivered" | "cancelled",
 	) {
 		const foodOrder = await this.adminRepository.getFoodOrderById(orderId);
 
