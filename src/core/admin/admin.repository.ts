@@ -280,10 +280,11 @@ export class AdminRepository {
 		return category;
 	}
 
-	async getAllFoodCategories(offset: number, limit: number) {
+	async getAllFoodCategories(offset: number, limit: number, search?: string) {
 		const categories = await this.databaseService.db
 			.select()
 			.from(foodCategories)
+			.where(search ? like(foodCategories.name, `%${search}%`) : undefined)
 			.limit(limit)
 			.offset(offset);
 		return categories;
@@ -1707,6 +1708,18 @@ export class AdminRepository {
 					recieptBarcodeData: false,
 					qrcodeData: false,
 				},
+				with: {
+					user: {
+						columns: {
+							firstName: true,
+							lastName: true,
+							email: true,
+							profilePicture: true,
+							phone: true,
+							id: true,
+						},
+					},
+				},
 				limit,
 				offset,
 				orderBy: (booking) => [desc(booking.createdAt)],
@@ -1751,6 +1764,18 @@ export class AdminRepository {
 					createdAt: false,
 					updatedAt: false,
 					receiptBarcodeData: false,
+				},
+				with: {
+					user: {
+						columns: {
+							firstName: true,
+							lastName: true,
+							email: true,
+							profilePicture: true,
+							phone: true,
+							id: true,
+						},
+					},
 				},
 				limit,
 				offset,
@@ -1810,6 +1835,18 @@ export class AdminRepository {
 					qrcodeData: false,
 					recieptBarcodeData: false,
 				},
+				with: {
+					user: {
+						columns: {
+							firstName: true,
+							lastName: true,
+							email: true,
+							profilePicture: true,
+							phone: true,
+							id: true,
+						},
+					},
+				},
 				limit,
 				offset,
 				orderBy: (purchase) => [desc(purchase.purchaseDate)],
@@ -1857,6 +1894,18 @@ export class AdminRepository {
 				qrcodeData: false,
 				recieptBarcodeData: false,
 			},
+			with: {
+				user: {
+					columns: {
+						firstName: true,
+						lastName: true,
+						email: true,
+						profilePicture: true,
+						phone: true,
+						id: true,
+					},
+				},
+			},
 			limit,
 			offset,
 			orderBy: (purchase) => [desc(purchase.purchaseDate)],
@@ -1900,6 +1949,18 @@ export class AdminRepository {
 					updatedAt: false,
 					qrcodeData: false,
 					receiptBarcodeData: false,
+				},
+				with: {
+					user: {
+						columns: {
+							firstName: true,
+							lastName: true,
+							email: true,
+							profilePicture: true,
+							phone: true,
+							id: true,
+						},
+					},
 				},
 				limit,
 				offset,
@@ -1968,6 +2029,18 @@ export class AdminRepository {
 				createdAt: false,
 				updatedAt: false,
 				receiptBarcodeData: false,
+			},
+			with: {
+				user: {
+					columns: {
+						firstName: true,
+						lastName: true,
+						email: true,
+						profilePicture: true,
+						phone: true,
+						id: true,
+					},
+				},
 			},
 			limit,
 			offset,
@@ -2112,13 +2185,13 @@ export class AdminRepository {
 		return result;
 	}
 
-  async getHotelBookingById(id: string) {
-    const booking = await this.databaseService.db
-      .select()
-      .from(hotelBookings)
-      .where(eq(hotelBookings.id, id));
-    return booking[0];
-  }
+	async getHotelBookingById(id: string) {
+		const booking = await this.databaseService.db
+			.select()
+			.from(hotelBookings)
+			.where(eq(hotelBookings.id, id));
+		return booking[0];
+	}
 
 	async updateHotelBookingStatus(
 		id: string,
