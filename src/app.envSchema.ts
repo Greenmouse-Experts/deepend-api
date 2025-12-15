@@ -30,4 +30,7 @@ export const envSchema = joi.object({
 	PAYMENT_CALLBACK_URL: joi.string().uri().required(),
 	PAYMENT_STATUS_CALLBACK_URL: joi.string().uri().required(),
 	DEEPEND_ADMIN_DASHBOARD_URL: joi.string().uri().required(),
+	CLOUDINARY_CLOUD_NAME: joi.string().required(),
+	CLOUDINARY_API_KEY: joi.string().required(),
+	CLOUDINARY_SECRET: joi.string().required(),
 });
