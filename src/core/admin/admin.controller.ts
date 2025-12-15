@@ -191,9 +191,9 @@ export class AdminController {
 	@ApiOperation({ summary: "Get all food categories" })
 	async getAllFoodCategories(
 		@Query(new QueryJoiValidationPipe(PaginationQuerySchema))
-		{ page, limit }: PaginationQueryDto,
+		{ page, limit, search }: PaginationQueryDto,
 	) {
-		return await this.adminService.getAllFoodCategories(+page, +limit);
+		return await this.adminService.getAllFoodCategories(+page, +limit, search);
 	}
 
 	@Get("foods/orders")
