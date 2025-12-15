@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { boolean } from "drizzle-orm/mysql-core";
 import {
@@ -14,6 +15,7 @@ import {
 } from "drizzle-orm/mysql-core";
 import { ID_GENERATOR_LENGTH } from "src/common/constants";
 import { generateId, generateTicketId } from "src/common/helpers";
+import { users } from "./users";
 
 export type PaymentStatus = "pending" | "completed" | "failed";
 export type OrderStatus = "pending" | "completed" | "failed";
@@ -197,6 +199,13 @@ export const hotelBookings = mysqlTable(
 	],
 );
 
+export const hotelBookingRelation = relations(hotelBookings, ({ one }) => ({
+	user: one(users, {
+		fields: [hotelBookings.userId],
+		references: [users.id],
+	}),
+}));
+
 export const foodOrders = mysqlTable(
 	"food_orders",
 	{
@@ -261,6 +270,13 @@ export const foodOrders = mysqlTable(
 	],
 );
 
+export const foodOrderRelation = relations(foodOrders, ({ one }) => ({
+	user: one(users, {
+		fields: [foodOrders.userId],
+		references: [users.id],
+	}),
+}));
+
 export const movieTicketPurchases = mysqlTable(
 	"movie_ticket_purchases",
 	{
@@ -319,6 +335,16 @@ export const movieTicketPurchases = mysqlTable(
 	],
 );
 
+export const movieTicketPurchaseRelation = relations(
+	movieTicketPurchases,
+	({ one }) => ({
+		user: one(users, {
+			fields: [movieTicketPurchases.userId],
+			references: [users.id],
+		}),
+	}),
+);
+
 export const vrgameTicketPurchases = mysqlTable(
 	"vrgame_ticket_purchases",
 	{
@@ -365,6 +391,16 @@ export const vrgameTicketPurchases = mysqlTable(
 	],
 );
 
+export const vrgameTicketPurchaseRelation = relations(
+	vrgameTicketPurchases,
+	({ one }) => ({
+		user: one(users, {
+			fields: [vrgameTicketPurchases.userId],
+			references: [users.id],
+		}),
+	}),
+);
+
 export const equipmentRentalBookings = mysqlTable(
 	"equipment_rental_bookings",
 	{
@@ -409,6 +445,16 @@ export const equipmentRentalBookings = mysqlTable(
 	],
 );
 
+export const equipmentRentalBookingRelation = relations(
+	equipmentRentalBookings,
+	({ one }) => ({
+		user: one(users, {
+			fields: [equipmentRentalBookings.userId],
+			references: [users.id],
+		}),
+	}),
+);
+
 export const studioSessionBookings = mysqlTable(
 	"studio_session_bookings",
 	{
@@ -450,4 +496,14 @@ export const studioSessionBookings = mysqlTable(
 			sql`status IN ('pending', 'scheduled', 'completed', 'cancelled')`,
 		),
 	],
+);
+
+export const studioSessionBookingRelation = relations(
+	studioSessionBookings,
+	({ one }) => ({
+		user: one(users, {
+			fields: [studioSessionBookings.userId],
+			references: [users.id],
+		}),
+	}),
 );
