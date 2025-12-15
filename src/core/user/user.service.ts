@@ -26,6 +26,7 @@ import { MysqlDatabaseTransaction } from "src/common/helpers";
 import { getDistanceInKm } from "src/common/geospatial";
 import { UpdateUserProfileDto } from "./dto/user";
 import { isDatabaseError, mysqlErrorCodes } from "src/common/mysql.error";
+import { StorageService } from "src/storage/storage.service";
 
 @Injectable()
 export class UserService {
@@ -34,6 +35,7 @@ export class UserService {
 		@Inject(forwardRef(() => ServicesService))
 		private readonly servicesService: ServicesService,
 		private readonly paymentService: PaymentService,
+		private readonly storageService: StorageService,
 	) {}
 
 	async getUserById(id: string) {
@@ -59,6 +61,12 @@ export class UserService {
 		updateData: Partial<Omit<CreateUser, " id" | "createdAt" | "updatedAt">>,
 	) {
 		return await this.userRepository.updateUser(id, updateData);
+	}
+
+	async generateProfilePictureUploadPresignedUrl(userId: string) {
+		const folder = `users/${userId}/profile-pictures`;
+
+		return await this.storageService.generateUploadPresignedUrl(folder);
 	}
 
 	async updateUserProfile(

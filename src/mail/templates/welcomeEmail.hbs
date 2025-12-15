@@ -1,8 +1,7 @@
-<!doctype html>
-<html lang="en">
+<html lang='en'>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <title>Welcome to Deepend!</title>
     <style>
       * {
@@ -110,6 +109,16 @@
       .celebration-icon::before {
         content: '🎉';
         font-size: 40px;
+      }
+
+      /* Deepend Logo Styling */
+      .deepend-logo {
+        width: 150px;
+        height: auto;
+        margin: 0 auto 30px;
+        display: block;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       }
 
       .greeting {
@@ -230,14 +239,14 @@
         margin-bottom: 25px;
       }
 
-      .social-links {
+      . social-links {
         display: flex;
         justify-content: center;
         gap: 15px;
         margin-top: 25px;
       }
 
-      .social-link {
+      . social-link {
         width: 45px;
         height: 45px;
         background: linear-gradient(135deg, #667eea, #764ba2);
@@ -296,86 +305,86 @@
         .welcome-message {
           font-size: 16px;
         }
+
+        .deepend-logo {
+          width: 120px;
+        }
       }
     </style>
   </head>
   <body>
-    <div class="container">
-      <div class="header">
-        <div class="welcome-badge">Welcome Aboard!</div>
-        <div class="logo">DEEPEND</div>
-        <div class="tagline">Your Gateway to Everything Amazing</div>
+    <div class='container'>
+      <div class='header'>
+        <div class='welcome-badge'>Welcome Aboard!</div>
+        <div class='logo'>DEEPEND</div>
+        <div class='tagline'>Your Gateway to Everything Amazing</div>
       </div>
 
-      <div class="content">
-        <div class="celebration-icon"></div>
+      <div class='content'>
+        <img
+          class='deepend-logo'
+          src='https://res.cloudinary.com/do2kojulq/image/upload/v1765822369/deepend/deep_nhr3wp.png'
+          alt='Deepend Logo'
+        />
 
-        <h1 class="greeting">Welcome, {{firstName}}! 🌟</h1>
+        <h1 class='greeting'>Welcome, {{firstName}}! 🌟</h1>
 
-        <p class="welcome-message">
+        <p class='welcome-message'>
           We're thrilled to have you join the Deepend community! Get ready to
           discover and book amazing experiences across hotels, entertainment,
           dining, and so much more.
         </p>
 
-        <div class="divider"></div>
+        <div class='divider'></div>
 
-        <div class="features-section">
-          <h2 class="features-title">Explore Everything We Offer</h2>
+        <div class='features-section'>
+          <h2 class='features-title'>Explore Everything We Offer</h2>
 
-          <div class="features-grid">
-            <div class="feature-card">
-              <span class="feature-icon">🏨</span>
-              <div class="feature-name">Hotels</div>
+          <div class='features-grid'>
+            <div class='feature-card'>
+              <span class='feature-icon'>🏨</span>
+              <div class='feature-name'>Hotels</div>
             </div>
-            <div class="feature-card">
-              <span class="feature-icon">🎮</span>
-              <div class="feature-name">Games</div>
+            <div class='feature-card'>
+              <span class='feature-icon'>🎮</span>
+              <div class='feature-name'>Games</div>
             </div>
-            <div class="feature-card">
-              <span class="feature-icon">🎬</span>
-              <div class="feature-name">Cinema</div>
+            <div class='feature-card'>
+              <span class='feature-icon'>🎬</span>
+              <div class='feature-name'>Cinema</div>
             </div>
-            <div class="feature-card">
-              <span class="feature-icon">🍽️</span>
-              <div class="feature-name">Food</div>
+            <div class='feature-card'>
+              <span class='feature-icon'>🍽️</span>
+              <div class='feature-name'>Food</div>
             </div>
-            <div class="feature-card">
-              <span class="feature-icon">🎵</span>
-              <div class="feature-name">Studios</div>
+            <div class='feature-card'>
+              <span class='feature-icon'>🎵</span>
+              <div class='feature-name'>Studios</div>
             </div>
-            <div class="feature-card">
-              <span class="feature-icon">✨</span>
-              <div class="feature-name">& More</div>
+            <div class='feature-card'>
+              <span class='feature-icon'>✨</span>
+              <div class='feature-name'>& More</div>
             </div>
           </div>
         </div>
 
-        <div class="cta-section">
-          <h3 class="cta-title">Ready to Start Your Journey?</h3>
-          <p class="cta-text">
+        <div class='cta-section'>
+          <h3 class='cta-title'>Ready to Start Your Journey?</h3>
+          <p class='cta-text'>
             Discover amazing deals and book your next experience with just a few
             clicks!
           </p>
-          <a href="#" class="cta-button">Start Exploring</a>
         </div>
       </div>
 
-      <div class="footer">
-        <p class="footer-message">
+      <div class='footer'>
+        <p class='footer-message'>
           Thank you for choosing Deepend. We're here to make every moment count!
         </p>
-        <p class="footer-signature">
+        <p class='footer-signature'>
           <strong>The Deepend Team</strong><br />
           Creating memorable experiences, one booking at a time
         </p>
-
-        <div class="social-links">
-          <a href="#" class="social-link">📧</a>
-          <a href="#" class="social-link">📱</a>
-          <a href="#" class="social-link">🌐</a>
-          <a href="#" class="social-link">💬</a>
-        </div>
       </div>
     </div>
   </body>

@@ -11,6 +11,7 @@ import { BullBoardModule } from "@bull-board/nestjs";
 import { ExpressAdapter } from "@bull-board/express";
 import basicAuth from "express-basic-auth";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
+import { StorageModule } from './storage/storage.module';
 
 @Module({
 	imports: [
@@ -45,6 +46,7 @@ import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
 			name: WEBHOOKS_QUEUE,
 			adapter: BullMQAdapter,
 		}),
+		StorageModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],

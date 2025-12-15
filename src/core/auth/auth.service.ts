@@ -159,6 +159,19 @@ export class AuthService {
 		return { ...userWithoutPassword, access_token, refresh_token };
 	}
 
+	async generateUserProfileUploadPresignedUrl(userId: string) {
+		const user = await this.userService.getUserById(userId);
+
+		if (!user) {
+			throw new NotFoundException("User not found");
+		}
+
+		const presignedUrlData =
+			await this.userService.generateProfilePictureUploadPresignedUrl(userId);
+
+		return presignedUrlData;
+	}
+
 	async updateUserProfile(userId: string, updateData: UpdateUserProfileDto) {
 		const user = await this.userService.getUserById(userId);
 
