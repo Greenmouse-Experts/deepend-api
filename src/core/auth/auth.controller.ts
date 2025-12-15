@@ -111,6 +111,13 @@ export class AuthController {
 		return await this.authService.refreshToken(body.userId);
 	}
 
+	@Get("users/profile/presigned-url")
+	@UseGuards(AuthGuard)
+	@ApiOperation({ summary: "Get presigned URL for user profile image upload" })
+	async getProfileImagePresignedUrl(@GetUser("userId") userId: string) {
+		return await this.authService.generateUserProfileUploadPresignedUrl(userId);
+	}
+
 	@Patch("users/profile")
 	@UseGuards(AuthGuard)
 	@ApiOperation({ summary: "Update user profile" })
