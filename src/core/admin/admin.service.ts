@@ -288,9 +288,13 @@ export class AdminService {
 		return { message: "Food category deleted successfully" };
 	}
 
-	async getAllFoodCategories(page: number, limit: number) {
+	async getAllFoodCategories(page: number, limit: number, search?: string) {
 		const offset = (page - 1) * limit;
-		return await this.adminRepository.getAllFoodCategories(offset, limit);
+		return await this.adminRepository.getAllFoodCategories(
+			offset,
+			limit,
+			search,
+		);
 	}
 
 	async createFoodAddonCategories(
