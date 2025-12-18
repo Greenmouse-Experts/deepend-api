@@ -19,7 +19,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets. GHRC_TOKEN }}
+          password: ${{ secrets.GHRC_TOKEN }}
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -27,7 +27,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ env.IMAGE_OWNER_LC }}/deepend-api:latest
-            ghcr. io/${{ env.IMAGE_OWNER_LC }}/deepend-api:${{ github.sha }}
+            ghcr.io/${{ env.IMAGE_OWNER_LC }}/deepend-api:${{ github.sha }}
   # On development branch deploy to render
   deploy-dev:
     runs-on: ubuntu-latest
