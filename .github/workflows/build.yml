@@ -1,7 +1,7 @@
 name: Build Docker Image
 on:
   push:
-    branches: [main]
+    branches: [main, development]
 permissions:
   packages: write
   contents: read
@@ -28,13 +28,32 @@ jobs:
           tags: |
             ghcr.io/${{ env.IMAGE_OWNER_LC }}/deepend-api:latest
             ghcr.io/${{ env.IMAGE_OWNER_LC }}/deepend-api:${{ github.sha }}
-  deploy:
+  # On development branch deploy to render
+  deploy-dev:
     runs-on: ubuntu-latest
     needs: build-and-push
+    if: github.ref == 'refs/heads/development'
     steps:
-      - name: Deploy to production
+      - name: Deploy to Render (development)
         uses: johnbeynon/render-deploy-action@v0.0.8
         with:
           service-id: ${{ secrets.RENDER_SERVICE_ID }}
           api-key: ${{ secrets.RENDER_API_KEY }}
           wait-for-success: true
+  # On main branch deploy to prod
+  deploy-prod:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy application
+        env:
+          DEPLOY_API_KEY: ${{ secrets.DEPLOY_API_KEY }}
+          DEPLOY_APPLICATION_ID: ${{ secrets.DEPLOY_APPLICATION_ID }}
+          DEPLOY_URL: ${{ secrets.DEPLOY_URL }}
+        run: |
+          curl -f -X POST "$DEPLOY_URL" \
+            -H "accept: application/json" \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: ${DEPLOY_API_KEY}" \
+            -d "{\"applicationId\":\"${DEPLOY_APPLICATION_ID}\"}"
