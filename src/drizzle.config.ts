@@ -1,8 +1,9 @@
 import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
+import { join } from "path";
 
 export default defineConfig({
-	out: "./src/database/migrations",
+	out: join(__dirname, "database", "migrations"),
 	schema: "./src/database/schema/*.ts",
 	dialect: "mysql",
 	dbCredentials: {
