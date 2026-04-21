@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Set up environment variables
         run: |
-          echo "IMAGE_OWNER_LC=$(echo ${{ secrets.GHCR_USERNAME }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+          echo "IMAGE_OWNER_LC=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
       - name: Debug GHCR auth context
         env:
           GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
