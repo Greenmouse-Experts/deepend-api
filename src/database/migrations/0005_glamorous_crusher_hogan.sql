@@ -17,7 +17,8 @@ CREATE TABLE `food_addons_items` (
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL,
 	CONSTRAINT `food_addons_items_id` PRIMARY KEY(`id`),
-	CONSTRAINT `food_addons_items_name_unique` UNIQUE(`name`)
+	CONSTRAINT `food_addons_items_name_unique` UNIQUE(`name`),
+	CONSTRAINT `food_addons_items_category_id_id_unique` UNIQUE(`category_id`,`id`)
 );
 --> statement-breakpoint
 CREATE TABLE `food_to_addons_categories` (
