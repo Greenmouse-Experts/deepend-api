@@ -17,6 +17,44 @@ jobs:
       - name: Set up environment variables
         run: |
           echo "IMAGE_OWNER_LC=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+      - name: Debug GHCR auth context
+        env:
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHRC_TOKEN: ${{ secrets.GHRC_TOKEN }}
+        run: |
+          echo "GitHub actor: ${{ github.actor }}"
+          echo "Repo owner (lowercase): ${IMAGE_OWNER_LC}"
+          echo "Target image: ghcr.io/${IMAGE_OWNER_LC}/deepend-api"
+
+          if [ -z "$GHCR_USERNAME" ]; then
+            echo "ERROR: GHCR_USERNAME secret is empty or missing"
+            exit 1
+          fi
+
+          if [ -z "$GHRC_TOKEN" ]; then
+            echo "ERROR: GHRC_TOKEN secret is empty or missing"
+            exit 1
+          fi
+
+          user_status=$(curl -sS -o /tmp/gh_user.json -w "%{http_code}" \
+            -H "Authorization: Bearer $GHRC_TOKEN" \
+            https://api.github.com/user)
+          echo "GitHub API /user status: ${user_status}"
+
+          repo_status=$(curl -sS -o /tmp/gh_repo.json -w "%{http_code}" \
+            -H "Authorization: Bearer $GHRC_TOKEN" \
+            "https://api.github.com/repos/${IMAGE_OWNER_LC}/deepend-api")
+          echo "GitHub API repo access status: ${repo_status}"
+
+          token_scope_response=$(curl -sS -u "$GHCR_USERNAME:$GHRC_TOKEN" \
+            "https://ghcr.io/token?service=ghcr.io&scope=repository:${IMAGE_OWNER_LC}/deepend-api:push,pull")
+
+          if echo "$token_scope_response" | grep -q '"token"'; then
+            echo "GHCR scope check: push/pull scope granted"
+          else
+            echo "GHCR scope check: push/pull scope NOT granted"
+            echo "Registry response: $token_scope_response"
+          fi
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
