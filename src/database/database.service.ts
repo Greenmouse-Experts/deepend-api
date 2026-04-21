@@ -5,7 +5,7 @@ import {
 	OnApplicationShutdown,
 	OnModuleInit,
 } from "@nestjs/common";
-import type { Connection } from "mysql2/promise";
+import type { Pool } from "mysql2/promise";
 import { drizzle, type MySql2Database } from "drizzle-orm/mysql2";
 import * as schema from "./schema";
 
@@ -15,7 +15,7 @@ export class DatabaseService implements OnModuleInit, OnApplicationShutdown {
 
 	public db: MySql2Database<typeof schema>;
 
-	constructor(@Inject("MYSQL_CONNECTION") private connection: Connection) {
+	constructor(@Inject("MYSQL_CONNECTION") private connection: Pool) {
 		this.db = drizzle(this.connection, {
 			schema: schema,
 			mode: "default",
@@ -29,7 +29,9 @@ export class DatabaseService implements OnModuleInit, OnApplicationShutdown {
 
 	async checkConnection() {
 		try {
-			await this.connection.ping();
+			const conn = await this.connection.getConnection();
+			await conn.ping();
+			conn.release();
 			this.logger.log("Database connection is healthy");
 		} catch (error) {
 			this.logger.error("Database connection failed", error);
@@ -39,7 +41,6 @@ export class DatabaseService implements OnModuleInit, OnApplicationShutdown {
 
 	async onApplicationShutdown() {
 		this.logger.log("Shutting down database connection");
-
 		await this.connection.end();
 	}
 }
