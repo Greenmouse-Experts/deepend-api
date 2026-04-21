@@ -10,7 +10,7 @@ export class AppController {
 	HomeV1() {
 		return this.appService.HomeV1();
 	}
-
+//added something
 	@Get("countries")
 	async getCountries(@Query("page") page = 1, @Query("limit") limit = 10) {
 		return await this.appService.getCountries(page, limit);
